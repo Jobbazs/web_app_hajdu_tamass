@@ -10,7 +10,7 @@ export const OWNER = {
   bio1: 'Budapesti fotós és videós vagyok, aki bulik, rendezvények és underground helyszínek dokumentálására specializálódott. Az Arsenal, a Lärm és a hasonló helyek a természetes közegem.',
   bio2: 'Kezdő videoklipp-forgató – hiszek abban, hogy a mozgókép ugyanolyan nyers igazságot tud mutatni, mint egy jó állókép. Portrékon, urbex helyszíneken és utcán is otthon vagyok.',
   bio3: 'Nem szépítem az életet. Megmutatom, ahogy van.',
-  email: 'hello@vkovacs.hu',
+  email: 'grega.balazs@gmail.com',
   instagram: 'https://instagram.com/',
   tiktok: 'https://tiktok.com/',
   behance: 'https://behance.net/',
