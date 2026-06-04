@@ -29,7 +29,7 @@ export const TRANSLATIONS = {
       bio1:    'Budapesti fotós és videós vagyok, aki bulik, rendezvények és underground helyszínek dokumentálására specializálódott. Az Arsenal, a Lärm és a hasonló helyek a természetes közegem.',
       bio2:    'Kezdő videoklipp-forgató – hiszek abban, hogy a mozgókép ugyanolyan nyers igazságot tud mutatni, mint egy jó állókép. Portrékon, urbex helyszíneken és utcán is otthon vagyok.',
       bio3:    'Nem szépítem az életet. Megmutatom, ahogy van.',
-      tags:    ['Rendezvény', 'Rave / Buli', 'Videóklipp', 'Portré', 'Urbex', 'Természet'],
+      tags:    ['Rendezvény', 'Rave / Buli', 'Videóklipp', 'Portré', 'Urbex'],
       imgAlt:  'Portré fotó',
     },
     // Portfolio
@@ -127,7 +127,7 @@ export const TRANSLATIONS = {
       bio1:   'Budapest-based photographer and videographer specializing in parties, events and underground venues. Arsenal, Lärm and similar places are my natural habitat.',
       bio2:   'Aspiring music video director – I believe moving image can carry the same raw truth as a still. I also shoot portraits, urbex locations and street.',
       bio3:   "I don't beautify life. I show it as it is.",
-      tags:   ['Events', 'Rave / Party', 'Music Video', 'Portrait', 'Urbex', 'Nature'],
+      tags:   ['Events', 'Rave / Party', 'Music Video', 'Portrait', 'Urbex'],
       imgAlt: 'Portrait photo',
     },
     portfolio: {
