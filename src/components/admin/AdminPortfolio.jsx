@@ -3,8 +3,13 @@ import { supabase } from '../../supabaseClient'
 import { usePortfolio, useCategories } from '../../hooks'
 
 const EMPTY_ITEM = {
-  title: '', category: '', cloudinary_url: '',
-  video_url: '', span: 'medium', visible: true, sort_order: 0,
+  title: '',
+  category_id: '',
+  cloudinary_url: '',
+  video_url: '',
+  span: 'medium',
+  visible: true,
+  sort_order: 0,
 }
 
 const EMPTY_CAT = { slug: '', label_hu: '', label_en: '', sort_order: 0 }
@@ -31,7 +36,7 @@ export default function AdminPortfolio() {
   // ── Portfolio item műveletek ─────────────────────────────
   const openNew = () => {
     setEditing(null)
-    setForm({ ...EMPTY_ITEM, category: categories[0]?.slug || '' })
+    setForm({ ...EMPTY_ITEM, category_id: categories[0]?.id || '' })
     setError('')
     setShowForm(true)
   }
@@ -40,7 +45,7 @@ export default function AdminPortfolio() {
     setEditing(item.id)
     setForm({
       title:          item.title,
-      category:       item.category,
+      category_id:    item.category_id,
       cloudinary_url: item.cloudinary_url,
       video_url:      item.video_url || '',
       span:           item.span,
@@ -60,12 +65,12 @@ export default function AdminPortfolio() {
     e.preventDefault()
     if (!form.title.trim())          { setError('A cím kötelező.'); return }
     if (!form.cloudinary_url.trim()) { setError('A kép URL kötelező.'); return }
-    if (!form.category)              { setError('Válassz kategóriát.'); return }
+    if (!form.category_id)           { setError('Válassz kategóriát.'); return }
 
     setSaving(true); setError('')
     const payload = {
       title:          form.title.trim(),
-      category:       form.category,
+      category_id:    form.category_id,
       cloudinary_url: form.cloudinary_url.trim(),
       video_url:      form.video_url.trim() || null,
       span:           form.span,
@@ -118,7 +123,7 @@ export default function AdminPortfolio() {
     if (!catForm.label_en.trim()) { setCatError('Az angol név kötelező.'); return }
     // slug csak betű, szám, kötőjel
     if (!/^[a-z0-9-]+$/.test(catForm.slug)) {
-      setCatError('A slug csak kisbetűket, számokat és kötőjelet tartalmazhat.'); return
+      setCatError('Első mezőben csak kisbetűk, szám, ékezetmentes, és kötőjeles szavak lehetnek.'); return
     }
 
     setCatSaving(true); setCatError('')
@@ -145,7 +150,7 @@ export default function AdminPortfolio() {
     const { data } = await supabase
       .from('portfolio_items')
       .select('id')
-      .eq('category', slug)
+      .eq('category_id', id)
       .limit(1)
 
     if (data && data.length > 0) {
@@ -158,8 +163,8 @@ export default function AdminPortfolio() {
   }
 
   // Kategória label kereső
-  const getCatLabel = (slug) =>
-    categories.find(c => c.slug === slug)?.label_hu || slug
+  const getCatLabel = (id) =>
+  categories.find(c => c.id === id)?.label_hu || 'Ismeretlen'
 
   return (
     <div className="acms-section">
@@ -248,7 +253,7 @@ export default function AdminPortfolio() {
                 <div className="acms-list-info">
                   <div className="acms-list-name">{item.title}</div>
                   <div className="acms-list-meta">
-                    <span className="acms-tag">{getCatLabel(item.category)}</span>
+                    <span className="acms-tag">{getCatLabel(item.category_id)}</span>
                     <span className="acms-tag">{item.span}</span>
                     {item.video_url && <span className="acms-tag">▶ videó</span>}
                     {!item.visible && <span className="acms-tag acms-tag--dim">rejtett</span>}
@@ -285,11 +290,18 @@ export default function AdminPortfolio() {
               <div className="acms-form-row">
                 <div className="acms-form-group">
                   <label>Kategória</label>
-                  <select name="category" className="acms-input" value={form.category} onChange={handleChange}>
-                    {categories.map(c => (
-                      <option key={c.slug} value={c.slug}>{c.label_hu}</option>
-                    ))}
-                  </select>
+                      <select
+                  name="category_id"
+                  className="acms-input"
+                  value={form.category_id}
+                  onChange={handleChange}
+                >
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.label_hu}
+                    </option>
+                  ))}
+                </select>
                 </div>
                 <div className="acms-form-group">
                   <label>Méret (grid)</label>
