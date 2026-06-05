@@ -6,6 +6,9 @@
 
 -- ── 1. MESSAGES (contact form üzenetek) ─────────────────────
 
+
+drop table if exists public.messages;
+
 create table public.messages (
   id          uuid primary key default gen_random_uuid(),
   created_at  timestamptz not null default now(),
@@ -35,16 +38,60 @@ create policy "Admin delete messages"
   using (auth.role() = 'authenticated');
 
 
+
+drop table if exists public.portfolio_items;
+drop table if exists public.portfolio_categories;
+
+
+-- ── 3. PORTFOLIO CATEGORIES ──────────────────────────────────
+
+
+create table public.portfolio_categories (
+  id          uuid primary key default gen_random_uuid(),
+  created_at  timestamptz not null default now(),
+  slug        text not null unique,
+  label_hu    text not null,
+  label_en    text not null,
+  sort_order  int not null default 0,
+  visible     boolean not null default true
+);
+
+alter table public.portfolio_categories enable row level security;
+
+create policy "Public read categories"
+  on public.portfolio_categories for select
+  using (true);
+
+create policy "Admin all categories"
+  on public.portfolio_categories for all
+  using (auth.role() = 'authenticated');
+
+insert into public.portfolio_categories
+(slug, label_hu, label_en, sort_order)
+values
+('event', 'Rendezvény', 'Event', 1),
+('portrait', 'Portré', 'Portrait', 2),
+('video', 'Videó', 'Video', 3),
+('urbex', 'Urbex', 'Urbex', 4);
+
 -- ── 2. PORTFOLIO_ITEMS ───────────────────────────────────────
+
 
 create table public.portfolio_items (
   id              uuid primary key default gen_random_uuid(),
   created_at      timestamptz not null default now(),
   title           text not null,
-  category        text not null check (category in ('event','portrait','video','urbex')),
+
+  category_id     uuid not null
+                  references public.portfolio_categories(id)
+                  on delete restrict,
+
   cloudinary_url  text not null,
   video_url       text,
-  span            text not null default 'medium' check (span in ('large','medium','small')),
+
+  span            text not null default 'medium'
+                  check (span in ('large','medium','small')),
+
   sort_order      int not null default 0,
   visible         boolean not null default true
 );
@@ -60,7 +107,11 @@ create policy "Admin all portfolio"
   using (auth.role() = 'authenticated');
 
 
+
+
 -- ── 3. SERVICES ──────────────────────────────────────────────
+
+drop table if exists public.services;
 
 create table public.services (
   id          uuid primary key default gen_random_uuid(),
@@ -84,6 +135,8 @@ create policy "Admin all services"
 
 
 -- ── 4. SITE_CONTENT (hero, about szövegek) ──────────────────
+
+drop table if exists public.site_content;
 
 create table public.site_content (
   key    text primary key,
@@ -148,3 +201,63 @@ insert into public.site_content (key, value) values
 ('about_bio1_en',    'Budapest-based photographer and videographer specializing in parties, events and underground venues. Arsenal, Lärm and similar places are my natural habitat.'),
 ('about_bio2_en',    'Aspiring music video director – I believe moving image can carry the same raw truth as a still. I also shoot portraits, urbex locations and street.'),
 ('about_bio3_en',    'I don''t beautify life. I show it as it is.');
+
+
+
+-- 1. Services – extra_fields JSON oszlop (bővíthető mezők)
+alter table public.services
+  add column if not exists extra_fields jsonb not null default '[]'::jsonb;
+-- extra_fields séma: [{ key: 'price', label_hu: 'Ár', label_en: 'Price', value: '...' }]
+
+
+-- 2. Custom sections tábla
+
+drop table if exists public.custom_sections;
+
+create table public.custom_sections (
+  id          uuid primary key default gen_random_uuid(),
+  title_hu    text not null default '',
+  title_en    text not null default '',
+  body_hu     text not null default '',
+  body_en     text not null default '',
+  align       text not null default 'left'
+                check (align in ('left','center-left','center','center-right','right')),
+  line_height text not null default '1.75'
+                check (line_height in ('1.4','1.6','1.75','2.0','2.4')),
+  font_size   text not null default 'normal'
+                check (font_size in ('small','normal','large')),
+  visible     boolean not null default true,
+  sort_order  int not null default 0,
+  created_at  timestamptz default now()
+);
+
+alter table public.custom_sections enable row level security;
+
+create policy "Public read sections"
+  on public.custom_sections for select using (true);
+create policy "Admin all sections"
+  on public.custom_sections for all
+  using (auth.role() = 'authenticated');
+
+
+-- ============================================================
+-- MIGRATION v8b – custom_sections bővítés
+-- Supabase Dashboard → SQL Editor → New query → Paste → Run
+-- ============================================================
+
+-- Cím és body külön igazítás
+alter table public.custom_sections
+  add column if not exists title_align text not null default 'left'
+    check (title_align in ('left','center-left','center','center-right','right'));
+
+alter table public.custom_sections
+  add column if not exists body_align text not null default 'left'
+    check (body_align in ('left','center-left','center','center-right','right'));
+
+-- Extra mezők (mint a services-nél)
+-- [{ key, label_hu, label_en, value, type, align }]
+alter table public.custom_sections
+  add column if not exists fields jsonb not null default '[]'::jsonb;
+
+-- A régi align oszlop mostantól "szekció alapértelmezett igazítás" marad
+-- title_align és body_align felülírják ha be van állítva
