@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useLang } from '../LangContext'
-import { usePortfolio } from '../hooks'
+import { usePortfolio, useCategories } from '../hooks'
 import MediaModal from './MediaModal'
 
 const SPAN_CLASS = {
@@ -12,19 +12,20 @@ const SPAN_CLASS = {
 export default function Portfolio() {
   const [active,   setActive]   = useState('all')
   const [selected, setSelected] = useState(null)
-  const { t } = useLang()
-  const { items, loading } = usePortfolio()
+  const { lang, t } = useLang()
+  const { items, loading }                   = usePortfolio()
+  const { categories, loading: catLoading }  = useCategories()
   const f = t.portfolio.filters
 
+  // Filter lista: "Mind" + Supabase kategóriák
   const FILTERS = [
-    { key: 'all',      label: f.all },
-    { key: 'event',    label: f.event },
-    { key: 'portrait', label: f.portrait },
-    { key: 'video',    label: f.video },
-    { key: 'urbex',    label: f.urbex },
+    { key: 'all', label: f.all },
+    ...categories.map(c => ({
+      key:   c.slug,
+      label: lang === 'hu' ? c.label_hu : c.label_en,
+    })),
   ]
 
-  // Supabase snake_case → camelCase igazítás a modal számára
   const normalized = items.map(item => ({
     ...item,
     cloudinaryUrl: item.cloudinary_url,
@@ -71,7 +72,7 @@ export default function Portfolio() {
             </div>
           </div>
 
-          {loading ? (
+          {loading || catLoading ? (
             <div className="port-loading">Betöltés...</div>
           ) : (
             <div className="portfolio-grid">

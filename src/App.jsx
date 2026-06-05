@@ -7,8 +7,9 @@ import Hero      from './components/Hero'
 import About     from './components/About'
 import Portfolio from './components/Portfolio'
 import Services  from './components/Services'
-import Contact   from './components/Contact'
-import Footer    from './components/Footer'
+import Contact        from './components/Contact'
+import CustomSections from './components/CustomSections'
+import Footer         from './components/Footer'
 import Admin     from './components/Admin'
 import Login     from './components/Login'
 
@@ -55,6 +56,7 @@ function AppInner() {
         <Portfolio />
         <div className="rust-divider" />
         <Services />
+        <CustomSections />
         <Contact />
       </main>
       <Footer />

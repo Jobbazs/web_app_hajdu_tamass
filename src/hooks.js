@@ -23,6 +23,25 @@ export function usePortfolio() {
   return { items, loading, error, refetch: fetch }
 }
 
+// ─── Portfólió kategóriák ────────────────────────────────────
+export function useCategories() {
+  const [categories, setCategories] = useState([])
+  const [loading,    setLoading]    = useState(true)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('portfolio_categories')
+      .select('*')
+      .order('sort_order', { ascending: true })
+    setCategories(data || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetch() }, [fetch])
+  return { categories, loading, refetch: fetch }
+}
+
 // ─── Szolgáltatások ──────────────────────────────────────────
 export function useServices() {
   const [services, setServices] = useState([])
@@ -52,7 +71,6 @@ export function useSiteContent() {
     const { data } = await supabase
       .from('site_content')
       .select('key, value')
-    // { key: value } objektummá alakítjuk
     const map = {}
     ;(data || []).forEach(row => { map[row.key] = row.value })
     setContent(map)
@@ -61,4 +79,24 @@ export function useSiteContent() {
 
   useEffect(() => { fetch() }, [fetch])
   return { content, loading, refetch: fetch }
+}
+
+// ─── Custom sections ─────────────────────────────────────────
+export function useCustomSections() {
+  const [sections, setSections] = useState([])
+  const [loading,  setLoading]  = useState(true)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('custom_sections')
+      .select('*')
+      .eq('visible', true)
+      .order('sort_order', { ascending: true })
+    setSections(data || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetch() }, [fetch])
+  return { sections, loading, refetch: fetch }
 }
