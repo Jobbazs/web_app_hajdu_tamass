@@ -21,7 +21,7 @@ export default function Portfolio() {
   const FILTERS = [
     { key: 'all', label: f.all },
     ...categories.map(c => ({
-      key:   c.slug,
+      key:   c.id,
       label: lang === 'hu' ? c.label_hu : c.label_en,
     })),
   ]
@@ -34,7 +34,7 @@ export default function Portfolio() {
 
   const visible = active === 'all'
     ? normalized
-    : normalized.filter(i => i.category === active)
+    : normalized.filter(i => i.category_id === active)
 
   const closeModal = () => setSelected(null)
 
