@@ -2146,3 +2146,136 @@ body { font-size: 18px; }
   .acms-input--num { max-width: 100%; flex: 1 !important; }
   .acms-srv-item { flex-wrap: wrap; }
 }
+
+/* ============================================================
+   ALIGN PICKER – gombsor az igazítás választáshoz
+   ============================================================ */
+
+.acms-align-picker {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.acms-align-btn {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.7rem;
+  min-height: 32px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.acms-align-btn:hover {
+  border-color: var(--border-mid);
+  color: var(--text-primary);
+}
+
+.acms-align-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(196,97,42,0.08);
+}
+
+/* ============================================================
+   EXTRA FIELD – fejléc sor
+   ============================================================ */
+
+.acms-extra-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.acms-extra-field-num {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+}
+
+/* ============================================================
+   CUSTOM SECTIONS – főoldal extra mezők
+   ============================================================ */
+
+.custom-section-fields {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.custom-section-field {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  /* Az igazítás inline style-ból jön */
+}
+
+.custom-section-field-label {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.custom-section-field-value {
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+/* ============================================================
+   PREVIEW – sortörés fix + extra mező előnézet
+   ============================================================ */
+
+/* Az előnézet body white-space pre-wrap */
+.acms-sect-preview-body {
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', 'Rajdhani', serif;
+  /* font-size, lineHeight, textAlign inline style-ból jön */
+}
+
+.acms-sect-preview-fields {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.8rem;
+}
+
+.acms-sect-preview-field {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.acms-sect-field-label {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.acms-sect-field-value {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+/* Live preview konténer mérete */
+.acms-sect-live-preview {
+  min-height: 100px;
+  max-height: 320px;
+  overflow-y: auto;
+}
