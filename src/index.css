@@ -897,6 +897,8 @@ footer {
 
 /* ── TABLET (768–1023px) ─────────────────────────────────── */
 @media (max-width: 1023px) {
+  :root { --navbar-height: 62px; }
+
   /* Nav */
   .nav-links    { display: none; }
   .nav-hamburger { display: flex; }
@@ -937,6 +939,8 @@ footer {
 
 /* ── PHONE (0–767px) ─────────────────────────────────────── */
 @media (max-width: 767px) {
+  :root { --navbar-height: 56px; }
+
   section { padding: 4.5rem 1.2rem; }
 
   /* Hero */
@@ -977,6 +981,8 @@ footer {
 
 /* ── SMALL PHONE (0–479px) ───────────────────────────────── */
 @media (max-width: 479px) {
+  :root { --navbar-height: 52px; }
+
   section { padding: 4rem 1rem; }
   #hero { padding: 0 1rem 4rem; }
 
@@ -2374,7 +2380,7 @@ body { font-size: 18px; }
 
 .portfolio-filter-bar--sticky {
   position: fixed;
-  top: 81px; /* navbar magassága alatt */
+  top: var(--navbar-height); /* navbar magassága alatt */
   left: 0;
   right: 0;
   padding: 0.8rem 2rem;
@@ -2485,7 +2491,7 @@ body { font-size: 18px; }
 
 @media (max-width: 767px) {
   .portfolio-ratio-grid { column-count: 1; }
-  .portfolio-filter-bar--sticky { top: 54px; padding: 0.7rem 1.2rem; }
+  .portfolio-filter-bar--sticky { top: var(--navbar-height); padding: 0.7rem 1.2rem; }
 }
 
 /* ============================================================
@@ -2634,7 +2640,7 @@ body { font-size: 18px; }
 .portfolio-filter-bar--sticky {
   position: fixed;
   /* Navbar magassága alatt – igazítsd ha a navbar más magasságú */
-  top: 81px;
+  top: var(--navbar-height);
   left: 0;
   right: 0;
   z-index: 500;
@@ -2686,7 +2692,7 @@ body { font-size: 18px; }
 /* ── Mobilon ── */
 @media (max-width: 1023px) {
   .portfolio-filter-bar--sticky {
-    top: 54px;
+    top: var(--navbar-height);
     padding: 0.7rem 1.5rem;
     justify-content: flex-start;
   }
@@ -2698,7 +2704,7 @@ body { font-size: 18px; }
 
 @media (max-width: 767px) {
   .portfolio-filter-bar--sticky {
-    top: 50px;
+    top: var(--navbar-height);
     padding: 0.6rem 1rem;
   }
   .portfolio-filters { gap: 0.6rem; }

@@ -3,8 +3,14 @@ import { useLang } from '../LangContext'
 import { usePortfolio, useCategories, useSiteContent } from '../hooks'
 import MediaModal from './MediaModal'
 
-// Navbar magassága – igazítsd ha változik
-const NAVBAR_H = 60
+// Navbar magassága – a CSS --navbar-height változóból olvassuk
+// Így mindig szinkronban van a CSS-sel, nem kell kézzel igazítani
+const getNavbarH = () => {
+  const val = getComputedStyle(document.documentElement)
+    .getPropertyValue('--navbar-height')
+    .trim()
+  return parseInt(val) || 81
+}
 
 export default function Portfolio() {
   const [active,   setActive]   = useState('all')
@@ -66,10 +72,11 @@ export default function Portfolio() {
       // navbar alatti pont ahol a sticky-nek be kellene kapcsolnia
       // = section top + portfolio-header magassága
       // Egyszerűbb: sticky ON ha a section teteje a navbar alá kerül
-      const sectionTopUnderNav = sectionRect.top - NAVBAR_H
+      const navH = getNavbarH()
+      const sectionTopUnderNav = sectionRect.top - navH
 
       // Section alja – ha ez a navbar alá kerül, a sticky-nek ki kell kapcsolni
-      const sectionBottomUnderNav = sectionRect.bottom - NAVBAR_H - filterBarH.current
+      const sectionBottomUnderNav = sectionRect.bottom - navH - filterBarH.current
 
       if (sectionTopUnderNav < 0 && sectionBottomUnderNav > 0) {
         // A section látható, a teteje már a navbar alatt → sticky ON
@@ -148,9 +155,9 @@ export default function Portfolio() {
               ))}
             </div>
             {/* Grid mód chip – csak vizuális jelző, nem kattintható */}
-            {/* {currentMode === 'ratio' && (
+            {currentMode === 'ratio' && (
               <span className="port-mode-chip-solo">FixRatio</span>
-            )} */}
+            )}
           </div>
 
           {/* Grid */}
