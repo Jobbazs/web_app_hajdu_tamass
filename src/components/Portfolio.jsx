@@ -3,6 +3,9 @@ import { useLang } from '../LangContext'
 import { usePortfolio, useCategories, useSiteContent } from '../hooks'
 import MediaModal from './MediaModal'
 
+// Navbar magassága – igazítsd ha változik
+const NAVBAR_H = 60
+
 export default function Portfolio() {
   const [active,   setActive]   = useState('all')
   const [selected, setSelected] = useState(null)
@@ -10,8 +13,8 @@ export default function Portfolio() {
 
   const sectionRef   = useRef(null)
   const filterBarRef = useRef(null)
-  const sentinelRef  = useRef(null)
-  const bottomRef    = useRef(null)
+  // filterBarHeight: az eredeti filter sáv magassága (placeholder-hez kell)
+  const filterBarH   = useRef(48)
 
   const { lang, t }                         = useLang()
   const { items, loading }                  = usePortfolio()
@@ -20,7 +23,6 @@ export default function Portfolio() {
 
   const f = t.portfolio.filters
 
-  // Filter lista Supabase kategóriákból
   const FILTERS = [
     { key: 'all', label: f.all },
     ...categories.map(c => ({
@@ -29,48 +31,47 @@ export default function Portfolio() {
     })),
   ]
 
-  // Grid mód per-filter – CMS-ből jön, fallback 'flex'
-  // Kulcs: portfolio_grid_mode_all, portfolio_grid_mode_event, stb.
   const getMode = (filterKey) =>
     content[`portfolio_grid_mode_${filterKey}`] || 'flex'
-
   const currentMode = getMode(active)
 
-  // ── Sticky logika ────────────────────────────────────────
-  // sentinelRef: a filter bar eredeti helye (ha eltűnik → sticky ON)
-  // bottomRef:   a section aljának jelzője (ha eltűnik → sticky OFF)
+  // ── Sticky logika scroll alapon ──────────────────────────
+  // A filter sáv sticky legyen amíg a section látható,
+  // de NE ragadjon a section alá, és NE legyen sticky a section felett.
   useEffect(() => {
-    const sentinel = sentinelRef.current
-    const bottom   = bottomRef.current
-    if (!sentinel || !bottom) return
+    const handleScroll = () => {
+      const section    = sectionRef.current
+      const filterBar  = filterBarRef.current
+      if (!section || !filterBar) return
 
-    // Filter bar eltűnt a viewportból → sticky ON
-    const topObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) setIsSticky(true)
-        else setIsSticky(false)
-      },
-      { threshold: 0, rootMargin: '-64px 0px 0px 0px' }
-    )
+      // Aktuális magasság mentése (responsive változhat)
+      if (!isSticky) filterBarH.current = filterBar.offsetHeight
 
-    // Section alja eltűnt a viewportból alulra → sticky OFF
-    const bottomObserver = new IntersectionObserver(
-      ([entry]) => {
-        // Ha a section alja már nem látható (feljebb görgettünk) → ne legyen sticky
-        if (!entry.isIntersecting && entry.boundingClientRect.top > 0) {
-          setIsSticky(false)
-        }
-      },
-      { threshold: 0 }
-    )
+      const sectionRect = section.getBoundingClientRect()
 
-    topObserver.observe(sentinel)
-    bottomObserver.observe(bottom)
-    return () => {
-      topObserver.disconnect()
-      bottomObserver.disconnect()
+      // A filter bar eredeti pozíciója a section-ön belül:
+      // navbar alatti pont ahol a sticky-nek be kellene kapcsolnia
+      // = section top + portfolio-header magassága
+      // Egyszerűbb: sticky ON ha a section teteje a navbar alá kerül
+      const sectionTopUnderNav = sectionRect.top - NAVBAR_H
+
+      // Section alja – ha ez a navbar alá kerül, a sticky-nek ki kell kapcsolni
+      const sectionBottomUnderNav = sectionRect.bottom - NAVBAR_H - filterBarH.current
+
+      if (sectionTopUnderNav < 0 && sectionBottomUnderNav > 0) {
+        // A section látható, a teteje már a navbar alatt → sticky ON
+        setIsSticky(true)
+      } else {
+        // Section felett vagyunk VAGY section alján túl vagyunk → sticky OFF
+        setIsSticky(false)
+      }
     }
-  }, [])
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    // Azonnal lefuttatjuk hogy az oldalra navigálásnál is helyes legyen
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [isSticky])
 
   // Normalizálás
   const normalized = items.map(item => ({
@@ -103,7 +104,7 @@ export default function Portfolio() {
       <section id="portfolio" ref={sectionRef}>
         <div className="container">
 
-          {/* Header */}
+          {/* Portfolio cím – sticky filter FELETT, ez nem sticky */}
           <div className="portfolio-header">
             <div>
               <div className="section-label">{t.portfolio.label}</div>
@@ -111,8 +112,11 @@ export default function Portfolio() {
             </div>
           </div>
 
-          {/* Sentinel – itt van a filter bar eredeti helye */}
-          <div ref={sentinelRef} style={{ height: 1, marginBottom: 0 }} />
+          {/* Placeholder – csak sticky módban veszi fel a filter sáv magasságát,
+              hogy a grid ne ugorjon fel amikor a filter sáv kikerül a flow-ból */}
+          {isSticky && (
+            <div style={{ height: filterBarH.current, display: 'block' }} />
+          )}
 
           {/* Filter sáv */}
           <div
@@ -130,20 +134,11 @@ export default function Portfolio() {
                 </button>
               ))}
             </div>
-
-            {/* Grid mód jelző – csak olvasható, CMS-ben állítható */}
-            <div className="port-mode-indicator">
-              <span className={`port-mode-chip ${currentMode === 'flex' ? 'active' : ''}`}>
-                FlexiGrid
-              </span>
-              <span className={`port-mode-chip ${currentMode === 'ratio' ? 'active' : ''}`}>
-                FixRatio
-              </span>
-            </div>
+            {/* Grid mód chip – csak vizuális jelző, nem kattintható */}
+            {currentMode === 'ratio' && (
+              <span className="port-mode-chip-solo">FixRatio</span>
+            )}
           </div>
-
-          {/* Placeholder – megakadályozza hogy a grid feljebb ugorjon sticky-nél */}
-          {isSticky && <div style={{ height: 48 }} />}
 
           {/* Grid */}
           {loading || catLoading ? (
@@ -204,9 +199,6 @@ export default function Portfolio() {
               })}
             </div>
           )}
-
-          {/* Bottom sentinel – sticky megáll itt */}
-          <div ref={bottomRef} style={{ height: 1 }} />
 
         </div>
       </section>

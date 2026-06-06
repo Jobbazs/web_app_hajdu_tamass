@@ -80,29 +80,25 @@ const EMPTY_SECTION = {
   fields:       [],
 }
 
-// ── alignToStyle – helyes CSS a különböző igazításokhoz ──────────────────────
-// center-left: bal igazított szöveg, de a blokk maga max 70% szélességű és középre tolva
-// center-right: jobb igazított szöveg, de a blokk max 70% és középre tolva jobbról
-const alignToStyle = (align, isBlock = false) => {
-  if (isBlock) {
-    // Blokk szintű igazítás (a konténerre)
-    switch (align) {
-      case 'center':       return { display: 'flex', justifyContent: 'center' }
-      case 'center-left':  return { display: 'flex', justifyContent: 'flex-start', paddingLeft: '15%' }
-      case 'center-right': return { display: 'flex', justifyContent: 'flex-end',   paddingRight: '15%' }
-      case 'right':        return { display: 'flex', justifyContent: 'flex-end' }
-      default:             return { display: 'flex', justifyContent: 'flex-start' }
-    }
-  }
-  // Szöveg igazítás (a tartalomra)
+// ── blockStyle – azonos logika mint CustomSections.jsx ──────────────────────
+// center-left:  25%-tól indul jobbra, bal igazítás  (marginLeft:25%, width:75%)
+// center-right: 0%-tól 75%-ig, jobb igazítás         (marginRight:25%, width:75%)
+const blockStyle = (align) => {
   switch (align) {
-    case 'center':       return { textAlign: 'center', width: '100%' }
-    case 'center-left':  return { textAlign: 'left',   width: '100%' }
-    case 'center-right': return { textAlign: 'right',  width: '100%' }
-    case 'right':        return { textAlign: 'right',  width: '100%' }
-    default:             return { textAlign: 'left',   width: '100%' }
+    case 'center-left':
+      return { marginLeft:'25%', marginRight:'0',    textAlign:'left',   width:'75%', display:'block' }
+    case 'center-right':
+      return { marginLeft:'0',   marginRight:'25%',  textAlign:'right',  width:'75%', display:'block' }
+    case 'center':
+      return { marginLeft:'auto', marginRight:'auto', textAlign:'center', width:'100%', display:'block' }
+    case 'right':
+      return { marginLeft:'auto', marginRight:'0',   textAlign:'right',  width:'100%', display:'block' }
+    default:
+      return { marginLeft:'0',   marginRight:'auto', textAlign:'left',   width:'100%', display:'block' }
   }
 }
+// Alias a régi névhez hogy ne kelljen mindenhol átírni
+const alignToStyle = (align) => blockStyle(align)
 
 // ── AlignPicker ──────────────────────────────────────────────
 function AlignPicker({ value, onChange }) {
@@ -146,38 +142,39 @@ function SectionPreview({ form }) {
 
   return (
     <div className="acms-sect-live-preview">
-      {/* Cím blokk */}
-      {(form.title_hu) && (
-        <div style={{ ...alignToStyle(form.title_align, true), marginBottom: '0.8rem' }}>
-          <div className="acms-sect-preview-title" style={{ ...alignToStyle(form.title_align), fontSize }}>
-            {form.title_hu}
-          </div>
+      {/* Cím */}
+      {form.title_hu && (
+        <div className="acms-sect-preview-title" style={{
+          ...blockStyle(form.title_align),
+          fontSize,
+          marginBottom: '1.4rem',
+        }}>
+          {form.title_hu}
         </div>
       )}
 
-      {/* Body blokk */}
-      <div style={alignToStyle(form.body_align, true)}>
-        <div className="acms-sect-preview-body" style={{
-          ...alignToStyle(form.body_align),
-          lineHeight: form.line_height,
-          fontSize,
-          whiteSpace: 'pre-wrap',
-        }}>
-          {renderText(form.body_hu)}
-        </div>
+      {/* Body */}
+      <div className="acms-sect-preview-body" style={{
+        ...blockStyle(form.body_align),
+        lineHeight: form.line_height,
+        fontSize,
+        whiteSpace: 'pre-wrap',
+      }}>
+        {renderText(form.body_hu)}
       </div>
 
       {/* Extra mezők */}
       {form.fields.length > 0 && (
         <div className="acms-sect-preview-fields" style={{ marginTop: '1rem' }}>
           {form.fields.map((f, i) => f.value && (
-            <div key={i} style={{ ...alignToStyle(f.align || form.body_align, true), marginBottom: '0.3rem' }}>
-              <div style={alignToStyle(f.align || form.body_align)} className="acms-sect-preview-field">
-                {f.label_hu && <span className="acms-sect-field-label">{f.label_hu}:&nbsp;</span>}
-                <span className="acms-sect-field-value" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                  {f.value}
-                </span>
-              </div>
+            <div key={i} className="acms-sect-preview-field" style={{
+              ...blockStyle(f.align || form.body_align),
+              marginBottom: '0.3rem',
+            }}>
+              {f.label_hu && <span className="acms-sect-field-label">{f.label_hu}:&nbsp;</span>}
+              <span className="acms-sect-field-value" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                {f.value}
+              </span>
             </div>
           ))}
         </div>

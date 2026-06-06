@@ -7,25 +7,52 @@ const FONT_SIZE_MAP = {
   large:  'clamp(1.15rem, 2.5vw, 1.4rem)',
 }
 
-// Wrapper konténer igazítása (justify-content)
-const wrapperStyle = (align) => {
-  switch (align) {
-    case 'center':       return { display: 'flex', justifyContent: 'center' }
-    case 'center-left':  return { display: 'flex', justifyContent: 'flex-start', paddingLeft:  'clamp(0px, 15%, 180px)' }
-    case 'center-right': return { display: 'flex', justifyContent: 'flex-end',   paddingRight: 'clamp(0px, 15%, 180px)' }
-    case 'right':        return { display: 'flex', justifyContent: 'flex-end' }
-    default:             return { display: 'block' }
-  }
-}
+/*
+  Igazítási logika – egyetlen blokk, margin + textAlign:
 
-// Szöveg igazítása a tartalmon belül
-const textStyle = (align) => {
+  left:         teljes szélesség, bal igazítás
+  center-left:  25%-tól 100%-ig, bal igazítás  (marginLeft: 25%)
+  center:       teljes szélesség, közép igazítás
+  center-right: 0%-tól 75%-ig, jobb igazítás   (marginRight: 25%)
+  right:        teljes szélesség, jobb igazítás
+*/
+const blockStyle = (align) => {
   switch (align) {
-    case 'center':       return { textAlign: 'center' }
-    case 'center-left':  return { textAlign: 'left' }
-    case 'center-right': return { textAlign: 'right' }
-    case 'right':        return { textAlign: 'right' }
-    default:             return { textAlign: 'left' }
+    case 'center-left':
+      return {
+        marginLeft:  '25%',
+        marginRight: '0',
+        textAlign:   'left',
+        width:       '75%',
+      }
+    case 'center-right':
+      return {
+        marginLeft:  '0',
+        marginRight: '25%',
+        textAlign:   'right',
+        width:       '75%',
+      }
+    case 'center':
+      return {
+        marginLeft:  'auto',
+        marginRight: 'auto',
+        textAlign:   'center',
+        width:       '100%',
+      }
+    case 'right':
+      return {
+        marginLeft:  'auto',
+        marginRight: '0',
+        textAlign:   'right',
+        width:       '100%',
+      }
+    default: // left
+      return {
+        marginLeft:  '0',
+        marginRight: 'auto',
+        textAlign:   'left',
+        width:       '100%',
+      }
   }
 }
 
@@ -56,54 +83,69 @@ export default function CustomSections() {
         const bodyAlign  = s.body_align  || s.align || 'left'
         const fields     = Array.isArray(s.fields) ? s.fields : []
 
+        const titleBlock = blockStyle(titleAlign)
+        const bodyBlock  = blockStyle(bodyAlign)
+
         return (
           <section key={s.id} className="custom-section">
             <div className="container">
 
-              {/* Cím */}
+              {/* Cím – saját blokk igazítással */}
               {title && (
-                <div style={wrapperStyle(titleAlign)}>
-                  <h2 className="custom-section-title" style={{ ...textStyle(titleAlign), fontSize }}>
-                    {title}
-                  </h2>
-                </div>
+                <h2
+                  className="custom-section-title"
+                  style={{
+                    ...titleBlock,
+                    fontSize,
+                    display: 'block',
+                    marginBottom: '1.4rem',   /* ~5 szóköz */
+                  }}
+                >
+                  {title}
+                </h2>
               )}
 
-              {/* Body */}
+              {/* Body – saját blokk igazítással */}
               {body && (
-                <div style={wrapperStyle(bodyAlign)}>
-                  <div
-                    className="custom-section-body"
-                    style={{
-                      ...textStyle(bodyAlign),
-                      lineHeight:  s.line_height || '1.75',
-                      fontSize,
-                      whiteSpace:  'pre-wrap',
-                    }}
-                  >
-                    <PreservedText text={body} />
-                  </div>
+                <div
+                  className="custom-section-body"
+                  style={{
+                    ...bodyBlock,
+                    lineHeight: s.line_height || '1.75',
+                    fontSize,
+                    whiteSpace: 'pre-wrap',
+                    display:    'block',
+                  }}
+                >
+                  <PreservedText text={body} />
                 </div>
               )}
 
-              {/* Extra mezők */}
+              {/* Extra mezők – minden mező saját igazítással */}
               {fields.length > 0 && (
                 <div className="custom-section-fields">
                   {fields.map((f, i) => {
-                    const label = lang === 'hu' ? f.label_hu : (f.label_en || f.label_hu)
+                    const label  = lang === 'hu' ? f.label_hu : (f.label_en || f.label_hu)
                     const fAlign = f.align || bodyAlign
                     if (!f.value) return null
                     return (
-                      <div key={f.key || i} style={wrapperStyle(fAlign)}>
-                        <div className="custom-section-field" style={textStyle(fAlign)}>
-                          {label && <span className="custom-section-field-label">{label}</span>}
-                          <span
-                            className="custom-section-field-value"
-                            style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
-                          >
-                            {f.value}
-                          </span>
-                        </div>
+                      <div
+                        key={f.key || i}
+                        className="custom-section-field"
+                        style={{
+                          ...blockStyle(fAlign),
+                          display: 'block',
+                        }}
+                      >
+                        {label && (
+                          <span className="custom-section-field-label">{label}</span>
+                        )}
+                        <span
+                          className="custom-section-field-value"
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                        >
+                          {f.value}
+                        </span>
                       </div>
                     )
                   })}
