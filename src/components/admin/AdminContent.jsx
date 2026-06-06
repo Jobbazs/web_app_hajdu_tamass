@@ -1,42 +1,50 @@
 import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
-import { useSiteContent, useCustomSections } from '../../hooks'
+import { useSiteContent, useAllCustomSections } from '../../hooks'
 
-// ── Rögzített szöveg csoportok ───────────────────────────────
+// ── Rögzített szöveg csoportok – most már igazítással és betűmérettel ───────
+// A site_content-ben minden mező egy key-value pár.
+// Az igazítás és betűméret beállításait külön key-ként tároljuk:
+// hero_line1_hu_align, hero_subtitle_hu_size, stb.
 const FIXED_GROUPS = [
   {
     id: 'hero', label: 'Hero szekció',
     fields: [
-      { key: 'hero_line1_hu',    label: 'Főcím 1. sor – Magyar',  type: 'text' },
-      { key: 'hero_line2_hu',    label: 'Főcím 2. sor – Magyar',  type: 'text' },
-      { key: 'hero_subtitle_hu', label: 'Alcím – Magyar',          type: 'textarea' },
-      { key: 'hero_cta_hu',      label: 'CTA gomb – Magyar',       type: 'text' },
-      { key: 'hero_line1_en',    label: 'Main title line 1 – EN',  type: 'text' },
-      { key: 'hero_line2_en',    label: 'Main title line 2 – EN',  type: 'text' },
-      { key: 'hero_subtitle_en', label: 'Subtitle – EN',           type: 'textarea' },
-      { key: 'hero_cta_en',      label: 'CTA button – EN',         type: 'text' },
+      { key: 'hero_line1_hu',    label: 'Főcím 1. sor – Magyar',  type: 'text',     hasAlign: true, hasSize: false },
+      { key: 'hero_line2_hu',    label: 'Főcím 2. sor – Magyar',  type: 'text',     hasAlign: true, hasSize: false },
+      { key: 'hero_subtitle_hu', label: 'Alcím – Magyar',          type: 'textarea', hasAlign: true, hasSize: true  },
+      { key: 'hero_cta_hu',      label: 'CTA gomb – Magyar',       type: 'text',     hasAlign: false, hasSize: false },
+      { key: 'hero_line1_en',    label: 'Main title line 1 – EN',  type: 'text',     hasAlign: true, hasSize: false },
+      { key: 'hero_line2_en',    label: 'Main title line 2 – EN',  type: 'text',     hasAlign: true, hasSize: false },
+      { key: 'hero_subtitle_en', label: 'Subtitle – EN',           type: 'textarea', hasAlign: true, hasSize: true  },
+      { key: 'hero_cta_en',      label: 'CTA button – EN',         type: 'text',     hasAlign: false, hasSize: false },
     ],
   },
   {
     id: 'about', label: 'Rólam szekció',
     fields: [
-      { key: 'about_bio1_hu', label: 'Bio 1. bekezdés – Magyar', type: 'textarea' },
-      { key: 'about_bio2_hu', label: 'Bio 2. bekezdés – Magyar', type: 'textarea' },
-      { key: 'about_bio3_hu', label: 'Bio 3. bekezdés – Magyar', type: 'textarea' },
-      { key: 'about_bio1_en', label: 'Bio paragraph 1 – EN',     type: 'textarea' },
-      { key: 'about_bio2_en', label: 'Bio paragraph 2 – EN',     type: 'textarea' },
-      { key: 'about_bio3_en', label: 'Bio paragraph 3 – EN',     type: 'textarea' },
+      { key: 'about_bio1_hu', label: 'Bio 1. bekezdés – Magyar', type: 'textarea', hasAlign: true, hasSize: true },
+      { key: 'about_bio2_hu', label: 'Bio 2. bekezdés – Magyar', type: 'textarea', hasAlign: true, hasSize: true },
+      { key: 'about_bio3_hu', label: 'Bio 3. bekezdés – Magyar', type: 'textarea', hasAlign: true, hasSize: true },
+      { key: 'about_bio1_en', label: 'Bio paragraph 1 – EN',     type: 'textarea', hasAlign: true, hasSize: true },
+      { key: 'about_bio2_en', label: 'Bio paragraph 2 – EN',     type: 'textarea', hasAlign: true, hasSize: true },
+      { key: 'about_bio3_en', label: 'Bio paragraph 3 – EN',     type: 'textarea', hasAlign: true, hasSize: true },
     ],
   },
 ]
 
-// ── Konstansok ───────────────────────────────────────────────
 const ALIGN_OPTIONS = [
   { value: 'left',         label: '← Bal' },
   { value: 'center-left',  label: '↖ Bal-közép' },
   { value: 'center',       label: '↔ Közép' },
-  { value: 'center-right', label: 'Jobb-közép ↗' },
+  { value: 'center-right', label: '↗ Jobb-közép' },
   { value: 'right',        label: 'Jobb →' },
+]
+
+const SIZE_OPTIONS = [
+  { value: 'small',  label: 'Kis' },
+  { value: 'normal', label: 'Normál' },
+  { value: 'large',  label: 'Nagy' },
 ]
 
 const LINE_HEIGHT_OPTIONS = [
@@ -64,39 +72,61 @@ const EMPTY_SECTION = {
   body_hu:  '', body_en:  '',
   title_align:  'left',
   body_align:   'left',
-  align:        'left',   // szekció default (fallback)
+  align:        'left',
   line_height:  '1.75',
   font_size:    'normal',
   visible:      true,
   sort_order:   0,
-  fields:       [],       // extra mezők tömbje
+  fields:       [],
 }
 
-// ── Segédfüggvény: align → CSS textAlign + margin ────────────
-const alignToStyle = (align) => {
+// ── alignToStyle – helyes CSS a különböző igazításokhoz ──────────────────────
+// center-left: bal igazított szöveg, de a blokk maga max 70% szélességű és középre tolva
+// center-right: jobb igazított szöveg, de a blokk max 70% és középre tolva jobbról
+const alignToStyle = (align, isBlock = false) => {
+  if (isBlock) {
+    // Blokk szintű igazítás (a konténerre)
+    switch (align) {
+      case 'center':       return { display: 'flex', justifyContent: 'center' }
+      case 'center-left':  return { display: 'flex', justifyContent: 'flex-start', paddingLeft: '15%' }
+      case 'center-right': return { display: 'flex', justifyContent: 'flex-end',   paddingRight: '15%' }
+      case 'right':        return { display: 'flex', justifyContent: 'flex-end' }
+      default:             return { display: 'flex', justifyContent: 'flex-start' }
+    }
+  }
+  // Szöveg igazítás (a tartalomra)
   switch (align) {
-    case 'center':       return { textAlign: 'center', marginLeft: 'auto', marginRight: 'auto' }
-    case 'center-left':  return { textAlign: 'left',   marginLeft: '0',    marginRight: 'auto', maxWidth: '75%' }
-    case 'center-right': return { textAlign: 'right',  marginLeft: 'auto', marginRight: '0',    maxWidth: '75%' }
-    case 'right':        return { textAlign: 'right',  marginLeft: 'auto', marginRight: '0' }
-    default:             return { textAlign: 'left' }
+    case 'center':       return { textAlign: 'center', width: '100%' }
+    case 'center-left':  return { textAlign: 'left',   width: '100%' }
+    case 'center-right': return { textAlign: 'right',  width: '100%' }
+    case 'right':        return { textAlign: 'right',  width: '100%' }
+    default:             return { textAlign: 'left',   width: '100%' }
   }
 }
 
-// ── AlignPicker – kis gombsor ────────────────────────────────
+// ── AlignPicker ──────────────────────────────────────────────
 function AlignPicker({ value, onChange }) {
   return (
     <div className="acms-align-picker">
       {ALIGN_OPTIONS.map(o => (
-        <button
-          key={o.value}
-          type="button"
+        <button key={o.value} type="button"
           className={`acms-align-btn ${value === o.value ? 'active' : ''}`}
-          onClick={() => onChange(o.value)}
-          title={o.label}
-        >
+          onClick={() => onChange(o.value)} title={o.label}>
           {o.label}
         </button>
+      ))}
+    </div>
+  )
+}
+
+// ── SizePicker ───────────────────────────────────────────────
+function SizePicker({ value, onChange }) {
+  return (
+    <div className="acms-align-picker">
+      {SIZE_OPTIONS.map(o => (
+        <button key={o.value} type="button"
+          className={`acms-align-btn ${value === o.value ? 'active' : ''}`}
+          onClick={() => onChange(o.value)}>{o.label}</button>
       ))}
     </div>
   )
@@ -107,7 +137,6 @@ function SectionPreview({ form }) {
   const fontSize = form.font_size === 'small' ? '0.9rem'
     : form.font_size === 'large' ? '1.2rem' : '1rem'
 
-  // Sortörések megőrzése
   const renderText = (text) =>
     text
       ? text.split('\n').map((line, i, arr) => (
@@ -117,40 +146,38 @@ function SectionPreview({ form }) {
 
   return (
     <div className="acms-sect-live-preview">
-      {/* Cím */}
-      {(form.title_hu || form.title_en) && (
-        <div
-          className="acms-sect-preview-title"
-          style={{ ...alignToStyle(form.title_align), fontSize }}
-        >
-          {form.title_hu || form.title_en || ''}
+      {/* Cím blokk */}
+      {(form.title_hu) && (
+        <div style={{ ...alignToStyle(form.title_align, true), marginBottom: '0.8rem' }}>
+          <div className="acms-sect-preview-title" style={{ ...alignToStyle(form.title_align), fontSize }}>
+            {form.title_hu}
+          </div>
         </div>
       )}
 
-      {/* Body */}
-      <div
-        className="acms-sect-preview-body"
-        style={{
+      {/* Body blokk */}
+      <div style={alignToStyle(form.body_align, true)}>
+        <div className="acms-sect-preview-body" style={{
           ...alignToStyle(form.body_align),
           lineHeight: form.line_height,
           fontSize,
-          whiteSpace: 'pre-wrap',   // ← sortörések megőrzése
-        }}
-      >
-        {renderText(form.body_hu)}
+          whiteSpace: 'pre-wrap',
+        }}>
+          {renderText(form.body_hu)}
+        </div>
       </div>
 
-      {/* Extra mezők előnézete */}
+      {/* Extra mezők */}
       {form.fields.length > 0 && (
-        <div className="acms-sect-preview-fields">
+        <div className="acms-sect-preview-fields" style={{ marginTop: '1rem' }}>
           {form.fields.map((f, i) => f.value && (
-            <div
-              key={i}
-              className="acms-sect-preview-field"
-              style={alignToStyle(f.align || form.body_align)}
-            >
-              {f.label_hu && <span className="acms-sect-field-label">{f.label_hu}:</span>}
-              <span className="acms-sect-field-value">{f.value}</span>
+            <div key={i} style={{ ...alignToStyle(f.align || form.body_align, true), marginBottom: '0.3rem' }}>
+              <div style={alignToStyle(f.align || form.body_align)} className="acms-sect-preview-field">
+                {f.label_hu && <span className="acms-sect-field-label">{f.label_hu}:&nbsp;</span>}
+                <span className="acms-sect-field-value" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                  {f.value}
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -161,15 +188,14 @@ function SectionPreview({ form }) {
 
 // ════════════════════════════════════════════════════════════
 export default function AdminContent() {
-  // ── Rögzített szövegek ───────────────────────────────────
   const { content, loading: contentLoading, refetch: refetchContent } = useSiteContent()
   const [edits,  setEdits]  = useState({})
   const [saving, setSaving] = useState(false)
   const [saved,  setSaved]  = useState(false)
   const [error,  setError]  = useState('')
 
-  // ── Custom sections ──────────────────────────────────────
-  const { sections, loading: sectLoading, refetch: refetchSections } = useCustomSections()
+  // useAllCustomSections – rejtett szekciók is látszanak az adminban
+  const { sections, loading: sectLoading, refetch: refetchSections } = useAllCustomSections()
   const [showSectForm, setShowSectForm] = useState(false)
   const [editingSect,  setEditingSect]  = useState(null)
   const [sectForm,     setSectForm]     = useState(EMPTY_SECTION)
@@ -178,10 +204,10 @@ export default function AdminContent() {
 
   const [tab, setTab] = useState('fixed')
 
-  // ── Rögzített szöveg ─────────────────────────────────────
-  const getValue = (key) => key in edits ? edits[key] : (content[key] || '')
-  const handleChange = (key, value) => { setSaved(false); setEdits(p => ({ ...p, [key]: value })) }
-  const hasChanges = Object.keys(edits).length > 0
+  // ── Rögzített szövegek ───────────────────────────────────
+  const getValue   = (key)        => key in edits ? edits[key] : (content[key] || '')
+  const handleChange = (key, val) => { setSaved(false); setEdits(p => ({ ...p, [key]: val })) }
+  const hasChanges   = Object.keys(edits).length > 0
 
   const handleSave = async () => {
     const keys = Object.keys(edits)
@@ -195,7 +221,7 @@ export default function AdminContent() {
     setSaving(false)
   }
 
-  // ── Section form kezelés ─────────────────────────────────
+  // ── Section kezelés ──────────────────────────────────────
   const openNewSect = () => {
     setEditingSect(null)
     setSectForm({ ...EMPTY_SECTION, sort_order: sections.length })
@@ -205,7 +231,6 @@ export default function AdminContent() {
 
   const openEditSect = (s) => {
     setEditingSect(s.id)
-    // Minden mezo betöltése – ha az oszlop még nem létezik a DB-ben, fallback
     setSectForm({
       title_hu:    s.title_hu    || '',
       title_en:    s.title_en    || '',
@@ -217,8 +242,8 @@ export default function AdminContent() {
       line_height: s.line_height || '1.75',
       font_size:   s.font_size   || 'normal',
       visible:     s.visible     !== false,
-      sort_order:  s.sort_order  || 0,
-      fields:      Array.isArray(s.fields) ? s.fields : [],
+      sort_order:  s.sort_order  ?? 0,
+      fields:      Array.isArray(s.fields) ? JSON.parse(JSON.stringify(s.fields)) : [],
     })
     setSectError('')
     setShowSectForm(true)
@@ -229,11 +254,9 @@ export default function AdminContent() {
     setSectForm(p => ({ ...p, [name]: type === 'checkbox' ? checked : value }))
   }
 
-  const setAlign = (field, value) => {
-    setSectForm(p => ({ ...p, [field]: value }))
-  }
+  const setAlign = (field, value) => setSectForm(p => ({ ...p, [field]: value }))
 
-  // ── Extra mezők ──────────────────────────────────────────
+  // Extra mezők
   const addField = () => {
     setSectForm(p => ({
       ...p,
@@ -246,8 +269,7 @@ export default function AdminContent() {
 
   const updateField = (idx, prop, val) => {
     setSectForm(p => {
-      const fields = [...p.fields]
-      fields[idx] = { ...fields[idx], [prop]: val }
+      const fields = p.fields.map((f, i) => i === idx ? { ...f, [prop]: val } : f)
       return { ...p, fields }
     })
   }
@@ -256,7 +278,6 @@ export default function AdminContent() {
     setSectForm(p => ({ ...p, fields: p.fields.filter((_, i) => i !== idx) }))
   }
 
-  // ── Mentés ───────────────────────────────────────────────
   const handleSectSave = async (e) => {
     e.preventDefault()
     if (!sectForm.body_hu.trim() && !sectForm.title_hu.trim()) {
@@ -302,7 +323,6 @@ export default function AdminContent() {
         )}
       </div>
 
-      {/* Sub-tabok */}
       <div className="acms-subtabs">
         <button className={`acms-subtab ${tab === 'fixed' ? 'active' : ''}`} onClick={() => setTab('fixed')}>
           Hero & Rólam
@@ -312,18 +332,23 @@ export default function AdminContent() {
         </button>
       </div>
 
-      {/* ── RÖGZÍTETT SZÖVEGEK ─────────────────────────────── */}
+      {/* ── RÖGZÍTETT SZÖVEGEK ── */}
       {tab === 'fixed' && (
         <>
           {error && <div className="acms-error" style={{ marginBottom: '1rem' }}>{error}</div>}
           {saved && !hasChanges && <div className="acms-success" style={{ marginBottom: '1rem' }}>✓ Mentve</div>}
+
+          <div className="acms-fixed-hint">
+            Igazítás és betűméret beállítások: minden szöveg alatt megjelenik az igazítás gombsor.
+            A változás az oldalon azonnal látható mentés után.
+          </div>
 
           {contentLoading ? <div className="admin-empty">Betöltés...</div> : FIXED_GROUPS.map(group => (
             <div key={group.id} className="acms-content-group">
               <div className="acms-content-group-label">{group.label}</div>
               <div className="acms-content-fields">
                 {group.fields.map(field => (
-                  <div key={field.key} className="acms-form-group">
+                  <div key={field.key} className="acms-form-group acms-fixed-field">
                     <label>
                       {field.label}
                       {edits[field.key] !== undefined && (
@@ -339,6 +364,26 @@ export default function AdminContent() {
                       <input type="text" className="acms-input"
                         value={getValue(field.key)}
                         onChange={e => handleChange(field.key, e.target.value)} />
+                    )}
+                    {/* Igazítás */}
+                    {field.hasAlign && (
+                      <div className="acms-field-options">
+                        <span className="acms-field-opt-label">Igazítás:</span>
+                        <AlignPicker
+                          value={getValue(field.key + '_align') || 'left'}
+                          onChange={v => handleChange(field.key + '_align', v)}
+                        />
+                      </div>
+                    )}
+                    {/* Betűméret */}
+                    {field.hasSize && (
+                      <div className="acms-field-options">
+                        <span className="acms-field-opt-label">Betűméret:</span>
+                        <SizePicker
+                          value={getValue(field.key + '_size') || 'normal'}
+                          onChange={v => handleChange(field.key + '_size', v)}
+                        />
+                      </div>
                     )}
                   </div>
                 ))}
@@ -356,14 +401,13 @@ export default function AdminContent() {
         </>
       )}
 
-      {/* ── EGYEDI SZEKCIÓK LISTA ───────────────────────────── */}
+      {/* ── EGYEDI SZEKCIÓK LISTA ── */}
       {tab === 'sections' && (
         <>
           {sectLoading ? <div className="admin-empty">Betöltés...</div>
           : sections.length === 0 ? (
             <div className="admin-empty">
-              Még nincs egyedi szekció.
-              <br /><br />
+              Még nincs egyedi szekció.<br /><br />
               <span style={{ fontSize: '0.85rem', opacity: 0.6 }}>
                 A szekciók a Szolgáltatások és Kapcsolat között jelennek meg, megadott sorrendben.
               </span>
@@ -371,30 +415,32 @@ export default function AdminContent() {
           ) : (
             <div className="acms-sect-list">
               {sections.map(s => (
-                <div key={s.id} className={`acms-sect-item ${!s.visible ? 'acms-hidden' : ''}`}>
+                <div key={s.id} className="acms-sect-item">
+                  {/* Status badge */}
+                  <div className="acms-sect-status">
+                    <span className={`acms-status-badge ${s.visible ? 'acms-status-visible' : 'acms-status-hidden'}`}>
+                      {s.visible ? 'Látható' : 'Elrejtett'}
+                    </span>
+                  </div>
+
                   <div className="acms-sect-preview">
-                    {/* Mini előnézet a listában */}
-                    <div
-                      className="acms-sect-preview-text"
-                      style={{
-                        textAlign: (s.body_align || s.align || 'left').replace('center-left','left').replace('center-right','right'),
-                        lineHeight: s.line_height || '1.75',
-                        fontSize: s.font_size === 'small' ? '0.82rem' : s.font_size === 'large' ? '1rem' : '0.9rem',
-                        whiteSpace: 'pre-wrap',
-                      }}
-                    >
+                    <div className="acms-sect-preview-text" style={{
+                      lineHeight: s.line_height || '1.75',
+                      fontSize: s.font_size === 'small' ? '0.82rem' : s.font_size === 'large' ? '1rem' : '0.9rem',
+                      whiteSpace: 'pre-wrap',
+                    }}>
                       {s.title_hu && <strong style={{ display: 'block', marginBottom: '0.3rem' }}>{s.title_hu}</strong>}
                       {(s.body_hu || '').slice(0, 120)}{(s.body_hu || '').length > 120 ? '…' : ''}
                     </div>
                     <div className="acms-sect-meta">
-                      <span className="acms-tag">cím: {ALIGN_OPTIONS.find(a => a.value === (s.title_align || s.align))?.label || '←'}</span>
-                      <span className="acms-tag">szöveg: {ALIGN_OPTIONS.find(a => a.value === (s.body_align || s.align))?.label || '←'}</span>
+                      <span className="acms-tag">cím: {ALIGN_OPTIONS.find(a => a.value === (s.title_align || 'left'))?.label}</span>
+                      <span className="acms-tag">szöveg: {ALIGN_OPTIONS.find(a => a.value === (s.body_align || 'left'))?.label}</span>
                       <span className="acms-tag">sorköz {s.line_height || '1.75'}</span>
                       <span className="acms-tag">{FONT_SIZE_OPTIONS.find(f => f.value === (s.font_size || 'normal'))?.label} betű</span>
                       {s.fields?.length > 0 && <span className="acms-tag">{s.fields.length} extra mező</span>}
-                      {!s.visible && <span className="acms-tag acms-tag--dim">rejtett</span>}
                     </div>
                   </div>
+
                   <div className="acms-list-actions">
                     <button className="acms-btn-sm" onClick={() => toggleSectVisible(s.id, s.visible)}>
                       {s.visible ? 'Elrejt' : 'Megjelenit'}
@@ -409,7 +455,7 @@ export default function AdminContent() {
         </>
       )}
 
-      {/* ── SECTION FORM MODAL ─────────────────────────────── */}
+      {/* ── SECTION FORM MODAL ── */}
       {showSectForm && (
         <div className="acms-modal-backdrop" onClick={() => setShowSectForm(false)}>
           <div className="acms-modal acms-modal--wide" onClick={e => e.stopPropagation()}>
@@ -419,8 +465,7 @@ export default function AdminContent() {
             </div>
 
             <form onSubmit={handleSectSave} className="acms-form">
-
-              {/* ── Globális beállítások ── */}
+              {/* Globális */}
               <div className="acms-form-divider">Globális beállítások</div>
               <div className="acms-form-row acms-form-row--3">
                 <div className="acms-form-group">
@@ -436,11 +481,10 @@ export default function AdminContent() {
                   </select>
                 </div>
                 <div className="acms-form-group">
-                  <label>Sorrend az oldalon</label>
+                  <label>Sorrend</label>
                   <input name="sort_order" type="number" className="acms-input" value={sectForm.sort_order} onChange={handleSectChange} min="0" />
                 </div>
               </div>
-
               <div className="acms-form-group acms-form-group--check">
                 <label>
                   <input name="visible" type="checkbox" checked={sectForm.visible} onChange={handleSectChange} />
@@ -448,9 +492,8 @@ export default function AdminContent() {
                 </label>
               </div>
 
-              {/* ── Magyar tartalom ── */}
+              {/* Magyar */}
               <div className="acms-form-divider">Magyar tartalom</div>
-
               <div className="acms-form-group">
                 <label>Cím igazítása</label>
                 <AlignPicker value={sectForm.title_align} onChange={v => setAlign('title_align', v)} />
@@ -459,7 +502,6 @@ export default function AdminContent() {
                 <label>Cím – Magyar (opcionális)</label>
                 <input name="title_hu" className="acms-input" value={sectForm.title_hu} onChange={handleSectChange} placeholder="pl. Díjak & elismerések" />
               </div>
-
               <div className="acms-form-group">
                 <label>Szöveg igazítása</label>
                 <AlignPicker value={sectForm.body_align} onChange={v => setAlign('body_align', v)} />
@@ -468,11 +510,11 @@ export default function AdminContent() {
                 <label>Szöveg – Magyar</label>
                 <textarea name="body_hu" className="acms-input acms-textarea acms-textarea--tall"
                   value={sectForm.body_hu} onChange={handleSectChange} rows={6}
-                  placeholder="Ide írd a szöveg tartalmát...&#10;(Enter = új sor az előnézetben is)" />
-                <span className="acms-hint">Enter gombbal új sort tudsz kezdeni – az előnézetben is megjelenik</span>
+                  placeholder="Ide írd a szöveg tartalmát...&#10;Enter = új sor" />
+                <span className="acms-hint">Enter = új sor az előnézetben és az oldalon is</span>
               </div>
 
-              {/* ── English tartalom ── */}
+              {/* English */}
               <div className="acms-form-divider">English content</div>
               <div className="acms-form-group">
                 <label>Title – English (optional)</label>
@@ -482,17 +524,17 @@ export default function AdminContent() {
                 <label>Body – English</label>
                 <textarea name="body_en" className="acms-input acms-textarea acms-textarea--tall"
                   value={sectForm.body_en} onChange={handleSectChange} rows={6}
-                  placeholder="English version of the text..." />
+                  placeholder="English version..." />
               </div>
 
-              {/* ── Extra mezők ── */}
+              {/* Extra mezők */}
               <div className="acms-form-divider">
                 Extra mezők
                 <span className="acms-hint" style={{ marginLeft: '0.6rem' }}>pl. Ár, Dátum, Helyszín</span>
               </div>
 
               {sectForm.fields.map((field, idx) => (
-                <div key={field.key} className="acms-extra-field">
+                <div key={field.key || idx} className="acms-extra-field">
                   <div className="acms-extra-field-header">
                     <span className="acms-extra-field-num">#{idx + 1}</span>
                     <button type="button" className="acms-btn-sm acms-btn-danger" onClick={() => removeField(idx)}>✕ Eltávolít</button>
@@ -501,14 +543,12 @@ export default function AdminContent() {
                     <div className="acms-form-group" style={{ flex: 1 }}>
                       <label>Magyar felirat</label>
                       <input className="acms-input" value={field.label_hu}
-                        onChange={e => updateField(idx, 'label_hu', e.target.value)}
-                        placeholder="pl. Ár" />
+                        onChange={e => updateField(idx, 'label_hu', e.target.value)} placeholder="pl. Ár" />
                     </div>
                     <div className="acms-form-group" style={{ flex: 1 }}>
                       <label>English label</label>
                       <input className="acms-input" value={field.label_en}
-                        onChange={e => updateField(idx, 'label_en', e.target.value)}
-                        placeholder="e.g. Price" />
+                        onChange={e => updateField(idx, 'label_en', e.target.value)} placeholder="e.g. Price" />
                     </div>
                     <div className="acms-form-group" style={{ flex: 1 }}>
                       <label>Típus</label>
@@ -525,7 +565,10 @@ export default function AdminContent() {
                         <textarea className="acms-input acms-textarea" value={field.value}
                           onChange={e => updateField(idx, 'value', e.target.value)} rows={2} />
                       ) : (
-                        <input className="acms-input" type={field.type === 'number' ? 'number' : 'text'}
+                        <input
+                          className="acms-input"
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal' }}
+                          type={field.type === 'number' ? 'number' : 'text'}
                           value={field.value}
                           onChange={e => updateField(idx, 'value', e.target.value)}
                           placeholder="pl. 50.000 Ft-tól" />
@@ -533,7 +576,8 @@ export default function AdminContent() {
                     </div>
                     <div className="acms-form-group" style={{ flex: 3 }}>
                       <label>Igazítás</label>
-                      <AlignPicker value={field.align || sectForm.body_align}
+                      <AlignPicker
+                        value={field.align || sectForm.body_align}
                         onChange={v => updateField(idx, 'align', v)} />
                     </div>
                   </div>
@@ -544,7 +588,6 @@ export default function AdminContent() {
                 + Új mező hozzáadása
               </button>
 
-              {/* ── Élő előnézet ── */}
               <div className="acms-form-divider">Élő előnézet – Magyar</div>
               <SectionPreview form={sectForm} />
 
