@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { usePortfolio, useCategories, useSiteContent } from '../../hooks'
 
@@ -10,28 +10,44 @@ const EMPTY_ITEM = {
 const EMPTY_CAT = { slug: '', label_hu: '', label_en: '', sort_order: 0 }
 const SPANS = ['large', 'medium', 'small']
 
-// Grid mód chip – FlexiGrid / FixRatio
-function GridModeSwitch({ filterKey, currentMode, onSave, saving }) {
+// Kategória beállítások – Grid mód + Limit
+function CategorySettings({ filterKey, currentMode, currentLimit, defaultLimit, onSaveMode, onSaveLimit, saving }) {
+  const [limitVal, setLimitVal] = useState(String(currentLimit))
+
+  const handleLimitBlur = () => {
+    const n = parseInt(limitVal)
+    if (!isNaN(n) && n > 0 && n !== currentLimit) onSaveLimit(filterKey, n)
+  }
+
   return (
-    <div className="acms-grid-mode-switch">
-      <span className="acms-grid-mode-label">Grid nézet:</span>
-      <div className="port-mode-wrap">
-        <button
-          type="button"
-          className={`port-mode-btn ${currentMode === 'flex' ? 'active' : ''}`}
-          onClick={() => onSave(filterKey, 'flex')}
-          disabled={saving}
-        >
-          FlexiGrid
-        </button>
-        <button
-          type="button"
-          className={`port-mode-btn ${currentMode === 'ratio' ? 'active' : ''}`}
-          onClick={() => onSave(filterKey, 'ratio')}
-          disabled={saving}
-        >
-          FixRatio
-        </button>
+    <div className="acms-cat-settings">
+      <div className="acms-grid-mode-switch">
+        <span className="acms-grid-mode-label">Nézet:</span>
+        <div className="port-mode-wrap">
+          <button type="button"
+            className={`port-mode-btn ${currentMode === 'flex' ? 'active' : ''}`}
+            onClick={() => onSaveMode(filterKey, 'flex')} disabled={saving}>
+            FlexiGrid
+          </button>
+          <button type="button"
+            className={`port-mode-btn ${currentMode === 'ratio' ? 'active' : ''}`}
+            onClick={() => onSaveMode(filterKey, 'ratio')} disabled={saving}>
+            FixRatio
+          </button>
+        </div>
+      </div>
+      <div className="acms-limit-wrap">
+        <span className="acms-grid-mode-label">Max képek:</span>
+        <input
+          type="number"
+          className="acms-input acms-input--sm acms-input--num"
+          value={limitVal}
+          min="1" max="100"
+          onChange={e => setLimitVal(e.target.value)}
+          onBlur={handleLimitBlur}
+          title={`Alapértelmezett: ${defaultLimit}`}
+        />
+        <span className="acms-hint">db</span>
       </div>
       {saving && <span className="acms-hint">Mentés...</span>}
     </div>
@@ -65,16 +81,27 @@ export default function AdminPortfolio() {
   const getMode = (filterKey) =>
     content[`portfolio_grid_mode_${filterKey}`] || 'flex'
 
-  // Grid mód mentése Supabase-be
+  // Grid mód mentése
   const saveMode = async (filterKey, mode) => {
     setModeSaving(true)
-    const key = `portfolio_grid_mode_${filterKey}`
-    await supabase
-      .from('site_content')
-      .upsert({ key, value: mode }, { onConflict: 'key' })
+    await supabase.from('site_content')
+      .upsert({ key: `portfolio_grid_mode_${filterKey}`, value: mode }, { onConflict: 'key' })
     await refetchContent()
     setModeSaving(false)
   }
+
+  // Limit mentése
+  const saveLimit = async (filterKey, limit) => {
+    setModeSaving(true)
+    await supabase.from('site_content')
+      .upsert({ key: `portfolio_limit_${filterKey}`, value: String(limit) }, { onConflict: 'key' })
+    await refetchContent()
+    setModeSaving(false)
+  }
+
+  // Limit olvasása
+  const getLimit = (filterKey) =>
+    parseInt(content[`portfolio_limit_${filterKey}`]) || (filterKey === 'all' ? 10 : 15)
 
   // ── Portfolio item műveletek ─────────────────────────────
   const openNew = () => {
@@ -184,10 +211,10 @@ export default function AdminPortfolio() {
 
   const getCatLabel = (id) => categories.find(c => c.id === id)?.label_hu || 'Ismeretlen'
 
-  // Grid módok listája: Mind + összes kategória
+  // Grid beállítások listája: Mind + összes kategória
   const gridFilterList = [
-    { key: 'all', label: 'Mind' },
-    ...categories.map(c => ({ key: c.slug, label: c.label_hu })),
+    { key: 'all', label: 'Mind', defaultLimit: 10 },
+    ...categories.map(c => ({ key: c.slug, label: c.label_hu, defaultLimit: 15 })),
   ]
 
   return (
@@ -218,16 +245,19 @@ export default function AdminPortfolio() {
             FlexiGrid: fix magasságú rácsos nézet. FixRatio: képarány megtartva, masonry elrendezés.
           </div>
           <div className="acms-gridmode-list">
-            {catLoading ? <div className="admin-empty">Betöltés...</div> : gridFilterList.map(({ key, label }) => (
-              <div key={key} className="acms-gridmode-item">
+            {catLoading ? <div className="admin-empty">Betöltés...</div> : gridFilterList.map((item) => (
+              <div key={item.key} className="acms-gridmode-item">
                 <div className="acms-gridmode-item-label">
                   <span className="acms-cat-slug">{key}</span>
                   <span className="acms-cat-label">{label}</span>
                 </div>
-                <GridModeSwitch
+                <CategorySettings
                   filterKey={key}
                   currentMode={getMode(key)}
-                  onSave={saveMode}
+                  currentLimit={getLimit(key)}
+                  defaultLimit={item.defaultLimit}
+                  onSaveMode={saveMode}
+                  onSaveLimit={saveLimit}
                   saving={modeSaving}
                 />
               </div>
