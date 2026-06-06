@@ -2374,7 +2374,7 @@ body { font-size: 18px; }
 
 .portfolio-filter-bar--sticky {
   position: fixed;
-  top: 60px; /* navbar magassága alatt */
+  top: 90px; /* navbar magassága alatt */
   left: 0;
   right: 0;
   padding: 0.8rem 2rem;
