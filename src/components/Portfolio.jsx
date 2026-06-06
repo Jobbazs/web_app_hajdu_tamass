@@ -155,9 +155,9 @@ export default function Portfolio() {
               ))}
             </div>
             {/* Grid mód chip – csak vizuális jelző, nem kattintható */}
-            {currentMode === 'ratio' && (
+            {/* {currentMode === 'ratio' && (
               <span className="port-mode-chip-solo">FixRatio</span>
-            )}
+            )} */}
           </div>
 
           {/* Grid */}
