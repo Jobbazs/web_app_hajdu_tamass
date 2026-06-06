@@ -31,6 +31,19 @@ export default function Portfolio() {
     })),
   ]
 
+  // Filter váltás – scroll pozíció rögzítve, nem ugrik sehova
+  const handleFilterClick = (key) => {
+    const scrollY = window.scrollY
+    setActive(key)
+    setSelected(null)
+    // Következő frame-ben visszaállítjuk – megakadályozza az ugrást
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: 'instant' })
+      })
+    })
+  }
+
   const getMode = (filterKey) =>
     content[`portfolio_grid_mode_${filterKey}`] || 'flex'
   const currentMode = getMode(active)
@@ -128,7 +141,7 @@ export default function Portfolio() {
                 <button
                   key={key}
                   className={`filter-btn ${active === key ? 'active' : ''}`}
-                  onClick={() => { setActive(key); setSelected(null) }}
+                  onClick={() => handleFilterClick(key)}
                 >
                   {label}
                 </button>
@@ -144,7 +157,9 @@ export default function Portfolio() {
           {loading || catLoading ? (
             <div className="port-loading">Betöltés...</div>
           ) : visible.length === 0 ? (
-            <div className="port-loading">Nincs elem ebben a kategóriában.</div>
+            <div className="port-empty">
+              <span>{lang === 'hu' ? 'Hamarosan feltöltöm a képeket.' : 'Photos coming soon.'}</span>
+            </div>
           ) : currentMode === 'ratio' ? (
             <div className="portfolio-ratio-grid">
               {visible.map(item => (

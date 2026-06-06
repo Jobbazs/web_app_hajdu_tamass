@@ -2704,3 +2704,21 @@ body { font-size: 18px; }
   .portfolio-filters { gap: 0.6rem; }
   .filter-btn { font-size: 0.68rem; padding: 0.3rem 0; }
 }
+
+/* ============================================================
+   PORTFOLIO – üres kategória placeholder
+   Fix magasság hogy ne ugorjon a layout
+   ============================================================ */
+.port-empty {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  opacity: 0.5;
+}
