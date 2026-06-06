@@ -1,29 +1,26 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useLang } from '../LangContext'
-import { usePortfolio, useCategories } from '../hooks'
+import { usePortfolio, useCategories, useSiteContent } from '../hooks'
 import MediaModal from './MediaModal'
 
-// Grid mód: 'flex' = eredeti grid fix magassággal, 'ratio' = képarány megtartva
-const GRID_MODES = {
-  flex:  { hu: 'FlexiGrid', en: 'FlexiGrid' },
-  ratio: { hu: 'FixRatio',  en: 'FixRatio'  },
-}
-
 export default function Portfolio() {
-  const [active,     setActive]     = useState('all')
-  const [selected,   setSelected]   = useState(null)
-  // gridMode: per-filter beállítás { all: 'flex', event: 'ratio', ... }
-  const [gridModes,  setGridModes]  = useState({})
-  const [showModeMenu, setShowModeMenu] = useState(false)
-  const filterRef = useRef(null)
-  const [isSticky, setIsSticky]     = useState(false)
+  const [active,   setActive]   = useState('all')
+  const [selected, setSelected] = useState(null)
+  const [isSticky, setIsSticky] = useState(false)
 
-  const { lang, t }                          = useLang()
-  const { items, loading }                   = usePortfolio()
-  const { categories, loading: catLoading }  = useCategories()
+  const sectionRef   = useRef(null)
+  const filterBarRef = useRef(null)
+  const sentinelRef  = useRef(null)
+  const bottomRef    = useRef(null)
+
+  const { lang, t }                         = useLang()
+  const { items, loading }                  = usePortfolio()
+  const { categories, loading: catLoading } = useCategories()
+  const { content }                         = useSiteContent()
+
   const f = t.portfolio.filters
 
-  // Filter lista
+  // Filter lista Supabase kategóriákból
   const FILTERS = [
     { key: 'all', label: f.all },
     ...categories.map(c => ({
@@ -32,32 +29,54 @@ export default function Portfolio() {
     })),
   ]
 
-  // Aktív grid mód az aktuális filterre
-  const currentMode = gridModes[active] || 'flex'
+  // Grid mód per-filter – CMS-ből jön, fallback 'flex'
+  // Kulcs: portfolio_grid_mode_all, portfolio_grid_mode_event, stb.
+  const getMode = (filterKey) =>
+    content[`portfolio_grid_mode_${filterKey}`] || 'flex'
 
-  const setModeForFilter = (filterKey, mode) => {
-    setGridModes(prev => ({ ...prev, [filterKey]: mode }))
-    setShowModeMenu(false)
-  }
+  const currentMode = getMode(active)
 
-  // Sticky filter figyelő
+  // ── Sticky logika ────────────────────────────────────────
+  // sentinelRef: a filter bar eredeti helye (ha eltűnik → sticky ON)
+  // bottomRef:   a section aljának jelzője (ha eltűnik → sticky OFF)
   useEffect(() => {
-    const sentinel = document.getElementById('portfolio-sentinel')
-    if (!sentinel) return
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsSticky(!entry.isIntersecting),
-      { threshold: 0, rootMargin: '-70px 0px 0px 0px' }
+    const sentinel = sentinelRef.current
+    const bottom   = bottomRef.current
+    if (!sentinel || !bottom) return
+
+    // Filter bar eltűnt a viewportból → sticky ON
+    const topObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) setIsSticky(true)
+        else setIsSticky(false)
+      },
+      { threshold: 0, rootMargin: '-64px 0px 0px 0px' }
     )
-    observer.observe(sentinel)
-    return () => observer.disconnect()
+
+    // Section alja eltűnt a viewportból alulra → sticky OFF
+    const bottomObserver = new IntersectionObserver(
+      ([entry]) => {
+        // Ha a section alja már nem látható (feljebb görgettünk) → ne legyen sticky
+        if (!entry.isIntersecting && entry.boundingClientRect.top > 0) {
+          setIsSticky(false)
+        }
+      },
+      { threshold: 0 }
+    )
+
+    topObserver.observe(sentinel)
+    bottomObserver.observe(bottom)
+    return () => {
+      topObserver.disconnect()
+      bottomObserver.disconnect()
+    }
   }, [])
 
-  // Kategória alapján szűrés – slug alapú matching
+  // Normalizálás
   const normalized = items.map(item => ({
     ...item,
     cloudinaryUrl: item.cloudinary_url,
     videoUrl:      item.video_url,
-    // category_slug: join-ból vagy direkt slug mező
     categorySlug:  item.portfolio_categories?.slug || item.category || '',
   }))
 
@@ -81,11 +100,8 @@ export default function Portfolio() {
 
   return (
     <>
-      <section id="portfolio">
+      <section id="portfolio" ref={sectionRef}>
         <div className="container">
-
-          {/* Sentinel – sticky érzékelő pont */}
-          <div id="portfolio-sentinel" style={{ height: 1 }} />
 
           {/* Header */}
           <div className="portfolio-header">
@@ -95,8 +111,14 @@ export default function Portfolio() {
             </div>
           </div>
 
-          {/* Filter sáv – sticky lesz görgetéskor */}
-          <div className={`portfolio-filter-bar ${isSticky ? 'portfolio-filter-bar--sticky' : ''}`} ref={filterRef}>
+          {/* Sentinel – itt van a filter bar eredeti helye */}
+          <div ref={sentinelRef} style={{ height: 1, marginBottom: 0 }} />
+
+          {/* Filter sáv */}
+          <div
+            ref={filterBarRef}
+            className={`portfolio-filter-bar ${isSticky ? 'portfolio-filter-bar--sticky' : ''}`}
+          >
             <div className="portfolio-filters">
               {FILTERS.map(({ key, label }) => (
                 <button
@@ -109,24 +131,19 @@ export default function Portfolio() {
               ))}
             </div>
 
-            {/* Grid mód kapcsoló */}
-            <div className="port-mode-wrap">
-              <button
-                className={`port-mode-btn ${currentMode === 'flex' ? 'active' : ''}`}
-                onClick={() => setModeForFilter(active, 'flex')}
-                title="FlexiGrid – fix magasságú rácsos nézet"
-              >
+            {/* Grid mód jelző – csak olvasható, CMS-ben állítható */}
+            <div className="port-mode-indicator">
+              <span className={`port-mode-chip ${currentMode === 'flex' ? 'active' : ''}`}>
                 FlexiGrid
-              </button>
-              <button
-                className={`port-mode-btn ${currentMode === 'ratio' ? 'active' : ''}`}
-                onClick={() => setModeForFilter(active, 'ratio')}
-                title="FixRatio – képarány megtartva"
-              >
+              </span>
+              <span className={`port-mode-chip ${currentMode === 'ratio' ? 'active' : ''}`}>
                 FixRatio
-              </button>
+              </span>
             </div>
           </div>
+
+          {/* Placeholder – megakadályozza hogy a grid feljebb ugorjon sticky-nél */}
+          {isSticky && <div style={{ height: 48 }} />}
 
           {/* Grid */}
           {loading || catLoading ? (
@@ -134,7 +151,6 @@ export default function Portfolio() {
           ) : visible.length === 0 ? (
             <div className="port-loading">Nincs elem ebben a kategóriában.</div>
           ) : currentMode === 'ratio' ? (
-            // ── FixRatio nézet: masonry-szerű, képarány megtartva ──
             <div className="portfolio-ratio-grid">
               {visible.map(item => (
                 <div
@@ -146,23 +162,18 @@ export default function Portfolio() {
                   onKeyDown={e => e.key === 'Enter' && setSelected(item)}
                 >
                   {item.cloudinaryUrl ? (
-                    <img
-                      src={item.cloudinaryUrl}
-                      alt={item.title}
-                      loading="lazy"
-                    />
+                    <img src={item.cloudinaryUrl} alt={item.title} loading="lazy" />
                   ) : (
                     <div className="port-placeholder">{item.title}</div>
                   )}
                   <div className="port-overlay">
                     <span className="port-label">{item.title}</span>
-                    {item.category === 'video' && <span className="port-play-icon">▶</span>}
+                    {item.categorySlug === 'video' && <span className="port-play-icon">▶</span>}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            // ── FlexiGrid nézet: eredeti 12-oszlopos grid ──
             <div className="portfolio-grid">
               {visible.map(item => {
                 const spanClass = {
@@ -170,7 +181,6 @@ export default function Portfolio() {
                   medium: 'port-item-medium',
                   small:  'port-item-small',
                 }[item.span] || 'port-item-medium'
-
                 return (
                   <div
                     key={item.id}
@@ -187,13 +197,17 @@ export default function Portfolio() {
                     )}
                     <div className="port-overlay">
                       <span className="port-label">{item.title}</span>
-                      {item.category === 'video' && <span className="port-play-icon">▶</span>}
+                      {item.categorySlug === 'video' && <span className="port-play-icon">▶</span>}
                     </div>
                   </div>
                 )
               })}
             </div>
           )}
+
+          {/* Bottom sentinel – sticky megáll itt */}
+          <div ref={bottomRef} style={{ height: 1 }} />
+
         </div>
       </section>
 

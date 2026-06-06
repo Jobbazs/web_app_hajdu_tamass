@@ -1,23 +1,47 @@
 import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
-import { usePortfolio, useCategories } from '../../hooks'
+import { usePortfolio, useCategories, useSiteContent } from '../../hooks'
 
 const EMPTY_ITEM = {
-  title: '',
-  category_id: '',
-  cloudinary_url: '',
-  video_url: '',
-  span: 'medium',
-  visible: true,
-  sort_order: 0,
+  title: '', category_id: '', cloudinary_url: '',
+  video_url: '', span: 'medium', visible: true, sort_order: 0,
 }
 
 const EMPTY_CAT = { slug: '', label_hu: '', label_en: '', sort_order: 0 }
 const SPANS = ['large', 'medium', 'small']
 
+// Grid mód chip – FlexiGrid / FixRatio
+function GridModeSwitch({ filterKey, currentMode, onSave, saving }) {
+  return (
+    <div className="acms-grid-mode-switch">
+      <span className="acms-grid-mode-label">Grid nézet:</span>
+      <div className="port-mode-wrap">
+        <button
+          type="button"
+          className={`port-mode-btn ${currentMode === 'flex' ? 'active' : ''}`}
+          onClick={() => onSave(filterKey, 'flex')}
+          disabled={saving}
+        >
+          FlexiGrid
+        </button>
+        <button
+          type="button"
+          className={`port-mode-btn ${currentMode === 'ratio' ? 'active' : ''}`}
+          onClick={() => onSave(filterKey, 'ratio')}
+          disabled={saving}
+        >
+          FixRatio
+        </button>
+      </div>
+      {saving && <span className="acms-hint">Mentés...</span>}
+    </div>
+  )
+}
+
 export default function AdminPortfolio() {
-  const { items,      loading,      refetch }         = usePortfolio()
-  const { categories, loading: catLoading, refetch: refetchCats } = useCategories()
+  const { items,      loading,      refetch }                        = usePortfolio()
+  const { categories, loading: catLoading, refetch: refetchCats }   = useCategories()
+  const { content,    refetch: refetchContent }                      = useSiteContent()
 
   // Portfolio item form
   const [showForm, setShowForm] = useState(false)
@@ -32,6 +56,25 @@ export default function AdminPortfolio() {
   const [catForm,    setCatForm]    = useState(EMPTY_CAT)
   const [catSaving,  setCatSaving]  = useState(false)
   const [catError,   setCatError]   = useState('')
+
+  // Grid mód panel
+  const [showGridModes, setShowGridModes] = useState(false)
+  const [modeSaving,    setModeSaving]    = useState(false)
+
+  // Grid mód olvasása a site_content-ből
+  const getMode = (filterKey) =>
+    content[`portfolio_grid_mode_${filterKey}`] || 'flex'
+
+  // Grid mód mentése Supabase-be
+  const saveMode = async (filterKey, mode) => {
+    setModeSaving(true)
+    const key = `portfolio_grid_mode_${filterKey}`
+    await supabase
+      .from('site_content')
+      .upsert({ key, value: mode }, { onConflict: 'key' })
+    await refetchContent()
+    setModeSaving(false)
+  }
 
   // ── Portfolio item műveletek ─────────────────────────────
   const openNew = () => {
@@ -100,71 +143,52 @@ export default function AdminPortfolio() {
   }
 
   // ── Kategória műveletek ──────────────────────────────────
-  const openNewCat = () => {
-    setEditingCat(null)
-    setCatForm(EMPTY_CAT)
-    setCatError('')
-  }
-
+  const openNewCat  = () => { setEditingCat(null); setCatForm(EMPTY_CAT); setCatError('') }
   const openEditCat = (cat) => {
     setEditingCat(cat.id)
     setCatForm({ slug: cat.slug, label_hu: cat.label_hu, label_en: cat.label_en, sort_order: cat.sort_order })
     setCatError('')
   }
-
-  const handleCatChange = (e) => {
-    setCatForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
-  }
+  const handleCatChange = (e) => setCatForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
 
   const handleCatSave = async (e) => {
     e.preventDefault()
     if (!catForm.slug.trim())     { setCatError('A slug kötelező.'); return }
     if (!catForm.label_hu.trim()) { setCatError('A magyar név kötelező.'); return }
     if (!catForm.label_en.trim()) { setCatError('Az angol név kötelező.'); return }
-    // slug csak betű, szám, kötőjel
     if (!/^[a-z0-9-]+$/.test(catForm.slug)) {
-      setCatError('Első mezőben csak kisbetűk, szám, ékezetmentes, és kötőjeles szavak lehetnek.'); return
+      setCatError('Slug: csak kisbetű, szám, kötőjel.'); return
     }
-
     setCatSaving(true); setCatError('')
     const payload = {
-      slug:       catForm.slug.trim(),
-      label_hu:   catForm.label_hu.trim(),
-      label_en:   catForm.label_en.trim(),
-      sort_order: parseInt(catForm.sort_order) || 0,
+      slug: catForm.slug.trim(), label_hu: catForm.label_hu.trim(),
+      label_en: catForm.label_en.trim(), sort_order: parseInt(catForm.sort_order) || 0,
     }
-
     const { error } = editingCat
       ? await supabase.from('portfolio_categories').update(payload).eq('id', editingCat)
       : await supabase.from('portfolio_categories').insert(payload)
-
     if (error) { setCatError('Hiba: ' + error.message); setCatSaving(false); return }
     await refetchCats()
-    setEditingCat(null)
-    setCatForm(EMPTY_CAT)
-    setCatSaving(false)
+    setEditingCat(null); setCatForm(EMPTY_CAT); setCatSaving(false)
   }
 
   const handleCatDelete = async (id, slug) => {
-    // Ellenőrzés: van-e elem ebben a kategóriában
-    const { data } = await supabase
-      .from('portfolio_items')
-      .select('id')
-      .eq('category_id', id)
-      .limit(1)
-
+    const { data } = await supabase.from('portfolio_items').select('id').eq('category_id', id).limit(1)
     if (data && data.length > 0) {
-      alert('Nem törölhető: vannak portfólió elemek ebben a kategóriában. Előbb helyezd át vagy töröld őket.')
-      return
+      alert('Nem törölhető: vannak portfólió elemek ebben a kategóriában.'); return
     }
     if (!window.confirm(`Törlöd a "${slug}" kategóriát?`)) return
     await supabase.from('portfolio_categories').delete().eq('id', id)
     await refetchCats()
   }
 
-  // Kategória label kereső
-  const getCatLabel = (id) =>
-  categories.find(c => c.id === id)?.label_hu || 'Ismeretlen'
+  const getCatLabel = (id) => categories.find(c => c.id === id)?.label_hu || 'Ismeretlen'
+
+  // Grid módok listája: Mind + összes kategória
+  const gridFilterList = [
+    { key: 'all', label: 'Mind' },
+    ...categories.map(c => ({ key: c.slug, label: c.label_hu })),
+  ]
 
   return (
     <div className="acms-section">
@@ -175,28 +199,55 @@ export default function AdminPortfolio() {
           <div className="acms-section-title">Portfólió elemek</div>
           <div className="acms-section-sub">{items.length} elem · {categories.length} kategória</div>
         </div>
-        <div style={{ display: 'flex', gap: '0.6rem' }}>
-          <button className="acms-btn-secondary" onClick={() => setShowCats(v => !v)}>
-            {showCats ? 'Elemek' : '⚙ Kategóriák'}
+        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <button className="acms-btn-secondary" onClick={() => { setShowGridModes(v => !v); setShowCats(false) }}>
+            {showGridModes ? '← Vissza' : '⊞ Grid nézetek'}
+          </button>
+          <button className="acms-btn-secondary" onClick={() => { setShowCats(v => !v); setShowGridModes(false) }}>
+            {showCats ? '← Vissza' : '⚙ Kategóriák'}
           </button>
           <button className="acms-btn-primary" onClick={openNew}>+ Új elem</button>
         </div>
       </div>
 
+      {/* ── GRID MÓDOK PANEL ── */}
+      {showGridModes && (
+        <div className="acms-cat-panel">
+          <div className="acms-cat-panel-title">Grid nézet beállítása kategóriánként</div>
+          <div className="acms-hint" style={{ marginBottom: '1.2rem' }}>
+            FlexiGrid: fix magasságú rácsos nézet. FixRatio: képarány megtartva, masonry elrendezés.
+          </div>
+          <div className="acms-gridmode-list">
+            {catLoading ? <div className="admin-empty">Betöltés...</div> : gridFilterList.map(({ key, label }) => (
+              <div key={key} className="acms-gridmode-item">
+                <div className="acms-gridmode-item-label">
+                  <span className="acms-cat-slug">{key}</span>
+                  <span className="acms-cat-label">{label}</span>
+                </div>
+                <GridModeSwitch
+                  filterKey={key}
+                  currentMode={getMode(key)}
+                  onSave={saveMode}
+                  saving={modeSaving}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── KATEGÓRIA KEZELŐ ── */}
       {showCats && (
         <div className="acms-cat-panel">
           <div className="acms-cat-panel-title">Kategóriák kezelése</div>
-
-          {/* Meglévő kategóriák */}
           <div className="acms-cat-list">
             {categories.map(cat => (
               <div key={cat.id} className="acms-cat-item">
                 {editingCat === cat.id ? (
                   <form onSubmit={handleCatSave} className="acms-cat-form">
-                    <input name="slug"     className="acms-input acms-input--sm" value={catForm.slug}     onChange={handleCatChange} placeholder="slug" />
-                    <input name="label_hu" className="acms-input acms-input--sm" value={catForm.label_hu} onChange={handleCatChange} placeholder="Magyar" />
-                    <input name="label_en" className="acms-input acms-input--sm" value={catForm.label_en} onChange={handleCatChange} placeholder="English" />
+                    <input name="slug"       className="acms-input acms-input--sm" value={catForm.slug}       onChange={handleCatChange} placeholder="slug" />
+                    <input name="label_hu"   className="acms-input acms-input--sm" value={catForm.label_hu}   onChange={handleCatChange} placeholder="Magyar" />
+                    <input name="label_en"   className="acms-input acms-input--sm" value={catForm.label_en}   onChange={handleCatChange} placeholder="English" />
                     <input name="sort_order" type="number" className="acms-input acms-input--sm acms-input--num" value={catForm.sort_order} onChange={handleCatChange} placeholder="0" />
                     {catError && <div className="acms-error acms-error--inline">{catError}</div>}
                     <button type="submit" className="acms-btn-sm" disabled={catSaving}>Ment</button>
@@ -215,14 +266,12 @@ export default function AdminPortfolio() {
               </div>
             ))}
           </div>
-
-          {/* Új kategória */}
           {editingCat === null && (
             <form onSubmit={handleCatSave} className="acms-cat-form acms-cat-form--new">
               <div className="acms-cat-form-label">+ Új kategória</div>
-              <input name="slug"     className="acms-input acms-input--sm" value={catForm.slug}     onChange={handleCatChange} placeholder="pl. wedding (csak a-z, 0-9, -)" />
-              <input name="label_hu" className="acms-input acms-input--sm" value={catForm.label_hu} onChange={handleCatChange} placeholder="Magyar felirat" />
-              <input name="label_en" className="acms-input acms-input--sm" value={catForm.label_en} onChange={handleCatChange} placeholder="English label" />
+              <input name="slug"       className="acms-input acms-input--sm" value={catForm.slug}       onChange={handleCatChange} placeholder="pl. wedding (a-z, 0-9, -)" />
+              <input name="label_hu"   className="acms-input acms-input--sm" value={catForm.label_hu}   onChange={handleCatChange} placeholder="Magyar felirat" />
+              <input name="label_en"   className="acms-input acms-input--sm" value={catForm.label_en}   onChange={handleCatChange} placeholder="English label" />
               <input name="sort_order" type="number" className="acms-input acms-input--sm acms-input--num" value={catForm.sort_order} onChange={handleCatChange} placeholder="Sorrend" />
               {catError && <div className="acms-error acms-error--inline">{catError}</div>}
               <button type="submit" className="acms-btn-primary" disabled={catSaving}>
@@ -234,7 +283,7 @@ export default function AdminPortfolio() {
       )}
 
       {/* ── PORTFOLIO LISTA ── */}
-      {!showCats && (
+      {!showCats && !showGridModes && (
         loading ? (
           <div className="admin-empty">Betöltés...</div>
         ) : items.length === 0 ? (
@@ -281,27 +330,16 @@ export default function AdminPortfolio() {
               <button className="acms-modal-close" onClick={() => setShowForm(false)}>✕</button>
             </div>
             <form onSubmit={handleSave} className="acms-form">
-
               <div className="acms-form-group">
                 <label>Cím *</label>
                 <input name="title" className="acms-input" value={form.title} onChange={handleChange} placeholder="pl. Arsenal — 2024.03" />
               </div>
-
               <div className="acms-form-row">
                 <div className="acms-form-group">
                   <label>Kategória</label>
-                      <select
-                  name="category_id"
-                  className="acms-input"
-                  value={form.category_id}
-                  onChange={handleChange}
-                >
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.label_hu}
-                    </option>
-                  ))}
-                </select>
+                  <select name="category_id" className="acms-input" value={form.category_id} onChange={handleChange}>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.label_hu}</option>)}
+                  </select>
                 </div>
                 <div className="acms-form-group">
                   <label>Méret (grid)</label>
@@ -310,19 +348,16 @@ export default function AdminPortfolio() {
                   </select>
                 </div>
               </div>
-
               <div className="acms-form-group">
                 <label>Cloudinary kép URL *</label>
                 <input name="cloudinary_url" className="acms-input" value={form.cloudinary_url} onChange={handleChange} placeholder="https://res.cloudinary.com/..." />
                 <span className="acms-hint">Thumbnail és lightbox képként jelenik meg</span>
               </div>
-
               <div className="acms-form-group">
                 <label>Videó URL (opcionális)</label>
                 <input name="video_url" className="acms-input" value={form.video_url} onChange={handleChange} placeholder="https://res.cloudinary.com/.../video.mp4" />
                 <span className="acms-hint">Csak videó kategóriánál töltsd ki</span>
               </div>
-
               <div className="acms-form-row">
                 <div className="acms-form-group">
                   <label>Sorrend</label>
@@ -335,15 +370,12 @@ export default function AdminPortfolio() {
                   </label>
                 </div>
               </div>
-
               {form.cloudinary_url && (
                 <div className="acms-preview">
                   <img src={form.cloudinary_url.replace(/w_\d+/, 'w_200')} alt="előnézet" />
                 </div>
               )}
-
               {error && <div className="acms-error">{error}</div>}
-
               <div className="acms-form-actions">
                 <button type="button" className="acms-btn-secondary" onClick={() => setShowForm(false)}>Mégse</button>
                 <button type="submit" className="acms-btn-primary" disabled={saving}>
