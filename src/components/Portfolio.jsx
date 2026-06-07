@@ -36,6 +36,8 @@ function CategoryAccordion({ category, items, isOpen, onToggle, onSelect, gridMo
       {isOpen && (
         <div className={`port-accordion-grid ${gridMode === 'ratio' ? 'port-accordion-grid--ratio' : ''}`}>
           {items.map(item => {
+            // FixRatio: kép betöltésekor meghatározzuk az arányt
+            // Fekvő kép (>1.2) → span 2 oszlop
             const handleImgLoad = (e) => {
               if (gridMode !== 'ratio') return
               const img   = e.currentTarget
@@ -45,26 +47,43 @@ function CategoryAccordion({ category, items, isOpen, onToggle, onSelect, gridMo
                 cell.style.gridColumn = 'span 2'
               }
             }
+
+            const isRatio = gridMode === 'ratio'
+            const src     = item.cloudinaryUrl
+
             return (
               <div
                 key={item.id}
-                className="port-acc-item"
+                className={`port-acc-item${isRatio ? ' port-acc-item--ratio' : ''}`}
                 onClick={() => onSelect(item)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={e => e.key === 'Enter' && onSelect(item)}
               >
-                {item.cloudinaryUrl ? (
-                  <img
-                    src={item.cloudinaryUrl}
-                    alt={item.title}
-                    loading="lazy"
-                    className={gridMode === 'ratio' ? 'port-acc-img--ratio' : 'port-acc-img--flex'}
-                    onLoad={handleImgLoad}
-                  />
+                {src ? (
+                  <>
+                    {/* Blur háttér – csak FixRatio módban, csak a gridrácson */}
+                    {isRatio && (
+                      <div
+                        className="port-acc-blur-bg"
+                        style={{ backgroundImage: `url(${src})` }}
+                        aria-hidden="true"
+                      />
+                    )}
+
+                    {/* Fő kép – eredeti arány FixRatio-ban, fix magasság FlexiGrid-ben */}
+                    <img
+                      src={src}
+                      alt={item.title}
+                      loading="lazy"
+                      className={isRatio ? 'port-acc-img--ratio' : 'port-acc-img--flex'}
+                      onLoad={handleImgLoad}
+                    />
+                  </>
                 ) : (
                   <div className="port-placeholder">{item.title}</div>
                 )}
+
                 <div className="port-overlay">
                   <span className="port-label">{item.title}</span>
                   {item.categorySlug === 'video' && <span className="port-play-icon">▶</span>}

@@ -2874,3 +2874,81 @@ body { font-size: 18px; }
   .service-name { font-size: 1.4rem; }
   .service-desc { font-size: 0.95rem; }
 }
+
+/* ============================================================
+   PORTFOLIO FIXRATIO – blur háttér (csak a grid rácson)
+   A MediaModal-ban TILOS – ott az eredeti kép látszik
+   ============================================================ */
+
+/* A cella: relatív pozíció, fix cella-magasság hogy legyen hová kitölteni */
+.port-acc-item--ratio {
+  position: relative;
+  overflow: hidden;
+  /* Minimum magasság hogy a cella ne omoljon össze */
+  min-height: 160px;
+  /* Háttér sötét ha a blur nem tölt ki mindent */
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Blur háttér réteg – z-index: 0, a kép fölötte van */
+.port-acc-blur-bg {
+  position: absolute;
+  inset: -8px;          /* kicsit túlnyúlik a cellahatáron – megakadályozza a blur-szélt */
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Erős blur + sötétítés */
+  filter: blur(18px) brightness(0.45) saturate(1.2);
+  /* Simább blur a sarkoknál */
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+/* Fő kép – z-index: 1, az eredeti arányban, a blur felett */
+.port-acc-item--ratio .port-acc-img--ratio {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  object-fit: unset;
+  display: block;
+  /* Max magasság hogy ne legyen aránytalanul magas álló kép */
+  max-height: 420px;
+  margin: auto;
+}
+
+/* Overlay a blur fölé (z-index: 2) */
+.port-acc-item--ratio .port-overlay {
+  z-index: 2;
+}
+
+/* FlexiGrid esetén nincs blur, az eredeti port-acc-item stílus érvényes */
+.port-acc-item:not(.port-acc-item--ratio) .port-acc-blur-bg {
+  display: none;
+}
+
+/* ── Reszponzív max-height ── */
+@media (max-width: 1023px) {
+  .port-acc-item--ratio .port-acc-img--ratio {
+    max-height: 340px;
+  }
+}
+
+@media (max-width: 767px) {
+  .port-acc-item--ratio {
+    min-height: 120px;
+  }
+  .port-acc-item--ratio .port-acc-img--ratio {
+    max-height: 260px;
+  }
+}
+
+@media (max-width: 479px) {
+  .port-acc-item--ratio .port-acc-img--ratio {
+    max-height: 200px;
+  }
+}
