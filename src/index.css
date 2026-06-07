@@ -93,18 +93,30 @@ section {
   top: 0;
   width: 100%;
   z-index: 1000;
-  /* padding-top: safe area + belső padding – navbar a notch/Dynamic Island fölé nyúlik */
   padding: 1.1rem 2rem;
-  padding-top: max(1.1rem, env(safe-area-inset-top));
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg-nav);           /* mindig látható – nem átlátszó mobilon */
+  background: transparent;
   border-bottom: 1px solid transparent;
   transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s;
-  /* iOS: teljes szélességű, safe area figyelembevételével */
-  padding-left: max(2rem, env(safe-area-inset-left));
-  padding-right: max(2rem, env(safe-area-inset-right));
+}
+
+/* iOS safe area – navbar kiterjed a notch/Dynamic Island területére */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .navbar {
+    padding-top: max(1.1rem, env(safe-area-inset-top));
+    padding-left: max(2rem, env(safe-area-inset-left));
+    padding-right: max(2rem, env(safe-area-inset-right));
+    /* Ha van safe area, a navbar hátterét mindig kitöltjük */
+    background: var(--bg-nav);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  /* A hero section paddingját is igazítjuk hogy ne csússzon a navbar alá */
+  #hero {
+    padding-top: env(safe-area-inset-top);
+  }
 }
 
 .navbar.scrolled {
@@ -926,8 +938,8 @@ footer {
   .port-item-medium,
   .port-item-small { grid-column: span 1; }
 
-  /* Services: 1 oszlop */
-  .services-grid { grid-template-columns: 1fr; }
+  /* Services: max 2 kártya / sor tableten */
+  .services-grid { grid-template-columns: repeat(2, 1fr); }
 
   /* Footer */
   footer {
@@ -2308,6 +2320,9 @@ body { font-size: 18px; }
     background 0.35s ease,
     border-color 0.35s ease;
   cursor: default;
+  /* Stabil elrendezés – ne mozgassa a szöveg magasságát */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Szám eltűnik hover-re */
@@ -2325,21 +2340,33 @@ body { font-size: 18px; }
   transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               letter-spacing 0.4s ease,
               transform 0.4s ease;
+  /* Megakadályozzuk a szó-tördelést hover-re */
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 .service-desc {
   transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               opacity 0.3s ease,
               transform 0.3s ease;
+  /* Stabil sortörés – ne rendezze át a szavakat */
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+  /* Fix sor-magasság hogy ne ugorjon */
+  line-height: 1.7;
+  min-height: 4.5rem;   /* kb. 3 sor helye mindig foglalt */
 }
 
+/* Hover: cím nő, leírás finom emelkedés – kisebb növekedés hogy ne törjön */
 .service-card:hover .service-name {
-  font-size: 2.2rem;
+  font-size: 2rem;
   letter-spacing: 0.04em;
 }
 
 .service-card:hover .service-desc {
-  font-size: 1.08rem;
+  font-size: 1.05rem;
   transform: translateY(-4px);
 }
 
@@ -2798,4 +2825,52 @@ body { font-size: 18px; }
   .port-accordion-grid--ratio {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* ============================================================
+   SERVICES – reszponzív finomhangolás
+   ============================================================ */
+
+/* Tableten: 2 kártya / sor – már beállítva a @media 1023px-ban */
+
+/* Mobilon: 1 kártya / sor, olvasható méretekkel */
+@media (max-width: 767px) {
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .service-card {
+    padding: 1.8rem;
+    clip-path: none;   /* mobilon levesszük a vágott sarkot */
+  }
+
+  .service-name {
+    font-size: 1.5rem;
+    /* Hover animáció ki mobilon – nincs hover touch-on */
+    transition: none;
+  }
+
+  .service-desc {
+    font-size: 1rem;
+    line-height: 1.65;
+    min-height: unset;   /* mobilon ne foglaljon fix helyet */
+    transition: none;
+  }
+
+  .service-number {
+    font-size: 2.2rem;
+    transition: none;
+  }
+
+  /* Hover hatások mobilon tiltva */
+  .service-card:hover .service-name { font-size: 1.5rem; }
+  .service-card:hover .service-desc { font-size: 1rem; transform: none; }
+  .service-card:hover .service-number { opacity: 1; transform: none; }
+}
+
+/* Kis mobil */
+@media (max-width: 479px) {
+  .service-card { padding: 1.5rem; }
+  .service-name { font-size: 1.4rem; }
+  .service-desc { font-size: 0.95rem; }
 }
