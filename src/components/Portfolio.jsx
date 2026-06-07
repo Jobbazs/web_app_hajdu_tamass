@@ -99,7 +99,8 @@ function CategoryAccordion({ category, items, isOpen, onToggle, onSelect, gridMo
 
 export default function Portfolio() {
   // Nyitott kategóriák – több is nyitva lehet egyszerre
-  const [openCats, setOpenCats] = useState({})
+  // Alapból 'all' nyitva, egyszerre max 1 kategória lehet aktív
+  const [openCat, setOpenCat] = useState('all')
   const [selected, setSelected] = useState(null)
 
   const { lang, t }                         = useLang()
@@ -134,30 +135,21 @@ export default function Portfolio() {
     return normalized.filter(i => i.categorySlug === slug).slice(0, limit)
   }
 
-  // Accordion toggle
+  // Accordion toggle – egyszerre csak 1 nyitva
+  // Ha ugyanazt nyomja amit nyitva van → bezárja (null)
   const toggleCat = (key) => {
-    setOpenCats(prev => ({ ...prev, [key]: !prev[key] }))
+    setOpenCat(prev => prev === key ? null : key)
   }
 
   // Modal
   const closeModal = () => setSelected(null)
 
-  // A modal navigációhoz szükséges "összes látható" lista
-  // Ha van nyitott kategória, az abban lévő képek közül navigál
+  // Modal navigáció – csak a jelenleg nyitott kategória képei
   const visibleForModal = useMemo(() => {
-    // Gyűjtsük össze az összes nyitott kategória képeit sorban
-    const result = []
-    // "All" mappa nyitva
-    if (openCats['all']) result.push(...allItems)
-    // Kategória mappák
-    categories.forEach(cat => {
-      if (openCats[cat.slug]) {
-        result.push(...getItemsForCat(cat.slug))
-      }
-    })
-    // Ha semmi nincs nyitva, használjuk az összes elemet
-    return result.length > 0 ? result : normalized
-  }, [openCats, allItems, categories, normalized])
+    if (!openCat) return normalized
+    if (openCat === 'all') return allItems
+    return getItemsForCat(openCat)
+  }, [openCat, allItems, normalized, categories])
 
   const goNext = useCallback(() => {
     if (!selected) return
@@ -196,7 +188,7 @@ export default function Portfolio() {
               <CategoryAccordion
                 category={{ label_hu: 'Mind', label_en: 'All', slug: 'all' }}
                 items={allItems}
-                isOpen={!!openCats['all']}
+                isOpen={openCat === 'all'}
                 onToggle={() => toggleCat('all')}
                 onSelect={setSelected}
                 gridMode={getMode('all')}
@@ -211,7 +203,7 @@ export default function Portfolio() {
                     key={cat.id}
                     category={cat}
                     items={catItems}
-                    isOpen={!!openCats[cat.slug]}
+                    isOpen={openCat === cat.slug}
                     onToggle={() => toggleCat(cat.slug)}
                     onSelect={setSelected}
                     gridMode={getMode(cat.slug)}
