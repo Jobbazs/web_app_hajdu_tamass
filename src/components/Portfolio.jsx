@@ -35,31 +35,43 @@ function CategoryAccordion({ category, items, isOpen, onToggle, onSelect, gridMo
       {/* Képek – csak ha nyitva */}
       {isOpen && (
         <div className={`port-accordion-grid ${gridMode === 'ratio' ? 'port-accordion-grid--ratio' : ''}`}>
-          {items.map(item => (
-            <div
-              key={item.id}
-              className="port-acc-item"
-              onClick={() => onSelect(item)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={e => e.key === 'Enter' && onSelect(item)}
-            >
-              {item.cloudinaryUrl ? (
-                <img
-                  src={item.cloudinaryUrl}
-                  alt={item.title}
-                  loading="lazy"
-                  className={gridMode === 'ratio' ? 'port-acc-img--ratio' : 'port-acc-img--flex'}
-                />
-              ) : (
-                <div className="port-placeholder">{item.title}</div>
-              )}
-              <div className="port-overlay">
-                <span className="port-label">{item.title}</span>
-                {item.categorySlug === 'video' && <span className="port-play-icon">▶</span>}
+          {items.map(item => {
+            const handleImgLoad = (e) => {
+              if (gridMode !== 'ratio') return
+              const img   = e.currentTarget
+              const ratio = img.naturalWidth / img.naturalHeight
+              const cell  = img.closest('.port-acc-item')
+              if (cell && ratio > 1.2) {
+                cell.style.gridColumn = 'span 2'
+              }
+            }
+            return (
+              <div
+                key={item.id}
+                className="port-acc-item"
+                onClick={() => onSelect(item)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && onSelect(item)}
+              >
+                {item.cloudinaryUrl ? (
+                  <img
+                    src={item.cloudinaryUrl}
+                    alt={item.title}
+                    loading="lazy"
+                    className={gridMode === 'ratio' ? 'port-acc-img--ratio' : 'port-acc-img--flex'}
+                    onLoad={handleImgLoad}
+                  />
+                ) : (
+                  <div className="port-placeholder">{item.title}</div>
+                )}
+                <div className="port-overlay">
+                  <span className="port-label">{item.title}</span>
+                  {item.categorySlug === 'video' && <span className="port-play-icon">▶</span>}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
