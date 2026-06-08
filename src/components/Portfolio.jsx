@@ -62,7 +62,7 @@ function RatioGrid({ items, onSelect }) {
   }, [ratios, items])
 
   return (
-    <div className="port-ratio-grid-inner">
+    <>
       {sortedItems.map(item => {
         const isLandscape = ratios[item.id] === 'landscape'
         const known       = ratios[item.id] !== undefined
@@ -102,7 +102,7 @@ function RatioGrid({ items, onSelect }) {
           </div>
         )
       })}
-    </div>
+    </>
   )
 }
 
@@ -126,8 +126,8 @@ function CategoryAccordion({ category, items, isOpen, onToggle, onSelect, gridMo
 
       {isOpen && (
         gridMode === 'ratio' ? (
-          // FixRatio: blur háttér + arány-alapú rendezés
-          <div className="port-accordion-grid port-accordion-grid--ratio">
+          // FixRatio: a grid konténer maga tartalmazza a cellákat
+          <div className="port-accordion-grid--ratio">
             <RatioGrid items={items} onSelect={onSelect} />
           </div>
         ) : (
