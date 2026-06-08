@@ -248,13 +248,13 @@ export default function AdminPortfolio() {
             {catLoading ? <div className="admin-empty">Betöltés...</div> : gridFilterList.map((item) => (
               <div key={item.key} className="acms-gridmode-item">
                 <div className="acms-gridmode-item-label">
-                  <span className="acms-cat-slug">{key}</span>
-                  <span className="acms-cat-label">{label}</span>
+                  <span className="acms-cat-slug">{item.key}</span>
+                  <span className="acms-cat-label">{item.label}</span>
                 </div>
                 <CategorySettings
-                  filterKey={key}
-                  currentMode={getMode(key)}
-                  currentLimit={getLimit(key)}
+                  filterKey={item.key}
+                  currentMode={getMode(item.key)}
+                  currentLimit={getLimit(item.key)}
                   defaultLimit={item.defaultLimit}
                   onSaveMode={saveMode}
                   onSaveLimit={saveLimit}
