@@ -1,9 +1,8 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useLang } from '../LangContext'
 import { usePortfolio, useCategories, useSiteContent } from '../hooks'
 import MediaModal from './MediaModal'
 
-// Véletlen keverés – Fisher-Yates
 const shuffle = (arr) => {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -13,13 +12,106 @@ const shuffle = (arr) => {
   return a
 }
 
-// Egy accordion mappa kártya
+// ── Képek rendezése FixRatio gridhez ────────────────────────
+// Probléma: fekvő kép (span 2) + páratlan számú álló → lyuk
+// Megoldás: az items-t úgy rendezzük át hogy fekvő képek
+// mindig párban legyenek (egymás mellett), és ne okozzanak lyukat.
+// Ezt előre nem tudjuk (arány nincs a DB-ben), de a rácsot
+// CSS subgrid + auto-placement dense-sel kezeljük.
+// A kulcstrükk: a fekvő képeket inline style-lal kezelve
+// az order CSS tulajdonsággal rendezzük a cellák pozícióját.
+
+// ── RatioGrid komponens – belső state a mért arányokhoz ─────
+function RatioGrid({ items, onSelect }) {
+  // { itemId: 'landscape' | 'portrait' }
+  const [ratios, setRatios] = useState({})
+
+  const handleLoad = (e, itemId) => {
+    const img   = e.currentTarget
+    const ratio = img.naturalWidth / img.naturalHeight
+    const type  = ratio > 1.15 ? 'landscape' : 'portrait'
+    setRatios(prev => {
+      if (prev[itemId] === type) return prev   // ne triggereljen felesleges renderelést
+      return { ...prev, [itemId]: type }
+    })
+  }
+
+  // Miután minden arány ismert, rendezzük a cellákat:
+  // Álló képek → span 1, fekvő képek → span 2
+  // A grid 4 oszlopos. Ha egy fekvő kép (span 2) után 1 álló kép marad
+  // az adott sorban (2 cella szabad volt, de csak 1 kell) → lyuk.
+  // Megoldás: a képeket ÚJRARENDEZZÜK: álló képek, majd fekvők párban.
+  const sortedItems = useMemo(() => {
+    const knownCount = Object.keys(ratios).length
+    if (knownCount < items.length) return items  // még nem mértünk mindent
+
+    const portraits  = items.filter(i => ratios[i.id] !== 'landscape')
+    const landscapes = items.filter(i => ratios[i.id] === 'landscape')
+
+    // Fekvő képeket párba rendezzük
+    // Ha páratlan számú fekvő van → az utolsót portraitnak kezeljük (span 1)
+    const pairedLandscapes = landscapes.length % 2 === 0
+      ? landscapes
+      : [...landscapes.slice(0, -1)]   // utolsó fekvőt kihagyjuk a span-2-ből
+    const oddLandscape = landscapes.length % 2 === 1
+      ? [landscapes[landscapes.length - 1]]
+      : []
+
+    // Elrendezés: álló képek + páratlan fekvő (mint portrait) + páros fekvők párban
+    return [...portraits, ...oddLandscape, ...pairedLandscapes]
+  }, [ratios, items])
+
+  return (
+    <div className="port-ratio-grid-inner">
+      {sortedItems.map(item => {
+        const isLandscape = ratios[item.id] === 'landscape'
+        const known       = ratios[item.id] !== undefined
+        const src         = item.cloudinaryUrl
+
+        return (
+          <div
+            key={item.id}
+            className={`port-acc-item port-acc-item--ratio ${isLandscape && known ? 'port-acc-item--landscape' : ''}`}
+            onClick={() => onSelect(item)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && onSelect(item)}
+          >
+            {src ? (
+              <>
+                <div
+                  className="port-acc-blur-bg"
+                  style={{ backgroundImage: `url(${src})` }}
+                  aria-hidden="true"
+                />
+                <img
+                  src={src}
+                  alt={item.title}
+                  loading="lazy"
+                  className="port-acc-img--ratio"
+                  onLoad={e => handleLoad(e, item.id)}
+                />
+              </>
+            ) : (
+              <div className="port-placeholder">{item.title}</div>
+            )}
+            <div className="port-overlay">
+              <span className="port-label">{item.title}</span>
+              {item.categorySlug === 'video' && <span className="port-play-icon">▶</span>}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── CategoryAccordion ────────────────────────────────────────
 function CategoryAccordion({ category, items, isOpen, onToggle, onSelect, gridMode, lang }) {
   const label = lang === 'hu' ? category.label_hu : category.label_en
 
   return (
     <div className={`port-accordion ${isOpen ? 'port-accordion--open' : ''}`}>
-      {/* Fejléc – kattintható sor */}
       <button
         className="port-accordion-header"
         onClick={onToggle}
@@ -32,74 +124,52 @@ function CategoryAccordion({ category, items, isOpen, onToggle, onSelect, gridMo
         </span>
       </button>
 
-      {/* Képek – csak ha nyitva */}
       {isOpen && (
-        <div className={`port-accordion-grid ${gridMode === 'ratio' ? 'port-accordion-grid--ratio' : ''}`}>
-          {items.map(item => {
-            // FixRatio: kép betöltésekor meghatározzuk az arányt
-            // Fekvő kép (>1.2) → span 2 oszlop
-            const handleImgLoad = (e) => {
-              if (gridMode !== 'ratio') return
-              const img   = e.currentTarget
-              const ratio = img.naturalWidth / img.naturalHeight
-              const cell  = img.closest('.port-acc-item')
-              if (cell && ratio > 1.2) {
-                cell.style.gridColumn = 'span 2'
-              }
-            }
-
-            const isRatio = gridMode === 'ratio'
-            const src     = item.cloudinaryUrl
-
-            return (
-              <div
-                key={item.id}
-                className={`port-acc-item${isRatio ? ' port-acc-item--ratio' : ''}`}
-                onClick={() => onSelect(item)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={e => e.key === 'Enter' && onSelect(item)}
-              >
-                {src ? (
-                  <>
-                    {/* Blur háttér – csak FixRatio módban, csak a gridrácson */}
-                    {isRatio && (
-                      <div
-                        className="port-acc-blur-bg"
-                        style={{ backgroundImage: `url(${src})` }}
-                        aria-hidden="true"
-                      />
-                    )}
-
-                    {/* Fő kép – eredeti arány FixRatio-ban, fix magasság FlexiGrid-ben */}
+        gridMode === 'ratio' ? (
+          // FixRatio: blur háttér + arány-alapú rendezés
+          <div className="port-accordion-grid port-accordion-grid--ratio">
+            <RatioGrid items={items} onSelect={onSelect} />
+          </div>
+        ) : (
+          // FlexiGrid: fix magasságú rács
+          <div className="port-accordion-grid">
+            {items.map(item => {
+              const src = item.cloudinaryUrl
+              return (
+                <div
+                  key={item.id}
+                  className="port-acc-item"
+                  onClick={() => onSelect(item)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && onSelect(item)}
+                >
+                  {src ? (
                     <img
                       src={src}
                       alt={item.title}
                       loading="lazy"
-                      className={isRatio ? 'port-acc-img--ratio' : 'port-acc-img--flex'}
-                      onLoad={handleImgLoad}
+                      className="port-acc-img--flex"
                     />
-                  </>
-                ) : (
-                  <div className="port-placeholder">{item.title}</div>
-                )}
-
-                <div className="port-overlay">
-                  <span className="port-label">{item.title}</span>
-                  {item.categorySlug === 'video' && <span className="port-play-icon">▶</span>}
+                  ) : (
+                    <div className="port-placeholder">{item.title}</div>
+                  )}
+                  <div className="port-overlay">
+                    <span className="port-label">{item.title}</span>
+                    {item.categorySlug === 'video' && <span className="port-play-icon">▶</span>}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )
       )}
     </div>
   )
 }
 
+// ── Főkomponens ──────────────────────────────────────────────
 export default function Portfolio() {
-  // Nyitott kategóriák – több is nyitva lehet egyszerre
-  // Alapból 'all' nyitva, egyszerre max 1 kategória lehet aktív
   const [openCat, setOpenCat] = useState('all')
   const [selected, setSelected] = useState(null)
 
@@ -108,14 +178,19 @@ export default function Portfolio() {
   const { categories, loading: catLoading } = useCategories()
   const { content }                         = useSiteContent()
 
-  // Beállítások a site_content-ből
-  // portfolio_limit_all = "10" (Mind kategória limit)
-  // portfolio_limit_event = "15" (per-kategória limit)
-  // portfolio_grid_mode_all = "flex" | "ratio"
+  const f = t.portfolio.filters
+
+  const FILTERS = [
+    { key: 'all', label: f.all },
+    ...categories.map(c => ({
+      key:   c.slug,
+      label: lang === 'hu' ? c.label_hu : c.label_en,
+    })),
+  ]
+
   const getLimit = (key) => parseInt(content[`portfolio_limit_${key}`]) || (key === 'all' ? 10 : 15)
   const getMode  = (key) => content[`portfolio_grid_mode_${key}`] || 'flex'
 
-  // Normalizálás
   const normalized = useMemo(() => items.map(item => ({
     ...item,
     cloudinaryUrl: item.cloudinary_url,
@@ -123,33 +198,28 @@ export default function Portfolio() {
     categorySlug:  item.portfolio_categories?.slug || item.category || '',
   })), [items])
 
-  // "Mind" – véletlenszerű mix az összes kategóriából
   const allItems = useMemo(() => {
     const limit = getLimit('all')
     return shuffle(normalized).slice(0, limit)
   }, [normalized, content])
 
-  // Per-kategória itemek limitálva
-  const getItemsForCat = (slug) => {
+  const getItemsForCat = useCallback((slug) => {
     const limit = getLimit(slug)
     return normalized.filter(i => i.categorySlug === slug).slice(0, limit)
-  }
+  }, [normalized, content])
 
-  // Accordion toggle – egyszerre csak 1 nyitva
-  // Ha ugyanazt nyomja amit nyitva van → bezárja (null)
   const toggleCat = (key) => {
     setOpenCat(prev => prev === key ? null : key)
   }
 
-  // Modal
-  const closeModal = () => setSelected(null)
-
-  // Modal navigáció – csak a jelenleg nyitott kategória képei
+  // Modal: csak az aktív kategória képei
   const visibleForModal = useMemo(() => {
     if (!openCat) return normalized
     if (openCat === 'all') return allItems
     return getItemsForCat(openCat)
-  }, [openCat, allItems, normalized, categories])
+  }, [openCat, allItems, normalized, getItemsForCat])
+
+  const closeModal = () => setSelected(null)
 
   const goNext = useCallback(() => {
     if (!selected) return
@@ -165,13 +235,10 @@ export default function Portfolio() {
     setSelected(visibleForModal[(idx - 1 + visibleForModal.length) % visibleForModal.length])
   }, [selected, visibleForModal])
 
-  const isLoading = loading || catLoading
-
   return (
     <>
       <section id="portfolio">
         <div className="container">
-
           <div className="portfolio-header">
             <div>
               <div className="section-label">{t.portfolio.label}</div>
@@ -179,12 +246,11 @@ export default function Portfolio() {
             </div>
           </div>
 
-          {isLoading ? (
+          {(loading || catLoading) ? (
             <div className="port-loading">Betöltés...</div>
           ) : (
             <div className="port-accordion-list">
-
-              {/* ── "Mind" accordion ── */}
+              {/* Mind */}
               <CategoryAccordion
                 category={{ label_hu: 'Mind', label_en: 'All', slug: 'all' }}
                 items={allItems}
@@ -194,27 +260,21 @@ export default function Portfolio() {
                 gridMode={getMode('all')}
                 lang={lang}
               />
-
-              {/* ── Kategória accordionok ── */}
-              {categories.map(cat => {
-                const catItems = getItemsForCat(cat.slug)
-                return (
-                  <CategoryAccordion
-                    key={cat.id}
-                    category={cat}
-                    items={catItems}
-                    isOpen={openCat === cat.slug}
-                    onToggle={() => toggleCat(cat.slug)}
-                    onSelect={setSelected}
-                    gridMode={getMode(cat.slug)}
-                    lang={lang}
-                  />
-                )
-              })}
-
+              {/* Kategóriák */}
+              {categories.map(cat => (
+                <CategoryAccordion
+                  key={cat.id}
+                  category={cat}
+                  items={getItemsForCat(cat.slug)}
+                  isOpen={openCat === cat.slug}
+                  onToggle={() => toggleCat(cat.slug)}
+                  onSelect={setSelected}
+                  gridMode={getMode(cat.slug)}
+                  lang={lang}
+                />
+              ))}
             </div>
           )}
-
         </div>
       </section>
 

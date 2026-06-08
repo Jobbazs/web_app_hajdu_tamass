@@ -2952,3 +2952,61 @@ body { font-size: 18px; }
     max-height: 200px;
   }
 }
+
+/* ============================================================
+   RATIO GRID – belső layout a RatioGrid komponenshez
+   ============================================================ */
+
+/* A külső .port-accordion-grid--ratio csak a paddinget adja */
+.port-accordion-grid--ratio {
+  background: var(--bg-primary);
+}
+
+/* Belső grid – 4 oszlop, dense fill */
+.port-ratio-grid-inner {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 4px;
+  grid-auto-flow: row dense;
+  align-items: start;
+}
+
+/* Fekvő kép cella – span 2 */
+.port-acc-item--landscape {
+  grid-column: span 2;
+}
+
+/* Reszponzív */
+@media (max-width: 1023px) {
+  .port-ratio-grid-inner {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .port-ratio-grid-inner {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3px;
+    padding: 3px;
+  }
+  /* Mobilon fekvő kép se span 2 – túl keskenyek lennének */
+  .port-acc-item--landscape {
+    grid-column: span 1;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .port-ratio-grid-inner {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 600px) and (max-width: 900px) and (orientation: portrait) {
+  .port-ratio-grid-inner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .port-acc-item--landscape {
+    grid-column: span 1;
+  }
+}
