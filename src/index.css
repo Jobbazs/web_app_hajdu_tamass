@@ -2917,3 +2917,47 @@ body { font-size: 18px; }
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ============================================================
+   ADMIN – Grid mód gombok (port-mode-wrap / port-mode-btn)
+   ============================================================ */
+
+.port-mode-wrap {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border-mid);
+  overflow: hidden;
+}
+
+.port-mode-btn {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.9rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 34px;
+}
+
+.port-mode-btn + .port-mode-btn {
+  border-left: 1px solid var(--border-mid);
+}
+
+.port-mode-btn.active {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+.port-mode-btn:not(.active):hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.04);
+}
+
+.port-mode-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
