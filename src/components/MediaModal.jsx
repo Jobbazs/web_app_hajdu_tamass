@@ -52,7 +52,21 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
         </div>
 
         {/* Media */}
-        <div className="modal-media">
+        {/* Kattintási zónák – bal/jobb oldal navigál */}
+        <div className="modal-media" onClick={e => {
+          if (total <= 1) return
+          const rect = e.currentTarget.getBoundingClientRect()
+          const x    = e.clientX - rect.left
+          if (x < rect.width * 0.35) onPrev()
+          else if (x > rect.width * 0.65) onNext()
+        }}>
+          {/* Vizuális hint – nyilak a széleken */}
+          {total > 1 && (
+            <>
+              <div className="modal-tap-prev" aria-hidden="true">‹</div>
+              <div className="modal-tap-next" aria-hidden="true">›</div>
+            </>
+          )}
           {isVideo && item.videoUrl ? (
             <video
               ref={videoRef}

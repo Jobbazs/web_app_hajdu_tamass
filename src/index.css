@@ -2961,3 +2961,49 @@ body { font-size: 18px; }
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ============================================================
+   MODAL – tap zónák (bal/jobb navigáció)
+   ============================================================ */
+
+.modal-media {
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Bal/jobb nyíl hint – alapból alig látható, hover-re/focus-ra erősebb */
+.modal-tap-prev,
+.modal-tap-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  font-size: 2.5rem;
+  color: rgba(255,255,255,0.15);
+  pointer-events: none;
+  transition: color 0.2s, opacity 0.2s;
+  line-height: 1;
+  padding: 1rem;
+  /* Háttér gradiens a széleken */
+  background: transparent;
+}
+
+.modal-tap-prev { left: 0; }
+.modal-tap-next { right: 0; }
+
+/* Hover-re erősebb – desktopra */
+.modal-media:hover .modal-tap-prev,
+.modal-media:hover .modal-tap-next {
+  color: rgba(255,255,255,0.55);
+}
+
+/* Mobilon mindig láthatóbbak – touch nem tud hover-elni */
+@media (max-width: 767px) {
+  .modal-tap-prev,
+  .modal-tap-next {
+    color: rgba(255,255,255,0.3);
+    font-size: 2rem;
+  }
+}
