@@ -3007,3 +3007,256 @@ body { font-size: 18px; }
     font-size: 2rem;
   }
 }
+
+/* ============================================================
+   PORTFOLIO – Kategória cover grid
+   ============================================================ */
+
+.port-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+/* Kártya */
+.port-cat-card {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  transition: border-color 0.3s;
+}
+
+.port-cat-card:hover {
+  border-color: var(--accent);
+}
+
+.port-cat-card--empty {
+  cursor: default;
+  opacity: 0.35;
+}
+
+/* Kép wrapper – fix arány */
+.port-cat-img-wrap {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+/* Cover kép */
+.port-cat-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease, filter 0.4s ease;
+}
+
+.port-cat-card:hover .port-cat-img {
+  transform: scale(1.06);
+  filter: brightness(1.15);
+}
+
+/* Placeholder ha nincs kép */
+.port-cat-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+}
+
+/* Hover overlay – képszám */
+.port-cat-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    rgba(26,21,16,0.75) 100%
+  );
+  display: flex;
+  align-items: flex-end;
+  padding: 0.8rem 1rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.port-cat-card:hover .port-cat-overlay {
+  opacity: 1;
+}
+
+.port-cat-count {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--parchment, #C8B89A);
+}
+
+/* Kategória neve – a kép alatt */
+.port-cat-label {
+  padding: 0.75rem 1rem;
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-subtle);
+  transition: color 0.3s, background 0.3s;
+}
+
+.port-cat-card:hover .port-cat-label {
+  color: var(--accent);
+  background: var(--bg-secondary);
+}
+
+/* ── Reszponzív ── */
+
+/* Tablet (768–1023px): 2 oszlop marad */
+@media (max-width: 1023px) {
+  .port-cat-grid { gap: 10px; }
+}
+
+/* Kis mobil (max 479px): 1 oszlop */
+@media (max-width: 479px) {
+  .port-cat-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* ============================================================
+   CONTACT – fájl csatolás
+   ============================================================ */
+
+.attach-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: 1px dashed var(--border-mid);
+  padding: 0.85rem 1.4rem;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.25s;
+  min-height: 48px;
+}
+
+.attach-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  border-style: solid;
+}
+
+.attach-btn-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Előnézet csatolás után */
+.attach-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border-mid);
+  background: var(--bg-card);
+}
+
+.attach-preview-img {
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+  border: 1px solid var(--border-subtle);
+}
+
+.attach-preview-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.attach-preview-name {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attach-preview-size {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.attach-remove-btn {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.attach-remove-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.form-hint {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 0.4rem;
+}
+
+/* Mobilon */
+@media (max-width: 767px) {
+  .attach-btn { font-size: 0.62rem; padding: 0.8rem 1rem; }
+  .attach-preview-img { width: 52px; height: 40px; }
+}
+
+/* ── Több fájl lista ── */
+.attach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.attach-limit-note {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  padding: 0.5rem 0;
+}
