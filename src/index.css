@@ -1689,7 +1689,20 @@ footer {
   .acms-form-row { grid-template-columns: 1fr; }
   .acms-content-fields { grid-template-columns: 1fr; }
   .acms-list-item { flex-wrap: wrap; }
-  .acms-list-actions { width: 100%; }
+  .acms-list-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  /* Sect-item gombok mobilon külön sorba */
+  .acms-sect-item .acms-list-actions {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .acms-sect-item .acms-list-actions .acms-btn-sm {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
   .acms-services-grid { grid-template-columns: 1fr; }
   .acms-modal {
     max-height: calc(100dvh - 2rem);
@@ -2053,22 +2066,33 @@ body { font-size: 18px; }
 .acms-sect-item {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  flex-wrap: wrap;        /* mobilon egymás alá mehet */
+  gap: 0.8rem;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  padding: 1.2rem;
+  padding: 1rem;
   transition: border-color 0.2s;
+  overflow: hidden;       /* hosszú szöveg ne lógjon ki */
 }
 
 .acms-sect-item:hover { border-color: var(--border-mid); }
 
-.acms-sect-preview { flex: 1; min-width: 0; }
+.acms-sect-preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
 
 .acms-sect-preview-text {
   font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 0.6rem;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .acms-sect-meta {
@@ -2338,7 +2362,9 @@ body { font-size: 18px; }
 
 .acms-sect-status {
   flex-shrink: 0;
-  margin-right: 0.5rem;
+  margin-right: 0;
+  /* Mobilon is a sor elején legyen */
+  order: -1;
 }
 
 .acms-status-badge {
@@ -2400,13 +2426,8 @@ body { font-size: 18px; }
   min-width: 70px;
 }
 
-/* Sect-item: ne legyen opacity csökkenés rejtett esetén – status badge mutatja */
-.acms-sect-item {
-  opacity: 1 !important;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.8rem;
-}
+/* Sect-item: ne legyen opacity csökkenés – status badge mutatja */
+/* (opacity és layout az első .acms-sect-item blokkban van) */
 
 /* ============================================================
    SERVICES – reszponzív finomhangolás
