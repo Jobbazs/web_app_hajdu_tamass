@@ -35,11 +35,6 @@ img {
 }
 
 /* A portfólió grid képei töltik ki a cellát */
-.port-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
@@ -352,48 +347,6 @@ section {
   flex-wrap: wrap;
 }
 
-
-
-/* Desktop: 12 oszlopos mozaik */
-.portfolio-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 5px;
-}
-
-.port-item-large  { grid-column: span 4; }
-.port-item-medium { grid-column: span 3; }
-.port-item-small  { grid-column: span 2; }
-
-.port-item {
-  min-height: 140px;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.port-item img {
-  transition: transform 0.5s ease;
-}
-
-.port-item:hover img,
-.port-item:focus img {
-  transform: scale(1.04);
-}
-
-.port-placeholder {
-  width: 100%;
-  height: 100%;
-  min-height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Space Mono', monospace;
-  font-size: 0.55rem;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
-  background: var(--bg-card);
-}
 
 /* ============================================================
    SERVICES
@@ -890,12 +843,6 @@ footer {
   font-size: 0.7rem; color: var(--text-muted);
 }
 
-.port-play-icon {
-  font-size: 1.3rem;
-  color: var(--accent);
-  margin-left: auto;
-  line-height: 1;
-}
 
 /* ============================================================
    RESPONSIVE BREAKPOINTS
@@ -910,8 +857,6 @@ footer {
 
 /* ── TABLET (768–1023px) ─────────────────────────────────── */
 @media (max-width: 1023px) {
-  :root { --navbar-height: 62px; }
-
   /* Nav */
   .nav-links    { display: none; }
   .nav-hamburger { display: flex; }
@@ -930,14 +875,6 @@ footer {
     margin: 0 auto;
   }
 
-  /* Portfolio: 2 oszlop, span reset */
-  .portfolio-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .port-item-large,
-  .port-item-medium,
-  .port-item-small { grid-column: span 1; }
-
   /* Services: max 2 kártya / sor tableten */
   .services-grid { grid-template-columns: repeat(2, 1fr); }
 
@@ -952,8 +889,6 @@ footer {
 
 /* ── PHONE (0–767px) ─────────────────────────────────────── */
 @media (max-width: 767px) {
-  :root { --navbar-height: 56px; }
-
   section { padding: 4.5rem 1.2rem; }
 
   /* Hero */
@@ -965,10 +900,6 @@ footer {
 
   /* Contact form: egymás alá */
   .form-row { grid-template-columns: 1fr; gap: 0; }
-
-  /* Portfolio: 1 oszlop mobilon */
-  .portfolio-grid { grid-template-columns: 1fr; }
-  .port-item { min-height: 160px; }
 
   /* Portfolio header */
   .portfolio-header {
@@ -994,8 +925,6 @@ footer {
 
 /* ── SMALL PHONE (0–479px) ───────────────────────────────── */
 @media (max-width: 479px) {
-  :root { --navbar-height: 52px; }
-
   section { padding: 4rem 1rem; }
   #hero { padding: 0 1rem 4rem; }
 
@@ -1013,8 +942,6 @@ footer {
 /* ── LARGE DESKTOP (1400px+) ─────────────────────────────── */
 @media (min-width: 1400px) {
   .container { max-width: 1320px; }
-  .portfolio-grid { gap: 6px; }
-  .port-item { min-height: 160px; }
 }
 
 /* ============================================================
@@ -1756,6 +1683,7 @@ footer {
 
 /* Reszponzív */
 @media (max-width: 767px) {
+  .acms-modal-backdrop { align-items: flex-start; padding-top: max(1rem, env(safe-area-inset-top)); }
   .acms-content { padding: 1rem; }
   .acms-tab { padding: 0.8rem 1rem; font-size: 0.6rem; }
   .acms-form-row { grid-template-columns: 1fr; }
@@ -1763,7 +1691,23 @@ footer {
   .acms-list-item { flex-wrap: wrap; }
   .acms-list-actions { width: 100%; }
   .acms-services-grid { grid-template-columns: 1fr; }
-  .acms-modal { max-height: 100vh; }
+  .acms-modal {
+    max-height: calc(100dvh - 2rem);
+    /* safe area figyelembevételével */
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 2rem);
+  }
+
+  /* Gombok mindig láthatók – sticky az alján */
+  .acms-form-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-secondary);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    margin: 0 -1.4rem -1.4rem;
+    padding-left: 1.4rem;
+    padding-right: 1.4rem;
+    z-index: 10;
+  }
 }
 
 /* ============================================================
@@ -2389,66 +2333,6 @@ body { font-size: 18px; }
 .service-card:hover::after { width: 100%; }
 
 /* ============================================================
-   PORTFOLIO – Sticky filter sáv
-   ============================================================ */
-
-
-
-
-
-/* Ha sticky, a grid ne csússzon a filter alá */
-
-
-/* ── Grid mód kapcsoló ── */
-
-
-
-
-
-
-
-
-
-
-/* ── FixRatio grid ── */
-.portfolio-ratio-grid {
-  column-count: 3;
-  column-gap: 5px;
-}
-
-
-
-/* Képarány megtartása – ne nyúljon bele */
-
-
-
-
-
-
-
-
-/* FlexiGrid képek – NE változtassa az arányokat a thumb nézetben */
-/* Admin thumbnail: mindig objektarány */
-.acms-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain !important;  /* ← ne vágjon bele */
-  background: var(--bg-secondary);
-}
-
-/* ============================================================
-   RESZPONZÍV – FixRatio grid
-   ============================================================ */
-@media (max-width: 1023px) {
-  .portfolio-ratio-grid { column-count: 2; }
-}
-
-@media (max-width: 767px) {
-  .portfolio-ratio-grid { column-count: 1; }
-  
-}
-
-/* ============================================================
    ADMIN – Status badge + fixed field options
    ============================================================ */
 
@@ -2525,73 +2409,6 @@ body { font-size: 18px; }
 }
 
 /* ============================================================
-   ADMIN – Grid mode panel
-   ============================================================ */
-
-
-
-
-
-
-
-
-
-
-
-@media (max-width: 767px) {
-  
-}
-
-/* ============================================================
-   ACCORDION RESPONSIVE
-   ============================================================ */
-
-/* Tablet álló (768–1023px): 3 oszlop */
-@media (max-width: 1023px) {
-  
-  
-}
-
-/* Tablet fekvő (1024px): 3 oszlop – már fent kezelt */
-
-/* iPad álló / nagy telefon fekvő (600–767px): 2 oszlop */
-@media (max-width: 767px) {
-  
-  
-  
-  
-}
-
-/* iPhone Pro Max (430px) és kisebb telefonok: 2 oszlop MARAD */
-/* Ez az explicit szabály biztosítja hogy mindig 2 oszlop legyen mobilon */
-@media (max-width: 479px) {
-  
-  /* Kis képernyőn kisebb magasság hogy ne legyen túl nagy */
-  
-  
-  
-}
-
-/* Nagyon kis telefon (360px alatt) */
-@media (max-width: 360px) {
-  
-}
-
-/* Tablet fekvő orientáció (min-width: 768px, max-width: 1024px): 3 oszlop */
-@media (min-width: 768px) and (max-width: 1024px) {
-  
-}
-
-/* Tablet álló orientáció – media query landscape/portrait */
-@media (min-width: 600px) and (max-width: 900px) and (orientation: portrait) {
-  
-}
-
-@media (min-width: 600px) and (max-width: 1024px) and (orientation: landscape) {
-  
-}
-
-/* ============================================================
    SERVICES – reszponzív finomhangolás
    ============================================================ */
 
@@ -2639,328 +2456,6 @@ body { font-size: 18px; }
   .service-desc { font-size: 0.95rem; }
 }
 
-
-/* ============================================================
-   PORTFOLIO ACCORDION
-   ============================================================ */
-
-/* Accordion lista */
-.port-accordion-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-
-/* Egy kategória kártya */
-.port-accordion {
-  width: 100%;
-  border: 1px solid var(--border-subtle);
-}
-.port-accordion--open {
-  border-color: var(--border-mid);
-}
-
-/* Fejléc – kattintható sor */
-.port-accordion-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  min-height: 56px;
-  background: var(--bg-card);
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.2s;
-}
-.port-accordion-header:hover,
-.port-accordion--open .port-accordion-header {
-  background: var(--bg-secondary);
-}
-.port-accordion--open .port-accordion-header {
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.port-accordion-name {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-primary);
-}
-.port-accordion-meta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-shrink: 0;
-}
-.port-accordion-count {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  color: var(--text-muted);
-}
-.port-accordion-arrow {
-  font-size: 0.65rem;
-  color: var(--accent);
-  width: 14px;
-  text-align: center;
-}
-
-/* ============================================================
-   PORTFOLIO GRID – FlexiGrid (fix magasságú cellák)
-   ============================================================ */
-
-.port-accordion-grid {
-  /* Desktop: 4 oszlop */
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  padding: 4px;
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--bg-primary);
-}
-
-/* Cella */
-.port-acc-item {
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  background: var(--bg-card);
-  /* FlexiGrid: fix magasság, minden cella egyforma */
-  height: 200px;
-}
-
-/* FlexiGrid kép: kitölti a cellát, crop-pol */
-.port-acc-img--flex {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.4s ease;
-}
-.port-acc-item:hover .port-acc-img--flex {
-  transform: scale(1.04);
-}
-
-/* ============================================================
-   PORTFOLIO GRID – FixRatio (képarány + blur háttér)
-   ============================================================ */
-
-.port-accordion-grid--ratio {
-  /* Ugyanaz mint FlexiGrid, de a cellák magasságát a kép dönti el */
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  padding: 4px;
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--bg-primary);
-  /* dense: betölti az üres cellákat */
-  grid-auto-flow: row dense;
-  /* cellák tetejéhez igazít – ne nyújtsa egységes magasságra */
-  align-items: start;
-}
-
-/* FixRatio cella: nincs fix magasság, a kép adja */
-.port-acc-item--ratio {
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  background: var(--bg-card);
-  height: auto;           /* ← KULCS: nem fix magasság */
-  min-height: 80px;
-}
-
-/* Fekvő kép: 2 oszlopot foglal */
-.port-acc-item--landscape {
-  grid-column: span 2;
-}
-
-/* Blur háttér réteg */
-.port-acc-blur-bg {
-  position: absolute;
-  inset: -6px;            /* kicsit túlnyúlik hogy a blur éle ne látsszon */
-  z-index: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  filter: blur(16px) brightness(0.4) saturate(1.3);
-  transform: scale(1.05);
-  pointer-events: none;
-}
-
-/* FixRatio kép: eredeti arány, blur felett */
-.port-acc-img--ratio {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: auto;           /* ← képarány megtartva */
-  display: block;
-  object-fit: unset;
-  transition: transform 0.4s ease;
-  /* Max magasság hogy álló kép ne legyen végtelen */
-  max-height: 480px;
-}
-.port-acc-item--ratio:hover .port-acc-img--ratio {
-  transform: scale(1.03);
-}
-
-/* Overlay (hover felirat) – mindkét módban */
-.port-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(26,21,16,0.88) 0%, transparent 55%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  display: flex;
-  align-items: flex-end;
-  padding: 1rem;
-  z-index: 2;
-}
-.port-acc-item:hover .port-overlay,
-.port-acc-item--ratio:hover .port-overlay {
-  opacity: 1;
-}
-
-/* Üres kategória */
-.port-empty {
-  min-height: 240px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  border: 1px dashed var(--border-subtle);
-  opacity: 0.5;
-}
-
-/* Betöltés */
-.port-loading {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
-  text-align: center;
-  padding: 4rem;
-}
-
-/* ============================================================
-   RESZPONZÍV
-   Korábbi megbeszélés alapján:
-   Desktop (1024px+)         → 4 oszlop
-   Tablet fekvő (landscape)  → 3 oszlop
-   Tablet álló (portrait)    → 2 oszlop
-   Telefon (max 767px)       → 2 oszlop (min!)
-   Kis telefon (max 479px)   → 2 oszlop, kisebb gap
-   ============================================================ */
-
-/* Tablet – max 1023px */
-@media (max-width: 1023px) {
-  .port-accordion-grid,
-  .port-accordion-grid--ratio {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .port-acc-item { height: 180px; }
-  .port-acc-img--ratio { max-height: 380px; }
-}
-
-/* Tablet álló + nagy telefon – max 767px */
-@media (max-width: 767px) {
-  .port-accordion-grid,
-  .port-accordion-grid--ratio {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 3px;
-    padding: 3px;
-  }
-  .port-acc-item { height: 160px; }
-  .port-acc-img--ratio { max-height: 280px; }
-  /* Mobilon fekvő kép ne span 2 – túl kicsi lenne */
-  .port-acc-item--landscape { grid-column: span 1; }
-  .port-accordion-header { padding: 0.85rem 1.2rem; }
-}
-
-/* Kis telefon – max 479px */
-@media (max-width: 479px) {
-  .port-accordion-grid,
-  .port-accordion-grid--ratio {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2px;
-    padding: 2px;
-  }
-  .port-acc-item { height: 130px; }
-  .port-acc-img--ratio { max-height: 220px; }
-  .port-accordion-header { padding: 0.75rem 1rem; min-height: 48px; }
-  .port-accordion-name { font-size: clamp(1rem, 5vw, 1.3rem); }
-}
-
-/* Tablet fekvő – orientation landscape, 600-1023px */
-@media (min-width: 600px) and (max-width: 1023px) and (orientation: landscape) {
-  .port-accordion-grid,
-  .port-accordion-grid--ratio {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .port-acc-item { height: 160px; }
-}
-
-/* Tablet álló – orientation portrait, 600-1023px */
-@media (min-width: 600px) and (max-width: 1023px) and (orientation: portrait) {
-  .port-accordion-grid,
-  .port-accordion-grid--ratio {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ============================================================
-   ADMIN – Grid mód gombok (port-mode-wrap / port-mode-btn)
-   ============================================================ */
-
-.port-mode-wrap {
-  display: flex;
-  gap: 0;
-  border: 1px solid var(--border-mid);
-  overflow: hidden;
-}
-
-.port-mode-btn {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.4rem 0.9rem;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s;
-  min-height: 34px;
-}
-
-.port-mode-btn + .port-mode-btn {
-  border-left: 1px solid var(--border-mid);
-}
-
-.port-mode-btn.active {
-  background: var(--accent);
-  color: var(--bg-primary);
-}
-
-.port-mode-btn:not(.active):hover {
-  color: var(--text-primary);
-  background: rgba(255,255,255,0.04);
-}
-
-.port-mode-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
 
 /* ============================================================
    MODAL – tap zónák (bal/jobb navigáció)
