@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
-import { usePortfolio, useCategories, useSiteContent } from '../../hooks'
+import { usePortfolio, useCategories } from '../../hooks'
 
 const EMPTY_ITEM = {
   title: '', category_id: '', cloudinary_url: '',
@@ -10,100 +10,23 @@ const EMPTY_ITEM = {
 const EMPTY_CAT = { slug: '', label_hu: '', label_en: '', sort_order: 0 }
 const SPANS = ['large', 'medium', 'small']
 
-// Kategória beállítások – Grid mód + Limit
-function CategorySettings({ filterKey, currentMode, currentLimit, defaultLimit, onSaveMode, onSaveLimit, saving }) {
-  const [limitVal, setLimitVal] = useState(String(currentLimit))
-
-  const handleLimitBlur = () => {
-    const n = parseInt(limitVal)
-    if (!isNaN(n) && n > 0 && n !== currentLimit) onSaveLimit(filterKey, n)
-  }
-
-  return (
-    <div className="acms-cat-settings">
-      <div className="acms-grid-mode-switch">
-        <span className="acms-grid-mode-label">Nézet:</span>
-        <div className="port-mode-wrap">
-          <button type="button"
-            className={`port-mode-btn ${currentMode === 'flex' ? 'active' : ''}`}
-            onClick={() => onSaveMode(filterKey, 'flex')} disabled={saving}>
-            FlexiGrid
-          </button>
-          <button type="button"
-            className={`port-mode-btn ${currentMode === 'ratio' ? 'active' : ''}`}
-            onClick={() => onSaveMode(filterKey, 'ratio')} disabled={saving}>
-            FixRatio
-          </button>
-        </div>
-      </div>
-      <div className="acms-limit-wrap">
-        <span className="acms-grid-mode-label">Max képek:</span>
-        <input
-          type="number"
-          className="acms-input acms-input--sm acms-input--num"
-          value={limitVal}
-          min="1" max="100"
-          onChange={e => setLimitVal(e.target.value)}
-          onBlur={handleLimitBlur}
-          title={`Alapértelmezett: ${defaultLimit}`}
-        />
-        <span className="acms-hint">db</span>
-      </div>
-      {saving && <span className="acms-hint">Mentés...</span>}
-    </div>
-  )
-}
-
 export default function AdminPortfolio() {
-  const { items,      loading,      refetch }                        = usePortfolio()
-  const { categories, loading: catLoading, refetch: refetchCats }   = useCategories()
-  const { content,    refetch: refetchContent }                      = useSiteContent()
+  const { items,      loading,      refetch }                      = usePortfolio()
+  const { categories, loading: catLoading, refetch: refetchCats } = useCategories()
 
-  // Portfolio item form
-  const [showForm, setShowForm] = useState(false)
-  const [editing,  setEditing]  = useState(null)
-  const [form,     setForm]     = useState(EMPTY_ITEM)
-  const [saving,   setSaving]   = useState(false)
-  const [error,    setError]    = useState('')
+  const [showForm,   setShowForm]   = useState(false)
+  const [editing,    setEditing]    = useState(null)
+  const [form,       setForm]       = useState(EMPTY_ITEM)
+  const [saving,     setSaving]     = useState(false)
+  const [error,      setError]      = useState('')
 
-  // Kategória kezelő
   const [showCats,   setShowCats]   = useState(false)
   const [editingCat, setEditingCat] = useState(null)
   const [catForm,    setCatForm]    = useState(EMPTY_CAT)
   const [catSaving,  setCatSaving]  = useState(false)
   const [catError,   setCatError]   = useState('')
 
-  // Grid mód panel
-  const [showGridModes, setShowGridModes] = useState(false)
-  const [modeSaving,    setModeSaving]    = useState(false)
-
-  // Grid mód olvasása a site_content-ből
-  const getMode = (filterKey) =>
-    content[`portfolio_grid_mode_${filterKey}`] || 'flex'
-
-  // Grid mód mentése
-  const saveMode = async (filterKey, mode) => {
-    setModeSaving(true)
-    await supabase.from('site_content')
-      .upsert({ key: `portfolio_grid_mode_${filterKey}`, value: mode }, { onConflict: 'key' })
-    await refetchContent()
-    setModeSaving(false)
-  }
-
-  // Limit mentése
-  const saveLimit = async (filterKey, limit) => {
-    setModeSaving(true)
-    await supabase.from('site_content')
-      .upsert({ key: `portfolio_limit_${filterKey}`, value: String(limit) }, { onConflict: 'key' })
-    await refetchContent()
-    setModeSaving(false)
-  }
-
-  // Limit olvasása
-  const getLimit = (filterKey) =>
-    parseInt(content[`portfolio_limit_${filterKey}`]) || (filterKey === 'all' ? 10 : 15)
-
-  // ── Portfolio item műveletek ─────────────────────────────
+  // ── Portfolio item műveletek ─────────────────────────────────
   const openNew = () => {
     setEditing(null)
     setForm({ ...EMPTY_ITEM, category_id: categories[0]?.id || '' })
@@ -169,7 +92,7 @@ export default function AdminPortfolio() {
     await refetch()
   }
 
-  // ── Kategória műveletek ──────────────────────────────────
+  // ── Kategória műveletek ──────────────────────────────────────
   const openNewCat  = () => { setEditingCat(null); setCatForm(EMPTY_CAT); setCatError('') }
   const openEditCat = (cat) => {
     setEditingCat(cat.id)
@@ -183,9 +106,8 @@ export default function AdminPortfolio() {
     if (!catForm.slug.trim())     { setCatError('A slug kötelező.'); return }
     if (!catForm.label_hu.trim()) { setCatError('A magyar név kötelező.'); return }
     if (!catForm.label_en.trim()) { setCatError('Az angol név kötelező.'); return }
-    if (!/^[a-z0-9-]+$/.test(catForm.slug)) {
-      setCatError('Slug: csak kisbetű, szám, kötőjel.'); return
-    }
+    if (!/^[a-z0-9-]+$/.test(catForm.slug)) { setCatError('Slug: csak kisbetű, szám, kötőjel.'); return }
+
     setCatSaving(true); setCatError('')
     const payload = {
       slug: catForm.slug.trim(), label_hu: catForm.label_hu.trim(),
@@ -201,21 +123,13 @@ export default function AdminPortfolio() {
 
   const handleCatDelete = async (id, slug) => {
     const { data } = await supabase.from('portfolio_items').select('id').eq('category_id', id).limit(1)
-    if (data && data.length > 0) {
-      alert('Nem törölhető: vannak portfólió elemek ebben a kategóriában.'); return
-    }
+    if (data && data.length > 0) { alert('Nem törölhető: vannak portfólió elemek ebben a kategóriában.'); return }
     if (!window.confirm(`Törlöd a "${slug}" kategóriát?`)) return
     await supabase.from('portfolio_categories').delete().eq('id', id)
     await refetchCats()
   }
 
   const getCatLabel = (id) => categories.find(c => c.id === id)?.label_hu || 'Ismeretlen'
-
-  // Grid beállítások listája: Mind + összes kategória
-  const gridFilterList = [
-    { key: 'all', label: 'Mind', defaultLimit: 10 },
-    ...categories.map(c => ({ key: c.slug, label: c.label_hu, defaultLimit: 15 })),
-  ]
 
   return (
     <div className="acms-section">
@@ -227,44 +141,12 @@ export default function AdminPortfolio() {
           <div className="acms-section-sub">{items.length} elem · {categories.length} kategória</div>
         </div>
         <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-          <button className="acms-btn-secondary" onClick={() => { setShowGridModes(v => !v); setShowCats(false) }}>
-            {showGridModes ? '← Vissza' : '⊞ Grid nézetek'}
-          </button>
-          <button className="acms-btn-secondary" onClick={() => { setShowCats(v => !v); setShowGridModes(false) }}>
+          <button className="acms-btn-secondary" onClick={() => setShowCats(v => !v)}>
             {showCats ? '← Vissza' : '⚙ Kategóriák'}
           </button>
           <button className="acms-btn-primary" onClick={openNew}>+ Új elem</button>
         </div>
       </div>
-
-      {/* ── GRID MÓDOK PANEL ── */}
-      {showGridModes && (
-        <div className="acms-cat-panel">
-          <div className="acms-cat-panel-title">Grid nézet beállítása kategóriánként</div>
-          <div className="acms-hint" style={{ marginBottom: '1.2rem' }}>
-            FlexiGrid: fix magasságú rácsos nézet. FixRatio: képarány megtartva, masonry elrendezés.
-          </div>
-          <div className="acms-gridmode-list">
-            {catLoading ? <div className="admin-empty">Betöltés...</div> : gridFilterList.map((item) => (
-              <div key={item.key} className="acms-gridmode-item">
-                <div className="acms-gridmode-item-label">
-                  <span className="acms-cat-slug">{item.key}</span>
-                  <span className="acms-cat-label">{item.label}</span>
-                </div>
-                <CategorySettings
-                  filterKey={item.key}
-                  currentMode={getMode(item.key)}
-                  currentLimit={getLimit(item.key)}
-                  defaultLimit={item.defaultLimit}
-                  onSaveMode={saveMode}
-                  onSaveLimit={saveLimit}
-                  saving={modeSaving}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ── KATEGÓRIA KEZELŐ ── */}
       {showCats && (
@@ -313,7 +195,7 @@ export default function AdminPortfolio() {
       )}
 
       {/* ── PORTFOLIO LISTA ── */}
-      {!showCats && !showGridModes && (
+      {!showCats && (
         loading ? (
           <div className="admin-empty">Betöltés...</div>
         ) : items.length === 0 ? (
@@ -372,33 +254,24 @@ export default function AdminPortfolio() {
                   </select>
                 </div>
                 <div className="acms-form-group">
-                  <label>Méret (grid)</label>
-                  <select name="span" className="acms-input" value={form.span} onChange={handleChange}>
-                    {SPANS.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  <label>Sorrend</label>
+                  <input name="sort_order" type="number" className="acms-input" value={form.sort_order} onChange={handleChange} min="0" />
                 </div>
               </div>
               <div className="acms-form-group">
                 <label>Cloudinary kép URL *</label>
                 <input name="cloudinary_url" className="acms-input" value={form.cloudinary_url} onChange={handleChange} placeholder="https://res.cloudinary.com/..." />
-                <span className="acms-hint">Thumbnail és lightbox képként jelenik meg</span>
+                <span className="acms-hint">Ez lesz a kép az oldalon és a lightboxban</span>
               </div>
               <div className="acms-form-group">
                 <label>Videó URL (opcionális)</label>
                 <input name="video_url" className="acms-input" value={form.video_url} onChange={handleChange} placeholder="https://res.cloudinary.com/.../video.mp4" />
-                <span className="acms-hint">Csak videó kategóriánál töltsd ki</span>
               </div>
-              <div className="acms-form-row">
-                <div className="acms-form-group">
-                  <label>Sorrend</label>
-                  <input name="sort_order" type="number" className="acms-input" value={form.sort_order} onChange={handleChange} min="0" />
-                </div>
-                <div className="acms-form-group acms-form-group--check">
-                  <label>
-                    <input name="visible" type="checkbox" checked={form.visible} onChange={handleChange} />
-                    <span>Látható az oldalon</span>
-                  </label>
-                </div>
+              <div className="acms-form-group acms-form-group--check">
+                <label>
+                  <input name="visible" type="checkbox" checked={form.visible} onChange={handleChange} />
+                  <span>Látható az oldalon</span>
+                </label>
               </div>
               {form.cloudinary_url && (
                 <div className="acms-preview">

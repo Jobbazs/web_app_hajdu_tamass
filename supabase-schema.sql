@@ -66,14 +66,6 @@ create policy "Admin all categories"
   on public.portfolio_categories for all
   using (auth.role() = 'authenticated');
 
-insert into public.portfolio_categories
-(slug, label_hu, label_en, sort_order)
-values
-('event', 'Rendezvény', 'Event', 1),
-('portrait', 'Portré', 'Portrait', 2),
-('video', 'Videó', 'Video', 3),
-('urbex', 'Urbex', 'Urbex', 4);
-
 -- ── 2. PORTFOLIO_ITEMS ───────────────────────────────────────
 
 
@@ -261,3 +253,50 @@ alter table public.custom_sections
 
 -- A régi align oszlop mostantól "szekció alapértelmezett igazítás" marad
 -- title_align és body_align felülírják ha be van állítva
+-- ============================================================
+-- MIGRATION v9 – Új kategóriák + csatolmány oszlop
+-- Supabase Dashboard → SQL Editor → New query → Paste → Run
+-- ============================================================
+
+-- 1. messages táblához attachment_url oszlop
+alter table public.messages
+  add column if not exists attachment_url text;
+
+-- 2. Supabase Storage – attachments bucket létrehozása
+-- (Ha még nem létezik – a Dashboard-on is megtehető:
+--  Storage → New bucket → "attachments" → Public: true)
+insert into storage.buckets (id, name, public)
+  values ('attachments', 'attachments', true)
+  on conflict (id) do nothing;
+
+  DROP POLICY IF EXISTS "Public upload attachments" ON storage.objects;
+  DROP POLICY IF EXISTS "Public read attachments" ON storage.objects;
+  DROP POLICY IF EXISTS "Admin delete attachments" ON storage.objects;
+
+-- Storage policy – mindenki feltölthet (contact form)
+create policy "Public upload attachments"
+  on storage.objects for insert
+  with check (bucket_id = 'attachments');
+
+-- Storage policy – mindenki olvashat (admin megtekintés)
+create policy "Public read attachments"
+  on storage.objects for select
+  using (bucket_id = 'attachments');
+
+-- Admin törölhet
+create policy "Admin delete attachments"
+  on storage.objects for delete
+  using (bucket_id = 'attachments' and auth.role() = 'authenticated');
+
+-- 3. Új portfolio kategóriák (ha még nem léteznek)
+insert into public.portfolio_categories (slug, label_hu, label_en, sort_order)
+  values
+    ('nightlife',     'Nightlife',       'Nightlife',       1),
+    ('studio',        'Studio',          'Studio',          2),
+    ('rendezveny',    'Rendezvény',      'Events',          3),
+    ('sport-kultura', 'Sport & Kultúra', 'Sport & Culture', 4),
+    ('kreativ',       'Kreatív',         'Creative',        5)
+  on conflict (slug) do update
+    set label_hu   = excluded.label_hu,
+        label_en   = excluded.label_en,
+        sort_order = excluded.sort_order;
