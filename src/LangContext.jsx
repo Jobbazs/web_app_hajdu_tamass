@@ -1,10 +1,15 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
 // ============================================================
 // FORDÍTÁSOK
 // ============================================================
 export const TRANSLATIONS = {
   hu: {
+    // Meta (document.title / meta description nyelvváltáskor)
+    meta: {
+      title:       'Hajdú Tamás — Fotós & Videós | Budapest',
+      description: 'Budapesti fotós és videós. Rendezvények, underground bulik, portrék, videóklippek. Arzenál és hasonló helyszínek.',
+    },
     // Navbar
     nav: {
       about:    'Rólam',
@@ -112,6 +117,11 @@ export const TRANSLATIONS = {
   },
 
   en: {
+    // Meta (document.title / meta description on language switch)
+    meta: {
+      title:       'Hajdú Tamás — Photographer & Videographer | Budapest',
+      description: 'Budapest-based photographer and videographer. Events, underground parties, portraits, music videos.',
+    },
     nav: {
       about:    'About',
       portfolio:'Portfolio',
@@ -221,6 +231,29 @@ export function LangProvider({ children }) {
   const [lang, setLang] = useState('hu')
   const t = TRANSLATIONS[lang]
   const toggleLang = () => setLang(l => l === 'hu' ? 'en' : 'hu')
+
+  // SEO: document.title, meta description és <html lang> szinkronban tartása
+  // a felhasználó által épp választott nyelvvel, hogy a keresőmotorok és
+  // a képernyőolvasók a ténylegesen látott nyelvet lássák.
+  useEffect(() => {
+    document.documentElement.lang = lang
+
+    if (t.meta?.title) document.title = t.meta.title
+
+    if (t.meta?.description) {
+      let descTag = document.querySelector('meta[name="description"]')
+      if (!descTag) {
+        descTag = document.createElement('meta')
+        descTag.setAttribute('name', 'description')
+        document.head.appendChild(descTag)
+      }
+      descTag.setAttribute('content', t.meta.description)
+    }
+
+    const ogLocale = document.querySelector('meta[property="og:locale"]')
+    if (ogLocale) ogLocale.setAttribute('content', lang === 'hu' ? 'hu_HU' : 'en_US')
+  }, [lang, t])
+
   return (
     <LangContext.Provider value={{ lang, t, toggleLang }}>
       {children}

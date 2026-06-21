@@ -104,7 +104,7 @@ export default function Portfolio() {
                     {cat.cover?.cloudinaryUrl ? (
                       <img
                         src={cat.cover.cloudinaryUrl}
-                        alt={label}
+                        alt={cat.cover.title ? `${cat.cover.title} — ${label}` : label}
                         className="port-cat-img"
                         loading="lazy"
                       />

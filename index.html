@@ -3,37 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hajdú Tamáss — Fotós & Videós</title>
+    <title>Hajdú Tamás — Fotós & Videós | Budapest</title>
     <meta
       name="description"
-      content="Budapesti fotós és videós. Rendezvények, underground bulik, portrék, videóklippek. Arzenal és hasonló helyszínek."
+      content="Budapesti fotós és videós. Rendezvények, underground bulik, portrék, videóklippek. Arzenál és hasonló helyszínek."
     />
     <meta
       name="keywords"
-      content="fotós budapest, rendezvény fotós, buli fotós, rave fotós, budapest videós, budapest fotós, videós budapest, portré fotózás, urbex fotó, profi fotós, profi videós, profi operatőr, budapesti fotós, budapest fotós, budapest based, budapest based photographer, budapest based videographer, "
+      content="fotós budapest, rendezvény fotós, buli fotós, rave fotós, budapest videós, budapest fotós, videós budapest, portré fotózás, urbex fotó, profi fotós, profi videós, profi operatőr, budapesti fotós, budapest based photographer, budapest based videographer"
     />
     <meta name="author" content="Hajdú Tamás" />
+    <meta name="robots" content="index, follow" />
 
     <!-- Open Graph (Facebook, Discord, WhatsApp előnézet) -->
     <meta property="og:type" content="website" />
-    <meta
-      property="og:title"
-      content="Hajdú Tamás – Fotós & Videós | Budapest"
-    />
-    <meta
-      property="og:title"
-      content="Hajdú Tamáss – Fotós & Videós | Budapest"
-    />
+    <meta property="og:site_name" content="Hajdú Tamás Fotós & Videós" />
+    <meta property="og:title" content="Hajdú Tamás – Fotós & Videós | Budapest" />
     <meta
       property="og:description"
       content="Rendezvények, underground bulik, portrék és videóklippek Budapestről."
     />
     <meta
       property="og:image"
-      content="https://res.cloudinary.com/CLOUD_NAME/image/upload/w_1200,h_630,c_fill/portfolio/og-image.jpg"
+      content="https://res.cloudinary.com/dpeavk0xh/image/upload/w_1200,h_630,c_fill,f_auto,q_auto/portfolio/og-image.jpg"
     />
-    <meta property="og:url" content="https://hajdutamass.com" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://hajdutamas.hu" />
     <meta property="og:locale" content="hu_HU" />
+    <meta property="og:locale:alternate" content="en_US" />
 
     <!-- Twitter/X kártya -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -44,11 +42,34 @@
     />
     <meta
       name="twitter:image"
-      content="https://res.cloudinary.com/CLOUD_NAME/image/upload/w_1200,h_630,c_fill/portfolio/og-image.jpg"
+      content="https://res.cloudinary.com/dpeavk0xh/image/upload/w_1200,h_630,c_fill,f_auto,q_auto/portfolio/og-image.jpg"
     />
 
-    <!-- Canonical URL (fontos ha több domainen is elérhető) -->
-    <link rel="canonical" href="https://hajdutamass.com" />
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://hajdutamas.hu" />
+
+    <!-- Strukturált adat (JSON-LD) – helyi szolgáltatás Google számára -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "Hajdú Tamás Fotós & Videós",
+      "image": "https://res.cloudinary.com/dpeavk0xh/image/upload/w_1200,h_630,c_fill,f_auto,q_auto/portfolio/og-image.jpg",
+      "url": "https://hajdutamas.hu",
+      "description": "Budapesti fotós és videós. Rendezvények, underground bulik, portrék, videóklippek.",
+      "areaServed": {
+        "@type": "City",
+        "name": "Budapest"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Budapest",
+        "addressCountry": "HU"
+      },
+      "priceRange": "$$",
+      "serviceType": ["Rendezvényfotózás", "Portréfotózás", "Videóklip forgatás", "Urbex fotózás"]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
