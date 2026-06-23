@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { usePortfolio, useCategories } from '../../hooks'
+import '../../Styles/AdminPortfolio.css'
 
 const EMPTY_ITEM = {
   title: '', category_id: '', cloudinary_url: '',

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
+import '../../Styles/AdminMessages.css'
 
 const ATTACHMENTS_BUCKET = 'attachments'
 const ATTACHMENTS_FOLDER = 'contact-attachments'

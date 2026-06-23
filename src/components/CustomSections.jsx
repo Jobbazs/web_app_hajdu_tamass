@@ -1,5 +1,6 @@
 import { useLang } from '../LangContext'
 import { useCustomSections } from '../hooks'
+import '../Styles/CustomSections.css'
 
 const FONT_SIZE_MAP = {
   small:  'clamp(0.85rem, 1.8vw, 1rem)',

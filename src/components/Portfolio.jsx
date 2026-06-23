@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useLang } from '../LangContext'
 import { usePortfolio, useCategories } from '../hooks'
+import '../Styles/Portfolio.css'
 import MediaModal from './MediaModal'
 
 // Fix kategória lista – slug, magyar és angol név

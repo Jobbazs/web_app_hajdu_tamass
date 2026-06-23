@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 import AdminMessages  from './admin/AdminMessages'
+import '../Styles/Admin.css'
 import AdminPortfolio from './admin/AdminPortfolio'
 import AdminServices  from './admin/AdminServices'
 import AdminContent   from './admin/AdminContent'

@@ -1,0 +1,234 @@
+/* ============================================================
+   GOOGLE FONTS
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,300&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap');
+
+/* ACTIVE THEME – cseréld theme-neon.css-re a neon témához */
+@import '../theme-rustic.css';
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  /* iOS Safari scroll fix */
+  -webkit-text-size-adjust: 100%;
+  /* Megakadályozza az iOS Safari automatikus betűméret-növelést tájképes fordulásnál */
+  /* Pinch-zoom tiltása: csak görgetés engedélyezett */
+  touch-action: pan-x pan-y;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Crimson Pro', 'Rajdhani', serif;
+  font-size: 18px;
+  line-height: 1.65;
+  overflow-x: hidden;
+  /* iOS momentum scroll */
+  -webkit-overflow-scrolling: touch;
+  /* Pinch-zoom tiltása body szinten is (redundáns biztonsági háló) */
+  touch-action: pan-x pan-y;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* A portfólió grid képei töltik ki a cellát */
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 2rem;
+}
+
+section {
+  padding: 6rem 2rem;
+  position: relative;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+.section-title {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+}
+
+.section-label { margin-bottom: 0.8rem; }
+
+.body-text {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  font-weight: 300;
+  line-height: 1.75;
+  margin-bottom: 1.4rem;
+}
+
+.body-text em { color: var(--text-primary); font-style: italic; }
+
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+.rust-divider {
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--rust, #8B3A1A), var(--rust-light, #C4612A), var(--rust, #8B3A1A), transparent);
+  opacity: 0.4;
+}
+
+/* ============================================================
+   BETŰMÉRET NÖVELÉS – kis szövegek olvashatóbbak nagyobb képernyőn
+   ============================================================ */
+
+/* Body alap */
+body { font-size: 18px; }
+
+/* Nav linkek */
+.nav-links a { font-size: 0.75rem; }
+
+/* Section label */
+.section-label { font-size: 0.72rem; }
+
+/* Filter gombok */
+.filter-btn { font-size: 0.72rem; }
+
+/* Admin mono szövegek */
+.admin-card-email,
+.admin-card-service,
+.admin-card-date,
+.admin-badge,
+.admin-mark-btn,
+.admin-logout-btn,
+.acms-tab,
+.acms-btn-sm,
+.acms-hint,
+.acms-tag,
+.acms-cat-slug,
+.form-label,
+.modal-counter,
+.modal-nav-btn,
+.footer-copy,
+.footer-socials a,
+.hero-eyebrow,
+.hero-year,
+.scroll-hint { font-size: 0.72rem; }
+
+/* Port label */
+.port-label { font-size: 0.72rem; }
+
+/* Tag */
+.tag { font-size: 0.7rem; }
+
+/* Lang switcher */
+.lang-switcher { font-size: 0.72rem; }
+
+/* Form label */
+.form-label { font-size: 0.7rem; }
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================
+
+   xs  – 0–479px    (kisebb telefonok: SE, mini)
+   sm  – 480–767px  (nagy telefonok: iPhone Pro Max, Galaxy)
+   md  – 768–1023px (tablet: iPad, kis laptop)
+   lg  – 1024px+    (laptop, desktop, monitor)
+
+   ============================================================ */
+
+/* ── TABLET (768–1023px) ─────────────────────────────────── */
+@media (max-width: 1023px) {
+  /* Nav */
+  .nav-links    { display: none; }
+  .nav-hamburger { display: flex; }
+
+  /* Hero */
+  .hero-year { display: none; }
+  .hero-content { padding-right: 0; max-width: 100%; }
+
+  /* About: egymás alatt */
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .about-img-frame {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  /* Services: max 2 kártya / sor tableten */
+  .services-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Footer */
+  footer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.2rem;
+  }
+}
+
+/* ── PHONE (0–767px) ─────────────────────────────────────── */
+@media (max-width: 767px) {
+  section { padding: 4.5rem 1.2rem; }
+
+  /* Hero */
+  #hero { padding: 0 1.2rem 4.5rem; }
+  .hero-title { font-size: clamp(3.2rem, 15vw, 5.5rem); }
+  .hero-subtitle { font-size: 0.95rem; max-width: 100%; }
+  .hero-cta { width: 100%; text-align: center; }
+  .scroll-hint { display: none; } /* mobilon felesleges */
+
+  /* Contact form: egymás alá */
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+
+  /* Portfolio header */
+  .portfolio-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.2rem;
+  }
+
+  /* Footer */
+  .footer-socials { justify-content: center; }
+}
+
+/* ── SMALL PHONE (0–479px) ───────────────────────────────── */
+@media (max-width: 479px) {
+  section { padding: 4rem 1rem; }
+  #hero { padding: 0 1rem 4rem; }
+
+  .hero-title { font-size: clamp(2.8rem, 17vw, 4.5rem); }
+
+  /* Admin */
+  .admin-messages { padding: 1rem; }
+  .admin-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+}
+
+/* ── LARGE DESKTOP (1400px+) ─────────────────────────────── */
+@media (min-width: 1400px) {
+  .container { max-width: 1320px; }
+}

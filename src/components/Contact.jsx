@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import emailjs from '@emailjs/browser'
 import { supabase } from '../supabaseClient'
+import '../Styles/Contact.css'
 import { useLang } from '../LangContext'
 import ThankYou from './ThankYou'
 

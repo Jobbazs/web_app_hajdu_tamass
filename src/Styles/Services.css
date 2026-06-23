@@ -1,0 +1,70 @@
+/* ============================================================
+   CUSTOM SECTIONS – főoldalon megjelenő egyedi szekciók
+   ============================================================ */
+
+.custom-section {
+  padding: 5rem 2rem;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+/* Váltakozó háttér ha több szekció van egymás után */
+.custom-section:nth-child(even) {
+  background: var(--bg-primary);
+}
+
+.custom-section-inner {
+  max-width: 900px;
+  /* Az igazítás inline style-ból jön */
+  width: 100%;
+}
+
+.custom-section-title {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 1.2rem;
+}
+
+.custom-section-body {
+  color: var(--text-secondary);
+  font-weight: 300;
+  /* font-size és line-height inline style-ból jön */
+}
+
+/* ============================================================
+   CUSTOM SECTIONS – főoldal extra mezők
+   ============================================================ */
+
+.custom-section-fields {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.custom-section-field {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  /* Az igazítás inline style-ból jön */
+}
+
+.custom-section-field-label {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.custom-section-field-value {
+  color: var(--text-primary);
+  font-size: 1rem;
+}

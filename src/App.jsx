@@ -13,7 +13,7 @@ import Footer         from './components/Footer'
 import Admin     from './components/Admin'
 import Login     from './components/Login'
 
-import './index.css'
+import './Styles/global.css'
 
 function useRoute() {
   const [path, setPath] = useState(window.location.pathname)

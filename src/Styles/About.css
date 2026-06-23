@@ -1,0 +1,194 @@
+/* ============================================================
+   NAVBAR – desktop
+   ============================================================ */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  padding: 1.1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s;
+}
+
+/* iOS safe area – navbar kiterjed a notch/Dynamic Island területére */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .navbar {
+    padding-top: max(1.1rem, env(safe-area-inset-top));
+    padding-left: max(2rem, env(safe-area-inset-left));
+    padding-right: max(2rem, env(safe-area-inset-right));
+    /* Ha van safe area, a navbar hátterét mindig kitöltjük */
+    background: var(--bg-nav);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  /* A hero section paddingját is igazítjuk hogy ne csússzon a navbar alá */
+  #hero {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+.navbar.scrolled {
+  background: var(--bg-nav);
+  border-bottom-color: var(--nav-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.nav-logo {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 1.75rem;
+  letter-spacing: 0.15em;
+  color: var(--text-primary);
+  cursor: pointer;
+  z-index: 1001;
+  position: relative;
+}
+
+.nav-logo .logo-accent { color: var(--accent); }
+
+/* Desktop nav links */
+.nav-links {
+  display: flex;
+  gap: 2.5rem;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  position: relative;
+  transition: color 0.25s;
+  /* Touch target méret */
+  padding: 0.5rem 0;
+  display: inline-block;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 0; height: 1px;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+.nav-links a:hover { color: var(--text-primary); }
+.nav-links a:hover::after { width: 100%; }
+
+/* Hamburger gomb */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 2.2rem;
+  height: 2.2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  z-index: 1001;
+  position: relative;
+}
+
+.nav-hamburger span {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--text-primary);
+  transition: transform 0.3s, opacity 0.3s;
+  transform-origin: center;
+}
+
+/* Hamburger → X animáció */
+.nav-hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.nav-hamburger.open span:nth-child(2) { opacity: 0; }
+.nav-hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* Mobil menü panel */
+.nav-mobile {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg-nav);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+}
+
+.nav-mobile.open { display: flex; }
+
+.nav-mobile a {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  transition: color 0.2s;
+}
+
+.nav-mobile a:hover { color: var(--accent); }
+
+/* ============================================================
+   LANGUAGE SWITCHER
+   ============================================================ */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.lang-switcher {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  background: none;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: border-color 0.2s;
+  min-height: 32px;
+}
+
+.lang-switcher:hover {
+  border-color: var(--accent);
+}
+
+.lang-sep {
+  opacity: 0.3;
+}
+
+.lang-active {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.lang-switcher--mobile {
+  font-size: 1rem;
+  letter-spacing: 0.3em;
+  border: 1px solid var(--border-mid);
+  padding: 0.6rem 1.2rem;
+  margin-top: 0.5rem;
+}
+
+/* Hamburger mellé mobilon */
+@media (max-width: 1023px) {
+  .nav-right { display: none; }
+}

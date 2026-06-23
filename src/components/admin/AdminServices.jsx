@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useServices } from '../../hooks'
+import '../../Styles/AdminServices.css'
 
 const EMPTY_FORM = {
   number: '', name_hu: '', name_en: '',

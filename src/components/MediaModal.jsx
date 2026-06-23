@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useLang } from '../LangContext'
+import '../Styles/MediaModal.css'
 
 export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const videoRef = useRef(null)

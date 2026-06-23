@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useSiteContent, useAllCustomSections } from '../../hooks'
+import '../../Styles/AdminContent.css'
 
 // ── Rögzített szöveg csoportok – most már igazítással és betűmérettel ───────
 // A site_content-ben minden mező egy key-value pár.

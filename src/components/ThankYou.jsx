@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLang } from '../LangContext'
+import '../Styles/ThankYou.css'
 
 /*
   Props:

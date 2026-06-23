@@ -1,5 +1,6 @@
 import { useLang } from '../LangContext'
 import { useSiteContent } from '../hooks'
+import '../Styles/Hero.css'
 
 // align kulcs → inline stílus a szöveg elemre
 const alignStyle = (align) => {

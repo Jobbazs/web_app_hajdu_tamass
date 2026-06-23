@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { OWNER } from '../data'
 import { useLang } from '../LangContext'
+import '../Styles/Navbar.css'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)

@@ -1,5 +1,6 @@
 import { useLang } from '../LangContext'
 import { OWNER } from '../data'
+import '../Styles/Footer.css'
 
 export default function Footer() {
   const { t } = useLang()

@@ -1,5 +1,6 @@
 import { useLang } from '../LangContext'
 import { useServices } from '../hooks'
+import '../Styles/Services.css'
 
 export default function Services() {
   const { lang, t } = useLang()

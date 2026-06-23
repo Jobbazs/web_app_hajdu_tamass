@@ -1,6 +1,7 @@
 import { useLang } from '../LangContext'
 import { useSiteContent } from '../hooks'
 import { OWNER } from '../data'
+import '../Styles/About.css'
 
 // align kulcs → textAlign + esetleges eltolás
 const alignStyle = (align) => {

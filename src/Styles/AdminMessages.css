@@ -1,0 +1,258 @@
+/* ============================================================
+   ADMIN – CONTENT (Custom Sections CMS)
+   ============================================================ */
+
+/* ── Szekció lista ── */
+.acms-sect-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.acms-sect-item {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;        /* mobilon egymás alá mehet */
+  gap: 0.8rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 1rem;
+  transition: border-color 0.2s;
+  overflow: hidden;       /* hosszú szöveg ne lógjon ki */
+}
+
+.acms-sect-item:hover { border-color: var(--border-mid); }
+
+.acms-sect-item--hidden {
+  opacity: 0.5;
+}
+
+/* ── Lista sorban preview (összesített nézet) ── */
+.acms-sect-preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.acms-sect-preview-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 0.6rem;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.acms-sect-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* ── Szekció fejléc (kattintható, expand/collapse) ── */
+.acms-sect-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  flex-wrap: wrap;
+}
+
+.acms-sect-toggle {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.acms-sect-item--open .acms-sect-toggle {
+  transform: rotate(90deg);
+}
+
+.acms-sect-name {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acms-sect-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+/* ── Szekció szerkesztő (nyitott állapot) ── */
+.acms-sect-body {
+  border-top: 1px solid var(--border-subtle);
+  padding: 1.2rem;
+  background: var(--bg-secondary);
+}
+
+/* ── Élő előnézet ── */
+.acms-sect-live-preview {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-mid);
+  border-left: 3px solid var(--accent);
+  padding: 1.5rem 2rem;
+  margin-bottom: 1rem;
+  min-height: 80px;
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', 'Rajdhani', serif;
+  /* Live preview konténer mérete */
+  min-height: 100px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.acms-sect-preview-title {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 0.6rem;
+}
+
+/* Az előnézet body white-space pre-wrap */
+.acms-sect-preview-body {
+  color: var(--text-secondary);
+  font-family: 'Crimson Pro', 'Rajdhani', serif;
+  /* font-size, lineHeight, textAlign inline style-ból jön */
+}
+
+.acms-sect-preview-fields {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.8rem;
+}
+
+.acms-sect-preview-field {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.acms-sect-field-label {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.acms-sect-field-value {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+/* ── Mező szerkesztő sor ── */
+.acms-field-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.8rem;
+  align-items: start;
+  margin-bottom: 0.8rem;
+}
+
+.acms-field-row .acms-btn-sm {
+  margin-top: 1.6rem; /* label magasságával igazodik */
+}
+
+/* ── Mező lista (Extra Fields) ── */
+.acms-extra-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.acms-extra-field-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  padding: 0.5rem 0.8rem;
+}
+
+.acms-extra-field-key {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  flex-shrink: 0;
+  min-width: 80px;
+}
+
+.acms-extra-field-val {
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Láthatóság toggle ── */
+.acms-visibility-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  padding: 0.4rem 0;
+}
+
+.acms-visibility-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.acms-visibility-label {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Mobilon */
+@media (max-width: 767px) {
+  .acms-field-row {
+    grid-template-columns: 1fr;
+  }
+  .acms-field-row .acms-btn-sm {
+    margin-top: 0;
+    align-self: flex-end;
+  }
+  .acms-sect-live-preview {
+    padding: 1.2rem;
+  }
+  /* Sect-item gombok mobilon külön sorba */
+  .acms-sect-item .acms-list-actions {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .acms-sect-item .acms-list-actions .acms-btn-sm {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
+}
+
