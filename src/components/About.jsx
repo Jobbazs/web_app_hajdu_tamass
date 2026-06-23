@@ -57,7 +57,7 @@ export default function About() {
         </div>
 
         {/* Szöveg */}
-        <div>
+        <div className="about-text">
           <div className="section-label">{a.label}</div>
           <h2 className="section-title">{a.title1}<br />{a.title2}</h2>
 
