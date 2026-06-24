@@ -15,13 +15,14 @@
 .about-img-frame {
   float: right;
   width: clamp(220px, 35%, 380px);
+    padding-left: 1rem;
+
   margin: 0 0 2rem 3rem;   /* bal és alsó margó: szöveg légzik mellette */
   shape-outside: border-box; /* szöveg a sarkot is megkerüli */
 }
 
 .about-img-frame img {
   width: 100%;
-  padding-left: 1rem;
   height: auto;
   display: block;
 }
