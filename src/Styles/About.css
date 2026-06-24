@@ -9,7 +9,7 @@
    ──────────────────────────────────────────────────────── */
 .about-grid {
   display: grid;
-  grid-template-columns: 1fr 1.3fr;
+  grid-template-columns: 2fr 1fr;
   gap: 5rem;
   align-items: center;
   overflow: hidden;
