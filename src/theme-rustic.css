@@ -322,11 +322,11 @@ body::before {
   padding: 2.5rem;
   border: 1px solid rgba(139,58,26,0.1);
   position: relative;
-  transition: border-color 0.3s;
+  /* transition owned by Services.css (DollyZoom) */
   clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
 }
 
-.service-card:hover { border-color: rgba(196,97,42,0.3); }
+/* border-color hover handled by Services.css with !important */
 
 .service-card::before {
   content: '';

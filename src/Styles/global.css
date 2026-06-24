@@ -1,460 +1,224 @@
 /* ============================================================
-   ADMIN – SERVICES
+   GOOGLE FONTS
    ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,300&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap');
 
-/* ── Ikon választó ── */
-.acms-icon-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+/* ACTIVE THEME – cseréld theme-neon.css-re a neon témához */
+@import '../theme-rustic.css';
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  /* iOS Safari scroll fix */
+  -webkit-text-size-adjust: 100%;
+  /* Megakadályozza az iOS Safari automatikus betűméret-növelést tájképes fordulásnál */
+  /* Pinch-zoom tiltása: csak görgetés engedélyezett */
+  touch-action: pan-x pan-y;
 }
 
-.acms-icon-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
+body {
   background: var(--bg-primary);
-  border: 1px solid var(--border-subtle);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.acms-icon-btn:hover {
-  border-color: var(--border-mid);
-}
-
-.acms-icon-btn.active {
-  border-color: var(--accent);
-  background: rgba(196, 97, 42, 0.1);
-}
-
-/* ── Ár mező ── */
-.acms-price-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  align-items: end;
-}
-
-/* ── Húzható sorrend ── */
-.acms-drag-handle {
-  cursor: grab;
-  color: var(--text-muted);
-  font-size: 1rem;
-  padding: 0.2rem 0.4rem;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.acms-drag-handle:active { cursor: grabbing; }
-
-/* ── Szolgáltatás kártya szerkesztő előnézet ── */
-.acms-service-preview {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  padding: 1.2rem;
-  margin-bottom: 0.4rem;
-}
-
-.acms-service-preview-number {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.55rem;
-  letter-spacing: 0.2em;
-  color: var(--accent);
-  margin-bottom: 0.4rem;
-}
-
-.acms-service-preview-name {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.3rem;
-  letter-spacing: 0.06em;
   color: var(--text-primary);
+  font-family: 'Crimson Pro', 'Rajdhani', serif;
+  font-size: 18px;
+  line-height: 1.65;
+  overflow-x: hidden;
+  /* iOS momentum scroll */
+  -webkit-overflow-scrolling: touch;
+  /* Pinch-zoom tiltása body szinten is (redundáns biztonsági háló) */
+  touch-action: pan-x pan-y;
 }
 
-/* ── Admin services grid (szerkesztő nézet) ── */
-.acms-services-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1px;
-  background: var(--border-subtle);
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
-.acms-service-card {
-  background: var(--bg-card);
-  padding: 2rem;
-  cursor: pointer;
-  transition: background 0.2s;
+/* A portfólió grid képei töltik ki a cellát */
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 2rem;
+}
+
+section {
+  padding: 6rem 2rem;
   position: relative;
 }
-.acms-service-card:hover { background: var(--bg-secondary); }
-.acms-service-card--active { background: var(--bg-secondary); cursor: default; }
 
-.acms-service-num {
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+.section-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 2.5rem;
-  color: rgba(139,58,26,0.2);
-  line-height: 1;
-  margin-bottom: 0.8rem;
-}
-
-.acms-service-name {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 0.06em;
+  font-weight: 900;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.acms-service-desc {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  line-height: 1.65;
-  margin-bottom: 0.8rem;
-}
-
-.acms-service-en {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
-}
-
-.acms-edit-hint {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.55rem;
-  letter-spacing: 0.15em;
-  color: var(--accent);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.acms-service-card:hover .acms-edit-hint { opacity: 1; }
-
-/* ── Services lista (új design) ── */
-.acms-services-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.acms-srv-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  padding: 1.2rem;
-  transition: border-color 0.2s;
-}
-
-.acms-srv-item:hover { border-color: var(--border-mid); }
-
-.acms-srv-num {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 2rem;
-  color: var(--accent);
-  opacity: 0.3;
-  line-height: 1;
-  min-width: 40px;
-  flex-shrink: 0;
-}
-
-.acms-srv-info { flex: 1; min-width: 0; }
-
-.acms-srv-name {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.3rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-primary);
-  margin-bottom: 0.4rem;
-}
-
-.acms-srv-desc {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 0.6rem;
-}
-
-.acms-srv-extras {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-/* ── Extra fields ── */
-.acms-extra-field {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-subtle);
-  border-left: 2px solid var(--accent);
-  padding: 1rem;
-  margin-bottom: 0.8rem;
-}
-
-.acms-extra-field-row {
-  display: flex;
-  gap: 0.8rem;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.acms-extra-remove {
-  flex-shrink: 0;
-  align-self: flex-end;
-  margin-bottom: 1rem;
-}
-
-.acms-add-field-btn {
-  width: 100%;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.acms-form-divider {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--accent);
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--border-subtle);
-  margin: 0.8rem 0 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.acms-form-row--3 { grid-template-columns: repeat(3, 1fr); }
-
-/* ── Subtabs ── */
-.acms-subtabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 1px solid var(--border-subtle);
   margin-bottom: 2rem;
 }
 
-.acms-subtab {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 0.7rem 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
+.section-label { margin-bottom: 0.8rem; }
+
+.body-text {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  font-weight: 300;
+  line-height: 1.75;
+  margin-bottom: 1.4rem;
 }
 
-.acms-subtab:hover { color: var(--text-primary); }
-.acms-subtab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.body-text em { color: var(--text-primary); font-style: italic; }
 
-/* ── Input variants ── */
-.acms-input--sm {
-  padding: 0.5rem 0.7rem !important;
-  min-height: 36px !important;
-  font-size: 0.9rem !important;
-  flex: 1;
-  min-width: 100px;
-}
-
-.acms-input--num {
-  max-width: 80px;
-  flex: 0 0 80px !important;
-}
-
-.acms-error--inline {
-  padding: 0 !important;
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+.rust-divider {
   width: 100%;
-  font-size: 0.6rem !important;
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--rust, #8B3A1A), var(--rust-light, #C4612A), var(--rust, #8B3A1A), transparent);
+  opacity: 0.4;
 }
 
-.acms-textarea--tall { min-height: 120px; }
+/* ============================================================
+   BETŰMÉRET NÖVELÉS – kis szövegek olvashatóbbak nagyobb képernyőn
+   ============================================================ */
 
-/* ── Extra field header ── */
-.acms-extra-field-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.8rem;
-  padding-bottom: 0.6rem;
-  border-bottom: 1px solid var(--border-subtle);
+/* Body alap */
+body { font-size: 18px; }
+
+/* Nav linkek */
+.nav-links a { font-size: 0.75rem; }
+
+/* Section label */
+.section-label { font-size: 0.72rem; }
+
+/* Filter gombok */
+.filter-btn { font-size: 0.72rem; }
+
+/* Admin mono szövegek */
+.admin-card-email,
+.admin-card-service,
+.admin-card-date,
+.admin-badge,
+.admin-mark-btn,
+.admin-logout-btn,
+.acms-tab,
+.acms-btn-sm,
+.acms-hint,
+.acms-tag,
+.acms-cat-slug,
+.form-label,
+.modal-counter,
+.modal-nav-btn,
+.footer-copy,
+.footer-socials a,
+.hero-eyebrow,
+.hero-year,
+.scroll-hint { font-size: 0.72rem; }
+
+/* Port label */
+.port-label { font-size: 0.72rem; }
+
+/* Tag */
+.tag { font-size: 0.7rem; }
+
+/* Lang switcher */
+.lang-switcher { font-size: 0.72rem; }
+
+/* Form label */
+.form-label { font-size: 0.7rem; }
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================
+
+   xs  – 0–479px    (kisebb telefonok: SE, mini)
+   sm  – 480–767px  (nagy telefonok: iPhone Pro Max, Galaxy)
+   md  – 768–1023px (tablet: iPad, kis laptop)
+   lg  – 1024px+    (laptop, desktop, monitor)
+
+   ============================================================ */
+
+/* ── TABLET (768–1023px) ─────────────────────────────────── */
+@media (max-width: 1023px) {
+  /* Nav */
+  .nav-links    { display: none; }
+  .nav-hamburger { display: flex; }
+
+  /* Hero */
+  .hero-year { display: none; }
+  .hero-content { padding-right: 0; max-width: 100%; }
+
+  /* Services: max 2 kártya / sor tableten */
+  .services-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Footer */
+  footer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.2rem;
+  }
 }
 
-.acms-extra-field-num {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.15em;
-  color: var(--accent);
-}
-
-/* ── Fixed field (igazítás/méret opciók) ── */
-.acms-fixed-hint {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-subtle);
-  padding: 0.8rem 1rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
-}
-
-.acms-fixed-field {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-subtle);
-  padding: 1rem;
-  margin-bottom: 0.8rem !important;
-}
-
-.acms-field-options {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-top: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.acms-field-opt-label {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  white-space: nowrap;
-  min-width: 70px;
-}
-
-/* ── Tartalom csoport ── */
-/* Tartalom szerkesztő */
-.acms-content-group {
-  margin-bottom: 2.5rem;
-  border: 1px solid var(--border-subtle);
-  padding: 1.5rem;
-}
-
-.acms-content-group-label {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.2rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 1.2rem;
-  padding-bottom: 0.8rem;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.acms-content-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 1.5rem;
-}
-
-/* ── Kategória panel ── */
-.acms-cat-panel {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-mid);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.acms-cat-panel-title {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.1rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 1rem;
-  padding-bottom: 0.7rem;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.acms-cat-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 1.5rem;
-}
-
-.acms-cat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 0.6rem 0.8rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  flex-wrap: wrap;
-}
-
-.acms-cat-slug {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-  min-width: 80px;
-}
-
-.acms-cat-label {
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  flex: 1;
-}
-
-.acms-cat-label--en {
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.acms-cat-order {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  min-width: 28px;
-  text-align: right;
-}
-
-.acms-cat-form {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.acms-cat-form-label {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 0.6rem;
-  width: 100%;
-}
-
-.acms-cat-form--new {
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-subtle);
-}
-
-/* ── Reszponzív ── */
+/* ── PHONE (0–767px) ─────────────────────────────────────── */
 @media (max-width: 767px) {
-  .acms-price-row { grid-template-columns: 1fr; }
-  .acms-extra-field-row { flex-direction: column; }
-  .acms-form-row--3 { grid-template-columns: 1fr; }
-  .acms-cat-form { flex-direction: column; }
-  .acms-input--sm { min-width: unset; width: 100%; }
-  .acms-input--num { max-width: 100%; flex: 1 !important; }
-  .acms-srv-item { flex-wrap: wrap; }
-  .acms-services-grid { grid-template-columns: 1fr; }
-  .acms-content-fields { grid-template-columns: 1fr; }
+  section { padding: 4.5rem 1.2rem; }
+
+  /* Hero */
+  #hero { padding: 0 1.2rem 4.5rem; }
+  .hero-title { font-size: clamp(3.2rem, 15vw, 5.5rem); }
+  .hero-subtitle { font-size: 0.95rem; max-width: 100%; }
+  .hero-cta { width: 100%; text-align: center; }
+  .scroll-hint { display: none; } /* mobilon felesleges */
+
+  /* Contact form: egymás alá */
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+
+  /* Portfolio header */
+  .portfolio-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.2rem;
+  }
+
+  /* Footer */
+  .footer-socials { justify-content: center; }
 }
 
+/* ── SMALL PHONE (0–479px) ───────────────────────────────── */
+@media (max-width: 479px) {
+  section { padding: 4rem 1rem; }
+  #hero { padding: 0 1rem 4rem; }
+
+  .hero-title { font-size: clamp(2.8rem, 17vw, 4.5rem); }
+
+  /* Admin */
+  .admin-messages { padding: 1rem; }
+  .admin-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+}
+
+/* ── LARGE DESKTOP (1400px+) ─────────────────────────────── */
+@media (min-width: 1400px) {
+  .container { max-width: 1320px; }
+}
