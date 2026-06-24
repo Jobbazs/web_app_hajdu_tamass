@@ -17,7 +17,7 @@
 
 .about-img-frame {
   float: right;
-  width: clamp(220px, 35%, 380px);
+  width: clamp(220px, 50%, 500px);
   margin: 0 0 2rem 3rem;   /* bal és alsó margó: szöveg légzik mellette */
   shape-outside: border-box; /* szöveg a sarkot is megkerüli */
 }
