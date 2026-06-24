@@ -1,72 +1,29 @@
 /* ============================================================
-   ADMIN – PORTFOLIO
+   LOGIN
    ============================================================ */
-
-.acms-cat-slug {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.55rem;
-  letter-spacing: 0.12em;
-  color: var(--text-muted);
-}
-
-.acms-video-badge {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.5rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.15rem 0.5rem;
-  border: 1px solid rgba(196, 97, 42, 0.4);
-  color: var(--accent);
-  background: rgba(196, 97, 42, 0.08);
-}
-
-/* ── Kép-sorrend kezelő ── */
-.acms-order-row {
+.login-page {
+  min-height: 100svh;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  justify-content: center;
+  background: var(--bg-primary);
+  padding: 2rem;
 }
 
-.acms-order-input {
-  width: 52px;
-  text-align: center;
-  padding: 0.3rem 0.4rem;
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.65rem;
-}
+.login-box { width: 100%; max-width: 420px; }
 
-/* ── Kategória szekció fejléc ── */
-.acms-cat-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
-  padding-bottom: 0.8rem;
-  border-bottom: 1px solid var(--border-subtle);
-  flex-wrap: wrap;
-}
-
-.acms-cat-title {
+.login-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 0.08em;
+  font-size: 2.5rem;
+  letter-spacing: 0.1em;
   color: var(--text-primary);
+  margin-bottom: 0.5rem;
 }
 
-.acms-cat-count {
+.login-sub {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
   color: var(--text-muted);
-}
-
-/* ── Portfólió szekció elválasztó ── */
-.acms-port-section {
   margin-bottom: 2.5rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.acms-port-section:last-child {
-  border-bottom: none;
 }

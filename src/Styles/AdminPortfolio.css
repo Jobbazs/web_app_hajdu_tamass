@@ -1,145 +1,72 @@
 /* ============================================================
-   PORTFOLIO
+   ADMIN – PORTFOLIO
    ============================================================ */
-.portfolio-header {
+
+.acms-cat-slug {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.acms-video-badge {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid rgba(196, 97, 42, 0.4);
+  color: var(--accent);
+  background: rgba(196, 97, 42, 0.08);
+}
+
+/* ── Kép-sorrend kezelő ── */
+.acms-order-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2.5rem;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.acms-order-input {
+  width: 52px;
+  text-align: center;
+  padding: 0.3rem 0.4rem;
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+}
+
+/* ── Kategória szekció fejléc ── */
+.acms-cat-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border-subtle);
   flex-wrap: wrap;
 }
 
-/* ============================================================
-   PORTFOLIO – Kategória cover grid
-   ============================================================ */
-
-.port-cat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  width: 100%;
-}
-
-/* Kártya */
-.port-cat-card {
-  position: relative;
-  cursor: pointer;
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  transition: border-color 0.3s;
-}
-
-.port-cat-card:hover {
-  border-color: var(--accent);
-}
-
-.port-cat-card--empty {
-  cursor: default;
-  opacity: 0.35;
-}
-
-/* Kép wrapper – fix arány */
-.port-cat-img-wrap {
-  position: relative;
-  aspect-ratio: 3 / 2;
-  overflow: hidden;
-  background: var(--bg-card);
-}
-
-/* Cover kép */
-.port-cat-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.5s ease, filter 0.4s ease;
-}
-
-.port-cat-card:hover .port-cat-img {
-  transform: scale(1.06);
-  filter: brightness(1.15);
-}
-
-/* Placeholder ha nincs kép */
-.port-cat-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Space Mono', monospace;
-  font-size: 1.5rem;
-  color: var(--text-muted);
-}
-
-/* Hover overlay – képszám */
-.port-cat-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 40%,
-    rgba(26,21,16,0.75) 100%
-  );
-  display: flex;
-  align-items: flex-end;
-  padding: 0.8rem 1rem;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.port-cat-card:hover .port-cat-overlay {
-  opacity: 1;
-}
-
-.port-cat-count {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--parchment, #C8B89A);
-}
-
-/* Kategória neve – a kép alatt */
-.port-cat-label {
-  padding: 0.75rem 1rem;
+.acms-cat-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
   color: var(--text-primary);
-  background: var(--bg-card);
-  border-top: 1px solid var(--border-subtle);
-  transition: color 0.3s, background 0.3s;
 }
 
-.port-cat-card:hover .port-cat-label {
-  color: var(--accent);
-  background: var(--bg-secondary);
-}
-
-/* Portfólió betöltés */
-.port-loading {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
+.acms-cat-count {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
   color: var(--text-muted);
-  text-align: center;
-  padding: 4rem;
 }
 
-/* ── Reszponzív ── */
-
-/* Tablet (768–1023px): 2 oszlop marad */
-@media (max-width: 1023px) {
-  .port-cat-grid { gap: 10px; }
+/* ── Portfólió szekció elválasztó ── */
+.acms-port-section {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-/* Kis mobil (max 479px): 1 oszlop */
-@media (max-width: 479px) {
-  .port-cat-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
+.acms-port-section:last-child {
+  border-bottom: none;
 }

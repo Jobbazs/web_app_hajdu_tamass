@@ -1,210 +1,70 @@
 /* ============================================================
-   THANK YOU POPUP
+   CUSTOM SECTIONS – főoldalon megjelenő egyedi szekciók
    ============================================================ */
 
-.ty-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 3000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  /* Fade-in */
-  background: rgba(0, 0, 0, 0);
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
-  transition: background 0.45s ease, backdrop-filter 0.45s ease;
-  /* iOS safe area */
-  padding-top: max(1.5rem, env(safe-area-inset-top));
-  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
-}
-
-.ty-backdrop.ty-active {
-  background: rgba(0, 0, 0, 0.82);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-/* ── Box ── */
-.ty-box {
-  position: relative;
-  width: 100%;
-  max-width: 560px;
-  padding: 3.5rem 3rem 3rem;
+.custom-section {
+  padding: 5rem 2rem;
   background: var(--bg-secondary);
-  border: 1px solid var(--border-mid);
-  text-align: center;
-  /* Slide-up + fade */
-  opacity: 0;
-  transform: translateY(28px) scale(0.97);
-  transition: opacity 0.45s ease, transform 0.45s ease;
+  border-top: 1px solid var(--border-subtle);
+  position: relative;
 }
 
-.ty-box.ty-box-active {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+/* Váltakozó háttér ha több szekció van egymás után */
+.custom-section:nth-child(even) {
+  background: var(--bg-primary);
 }
 
-/* ── Dekoratív sarok vonalak ── */
-.ty-corner {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  pointer-events: none;
+.custom-section-inner {
+  max-width: 900px;
+  /* Az igazítás inline style-ból jön */
+  width: 100%;
 }
 
-.ty-corner--tl {
-  top: -1px; left: -1px;
-  border-top: 2px solid var(--accent);
-  border-left: 2px solid var(--accent);
-}
-.ty-corner--tr {
-  top: -1px; right: -1px;
-  border-top: 2px solid var(--accent);
-  border-right: 2px solid var(--accent);
-}
-.ty-corner--bl {
-  bottom: -1px; left: -1px;
-  border-bottom: 2px solid var(--accent);
-  border-left: 2px solid var(--accent);
-}
-.ty-corner--br {
-  bottom: -1px; right: -1px;
-  border-bottom: 2px solid var(--accent);
-  border-right: 2px solid var(--accent);
-}
-
-/* ── Ikon ── */
-.ty-icon {
-  font-size: 2rem;
-  color: var(--accent);
-  margin-bottom: 1.2rem;
-  line-height: 1;
-  /* Pulse animáció */
-  animation: tyPulse 0.6s ease 0.45s both;
-}
-
-@keyframes tyPulse {
-  0%   { transform: scale(0.5); opacity: 0; }
-  70%  { transform: scale(1.15); }
-  100% { transform: scale(1);  opacity: 1; }
-}
-
-/* ── Eyebrow ── */
-.ty-eyebrow {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 1rem;
-}
-
-/* ── Title ── */
-.ty-title {
+.custom-section-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
   font-weight: 900;
-  font-size: clamp(2.4rem, 6vw, 3.8rem);
-  line-height: 0.95;
-  letter-spacing: 0.03em;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-primary);
-  margin-bottom: 1.4rem;
-}
-
-.ty-title-accent {
-  color: var(--accent);
-  display: block;
-}
-
-/* ── Body szöveg ── */
-.ty-body {
-  font-size: clamp(1rem, 2.5vw, 1.2rem);
-  color: var(--text-secondary);
-  font-weight: 300;
-  line-height: 1.7;
-  margin-bottom: 2.2rem;
-  max-width: 380px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* ── Főgomb ── */
-.ty-close-btn {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--bg-primary);
-  background: var(--accent);
-  border: none;
-  padding: 1rem 2.5rem;
-  min-height: 48px;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
-  display: inline-block;
   margin-bottom: 1.2rem;
 }
 
-.ty-close-btn:hover {
-  opacity: 0.85;
-  transform: translateY(-1px);
+.custom-section-body {
+  color: var(--text-secondary);
+  font-weight: 300;
+  /* font-size és line-height inline style-ból jön */
 }
 
-/* ── Másodlagos bezárás link ── */
-.ty-dismiss {
-  display: block;
+/* ============================================================
+   CUSTOM SECTIONS – főoldal extra mezők
+   ============================================================ */
+
+.custom-section-fields {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.custom-section-field {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  /* Az igazítás inline style-ból jön */
+}
+
+.custom-section-field-label {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.2em;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: color 0.2s;
-  padding: 0.4rem;
-  min-height: 36px;
-  margin: 0 auto;
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
-.ty-dismiss:hover { color: var(--text-primary); }
-
-/* ── Reszponzív ── */
-@media (max-width: 767px) {
-  .ty-box {
-    padding: 2.5rem 1.5rem 2rem;
-    max-width: 100%;
-  }
-
-  .ty-title {
-    font-size: clamp(2rem, 10vw, 3rem);
-  }
-
-  .ty-close-btn {
-    width: 100%;
-    text-align: center;
-  }
-}
-
-@media (max-width: 479px) {
-  .ty-box {
-    padding: 2rem 1.2rem 1.8rem;
-  }
-
-  .ty-backdrop {
-    padding: 1rem;
-    align-items: flex-end;
-  }
-
-  .ty-box {
-    border-radius: 0;
-    /* Mobilon alulról csúszik fel */
-    transform: translateY(60px) scale(1);
-  }
-
-  .ty-box.ty-box-active {
-    transform: translateY(0) scale(1);
-  }
+.custom-section-field-value {
+  color: var(--text-primary);
+  font-size: 1rem;
 }
