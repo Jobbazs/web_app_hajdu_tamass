@@ -8,9 +8,11 @@
    de a float clearfix-hez a wrapperre kell overflow:hidden.
    ──────────────────────────────────────────────────────── */
 .about-grid {
-  /* float clearfix */
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 5rem;
+  align-items: center;
   overflow: hidden;
-  gap: 1rem;
 }
 
 .about-img-frame {
