@@ -21,6 +21,7 @@
 
 .about-img-frame img {
   width: 100%;
+  padding-left: 1rem;
   height: auto;
   display: block;
 }
