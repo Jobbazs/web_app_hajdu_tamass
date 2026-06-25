@@ -16,6 +16,14 @@
   text-transform: uppercase;
   color: var(--text-primary);
   margin-bottom: 0.8rem;
+  /* transform: scale() nem érinti a layout-ot → más kártyák nem mozdulnak */
+  display: inline-block;
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              letter-spacing 0.4s ease;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 .service-desc {
@@ -23,6 +31,9 @@
   color: var(--text-secondary);
   font-weight: 300;
   line-height: 1.75;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
 }
 
 /* ============================================================
@@ -33,17 +44,23 @@
   position: relative;
   padding: 2.5rem;
   overflow: hidden;
-  /* Kártya saját bordere – nincs üres grid cella probléma */
   border: 1px solid var(--border-subtle);
   margin-top: -1px;
   margin-left: -1px;
   transition:
-    transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94),
     background 0.35s ease,
     border-color 0.35s ease;
   cursor: default;
   display: flex;
   flex-direction: column;
+}
+
+/* Hover: kártya overflow visible hogy a scaled cím ne legyen levágva */
+.service-card:hover {
+  overflow: visible;
+  z-index: 2;
+  background: var(--bg-secondary, #2A2520);
+  border-color: rgba(196,97,42,0.4) !important;
 }
 
 /* Szám eltűnik hover-re */
@@ -56,37 +73,10 @@
   transform: translateY(-8px) scale(0.8);
 }
 
-/* Cím és leírás megnő */
-.service-name {
-  transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              letter-spacing 0.4s ease,
-              transform 0.4s ease;
-  word-break: keep-all;
-  overflow-wrap: normal;
-  hyphens: none;
-}
-
-.service-desc {
-  word-break: normal;
-  overflow-wrap: break-word;
-  hyphens: none;
-}
-
-/* Hover: cím nő */
+/* Cím scale-el nő – 1.7rem × 1.76 ≈ 3rem vizuálisan */
 .service-card:hover .service-name {
-  font-size: 3rem;
+  transform: scale(1.76);
   letter-spacing: 0.04em;
-}
-
-/* .service-card:hover .service-desc {
-  font-size: 1.05rem;
-  transform: translateY(-4px);
-} */
-
-/* Finom háttér változás */
-.service-card:hover {
-  background: var(--bg-secondary, #2A2520);
-  border-color: rgba(196,97,42,0.4) !important;
 }
 
 /* Glow vonal a tetején hover-re */
@@ -121,27 +111,23 @@
   .service-name {
     font-size: 1.5rem;
     transition: none;
+    display: block; /* mobilon nincs hover, inline-block nem kell */
   }
 
   .service-desc {
-  /* transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              opacity 0.3s ease,
-              transform 0.3s ease; */
-  /* Stabil sortörés – ne rendezze át a szavakat ////////////*/
-  word-break: normal;
-  overflow-wrap: break-word;
-  hyphens: none;
-  /* Fix sor-magasság hogy ne ugorjon //////////////////*/
-  line-height: 1.8;
-  min-height: 5rem;   /* kb. 3 sor helye mindig foglalt ///////////////*/
-}
-
-
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
+    line-height: 1.8;
+    min-height: 5rem;
+  }
 
   .service-number { font-size: 2.2rem; transition: none; }
 
-  .service-card:hover .service-name   { font-size: 1.5rem; }
-  .service-card:hover .service-desc   { font-size: 1rem; transform: none; }
+  /* Hover hatások mobilon tiltva */
+  .service-card:hover             { overflow: hidden; z-index: auto; }
+  .service-card:hover .service-name   { transform: none; font-size: 1.5rem; }
+  .service-card:hover .service-desc   { transform: none; font-size: 1rem; }
   .service-card:hover .service-number { opacity: 1; transform: none; }
 }
 
