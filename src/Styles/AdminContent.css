@@ -256,3 +256,102 @@
   }
 }
 
+
+/* ============================================================
+   ADMIN – SECTION IMAGES (Képkezelő)
+   ============================================================ */
+
+/* Meglévő képek listája */
+.acms-img-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 1.2rem;
+}
+
+.acms-img-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  padding: 0.7rem;
+  flex-wrap: wrap;
+}
+
+/* Bélyegkép */
+.acms-img-thumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border-subtle);
+  display: block;
+  background: var(--bg-secondary);
+}
+
+/* Pozíció + szélesség tagek */
+.acms-img-meta {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding-top: 0.2rem;
+}
+
+/* Szélesség picker meglévő képnél */
+.acms-img-width-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Új kép hozzáadása szekció */
+.acms-img-upload {
+  background: var(--bg-primary);
+  border: 1px dashed var(--border-mid);
+  padding: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+/* Előnézet képek az admin live preview-ban */
+.acms-prev-img-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.acms-prev-img {
+  height: 60px;
+  width: auto;
+  max-width: 33%;
+  object-fit: cover;
+  border: 1px solid var(--border-subtle);
+  display: block;
+}
+
+.acms-prev-img--side {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 80px;
+}
+
+.acms-prev-side-imgs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Mobilon */
+@media (max-width: 767px) {
+  .acms-img-item { flex-wrap: wrap; }
+  .acms-img-thumb { width: 64px; height: 48px; }
+  .acms-img-width-picker { gap: 0.3rem; }
+}

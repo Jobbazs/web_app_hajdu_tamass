@@ -2,11 +2,7 @@
    ABOUT
    ============================================================ */
 
-/* ── Desktop: C-wrap layout ──
-   A kép jobbra float-ol, a szöveg köré folyik (C-alakzat).
-   container class-t az About.jsx section > div-je hordozza,
-   de a float clearfix-hez a wrapperre kell overflow:hidden.
-   ──────────────────────────────────────────────────────── */
+
 .about-grid {
   display: grid;
   grid-template-columns: 1fr 1.5fr;

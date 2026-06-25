@@ -3,21 +3,18 @@ import { supabase } from '../../supabaseClient'
 import { useSiteContent, useAllCustomSections } from '../../hooks'
 import '../../Styles/AdminContent.css'
 
-// ── Rögzített szöveg csoportok – most már igazítással és betűmérettel ───────
-// A site_content-ben minden mező egy key-value pár.
-// Az igazítás és betűméret beállításait külön key-ként tároljuk:
-// hero_line1_hu_align, hero_subtitle_hu_size, stb.
+// ── Rögzített szöveg csoportok ───────────────────────────────
 const FIXED_GROUPS = [
   {
     id: 'hero', label: 'Hero szekció',
     fields: [
-      { key: 'hero_line1_hu',    label: 'Főcím 1. sor – Magyar',  type: 'text',     hasAlign: true, hasSize: false },
-      { key: 'hero_line2_hu',    label: 'Főcím 2. sor – Magyar',  type: 'text',     hasAlign: true, hasSize: false },
-      { key: 'hero_subtitle_hu', label: 'Alcím – Magyar',          type: 'textarea', hasAlign: true, hasSize: true  },
+      { key: 'hero_line1_hu',    label: 'Főcím 1. sor – Magyar',  type: 'text',     hasAlign: true,  hasSize: false },
+      { key: 'hero_line2_hu',    label: 'Főcím 2. sor – Magyar',  type: 'text',     hasAlign: true,  hasSize: false },
+      { key: 'hero_subtitle_hu', label: 'Alcím – Magyar',          type: 'textarea', hasAlign: true,  hasSize: true  },
       { key: 'hero_cta_hu',      label: 'CTA gomb – Magyar',       type: 'text',     hasAlign: false, hasSize: false },
-      { key: 'hero_line1_en',    label: 'Main title line 1 – EN',  type: 'text',     hasAlign: true, hasSize: false },
-      { key: 'hero_line2_en',    label: 'Main title line 2 – EN',  type: 'text',     hasAlign: true, hasSize: false },
-      { key: 'hero_subtitle_en', label: 'Subtitle – EN',           type: 'textarea', hasAlign: true, hasSize: true  },
+      { key: 'hero_line1_en',    label: 'Main title line 1 – EN',  type: 'text',     hasAlign: true,  hasSize: false },
+      { key: 'hero_line2_en',    label: 'Main title line 2 – EN',  type: 'text',     hasAlign: true,  hasSize: false },
+      { key: 'hero_subtitle_en', label: 'Subtitle – EN',           type: 'textarea', hasAlign: true,  hasSize: true  },
       { key: 'hero_cta_en',      label: 'CTA button – EN',         type: 'text',     hasAlign: false, hasSize: false },
     ],
   },
@@ -68,6 +65,23 @@ const FIELD_TYPES = [
   { value: 'number',   label: 'Szám' },
 ]
 
+// ── Kép elhelyezés opciók ────────────────────────────────────
+const POS_OPTIONS = [
+  { value: 'above', label: '⬆ Szöveg felett',     side: false },
+  { value: 'below', label: '⬇ Szöveg alatt',       side: false },
+  { value: 'left',  label: '⬅ Szöveg bal oldala',  side: true  },
+  { value: 'right', label: '➡ Szöveg jobb oldala', side: true  },
+]
+
+// Kép szélesség opciók oldalnézethez (user-barát nevek)
+const WIDTH_OPTIONS = [
+  { value: 25, label: 'Kis sáv'     },
+  { value: 38, label: 'Normál'      },
+  { value: 50, label: 'Félbe-félbe' },
+  { value: 62, label: 'Hangsúlyos'  },
+  { value: 72, label: 'Nagy kép'    },
+]
+
 const EMPTY_SECTION = {
   title_hu: '', title_en: '',
   body_hu:  '', body_en:  '',
@@ -79,11 +93,10 @@ const EMPTY_SECTION = {
   visible:      true,
   sort_order:   0,
   fields:       [],
+  images:       [],
 }
 
-// ── blockStyle – azonos logika mint CustomSections.jsx ──────────────────────
-// center-left:  25%-tól indul jobbra, bal igazítás  (marginLeft:25%, width:75%)
-// center-right: 0%-tól 75%-ig, jobb igazítás         (marginRight:25%, width:75%)
+// ── blockStyle – azonos logika mint CustomSections.jsx ───────
 const blockStyle = (align) => {
   switch (align) {
     case 'center-left':
@@ -98,10 +111,8 @@ const blockStyle = (align) => {
       return { marginLeft:'0',   marginRight:'auto', textAlign:'left',   width:'100%', display:'block' }
   }
 }
-// Alias a régi névhez hogy ne kelljen mindenhol átírni
-const alignToStyle = (align) => blockStyle(align)
 
-// ── AlignPicker ──────────────────────────────────────────────
+// ── AlignPicker ───────────────────────────────────────────────
 function AlignPicker({ value, onChange }) {
   return (
     <div className="acms-align-picker">
@@ -129,7 +140,14 @@ function SizePicker({ value, onChange }) {
   )
 }
 
-// ── Live előnézet ────────────────────────────────────────────
+// ── Cloudinary URL → kisbélyegkép URL ────────────────────────
+function thumbUrl(url) {
+  if (!url) return ''
+  // Beillesztjük a w_80,h_60,c_fill transzformációt az upload/ után
+  return url.replace('/upload/', '/upload/w_80,h_60,c_fill,f_auto,q_auto/')
+}
+
+// ── Live előnézet ─────────────────────────────────────────────
 function SectionPreview({ form }) {
   const fontSize = form.font_size === 'small' ? '0.9rem'
     : form.font_size === 'large' ? '1.2rem' : '1rem'
@@ -141,42 +159,84 @@ function SectionPreview({ form }) {
         ))
       : <em style={{ opacity: 0.35 }}>A szöveg itt jelenik meg...</em>
 
-  return (
-    <div className="acms-sect-live-preview">
-      {/* Cím */}
+  const images     = Array.isArray(form.images) ? form.images : []
+  const aboveImgs  = images.filter(img => img.position === 'above')
+  const belowImgs  = images.filter(img => img.position === 'below')
+  const leftImgs   = images.filter(img => img.position === 'left')
+  const rightImgs  = images.filter(img => img.position === 'right')
+  const hasLeft    = leftImgs.length  > 0
+  const hasRight   = rightImgs.length > 0
+  const leftW      = hasLeft  ? (leftImgs[0].width  || 38) : 0
+  const rightW     = hasRight ? (rightImgs[0].width || 38) : 0
+
+  let gridCols = ''
+  if (hasLeft && hasRight) gridCols = `${leftW}% 1fr ${rightW}%`
+  else if (hasLeft)  gridCols = `${leftW}% 1fr`
+  else if (hasRight) gridCols = `1fr ${rightW}%`
+
+  const textBlock = (
+    <div>
       {form.title_hu && (
         <div className="acms-sect-preview-title" style={{
-          ...blockStyle(form.title_align),
-          fontSize,
-          marginBottom: '1.4rem',
-        }}>
-          {form.title_hu}
-        </div>
+          ...blockStyle(form.title_align), fontSize, marginBottom: '1.4rem',
+        }}>{form.title_hu}</div>
       )}
-
-      {/* Body */}
       <div className="acms-sect-preview-body" style={{
-        ...blockStyle(form.body_align),
-        lineHeight: form.line_height,
-        fontSize,
-        whiteSpace: 'pre-wrap',
+        ...blockStyle(form.body_align), lineHeight: form.line_height, fontSize, whiteSpace: 'pre-wrap',
       }}>
         {renderText(form.body_hu)}
       </div>
-
-      {/* Extra mezők */}
       {form.fields.length > 0 && (
         <div className="acms-sect-preview-fields" style={{ marginTop: '1rem' }}>
           {form.fields.map((f, i) => f.value && (
-            <div key={i} className="acms-sect-preview-field" style={{
-              ...blockStyle(f.align || form.body_align),
-              marginBottom: '0.3rem',
-            }}>
+            <div key={i} className="acms-sect-preview-field"
+              style={{ ...blockStyle(f.align || form.body_align), marginBottom: '0.3rem' }}>
               {f.label_hu && <span className="acms-sect-field-label">{f.label_hu}:&nbsp;</span>}
-              <span className="acms-sect-field-value" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                {f.value}
-              </span>
+              <span className="acms-sect-field-value">{f.value}</span>
             </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="acms-sect-live-preview">
+      {/* Felette */}
+      {aboveImgs.length > 0 && (
+        <div className="acms-prev-img-row" style={{ marginBottom: '1rem' }}>
+          {aboveImgs.map(img => (
+            <img key={img.id} src={thumbUrl(img.url)} alt="" className="acms-prev-img" />
+          ))}
+        </div>
+      )}
+
+      {/* Fő tartalom: oldalkép + szöveg */}
+      {(hasLeft || hasRight) ? (
+        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '0.8rem', alignItems: 'start' }}>
+          {hasLeft && (
+            <div className="acms-prev-side-imgs">
+              {leftImgs.map(img => (
+                <img key={img.id} src={thumbUrl(img.url)} alt="" className="acms-prev-img acms-prev-img--side" />
+              ))}
+            </div>
+          )}
+          {textBlock}
+          {hasRight && (
+            <div className="acms-prev-side-imgs">
+              {rightImgs.map(img => (
+                <img key={img.id} src={thumbUrl(img.url)} alt="" className="acms-prev-img acms-prev-img--side" />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : textBlock}
+
+      {/* Alatta */}
+      {belowImgs.length > 0 && (
+        <div className="acms-prev-img-row" style={{ marginTop: '1rem' }}>
+          {belowImgs.map(img => (
+            <img key={img.id} src={thumbUrl(img.url)} alt="" className="acms-prev-img" />
           ))}
         </div>
       )}
@@ -192,7 +252,6 @@ export default function AdminContent() {
   const [saved,  setSaved]  = useState(false)
   const [error,  setError]  = useState('')
 
-  // useAllCustomSections – rejtett szekciók is látszanak az adminban
   const { sections, loading: sectLoading, refetch: refetchSections } = useAllCustomSections()
   const [showSectForm, setShowSectForm] = useState(false)
   const [editingSect,  setEditingSect]  = useState(null)
@@ -202,9 +261,15 @@ export default function AdminContent() {
 
   const [tab, setTab] = useState('fixed')
 
-  // ── Rögzített szövegek ───────────────────────────────────
-  const getValue   = (key)        => key in edits ? edits[key] : (content[key] || '')
-  const handleChange = (key, val) => { setSaved(false); setEdits(p => ({ ...p, [key]: val })) }
+  // Új kép hozzáadás state
+  const [newImgUrl,   setNewImgUrl]   = useState('')
+  const [newImgPos,   setNewImgPos]   = useState('above')
+  const [newImgWidth, setNewImgWidth] = useState(38)
+  const [imgError,    setImgError]    = useState('')
+
+  // ── Rögzített szövegek ──────────────────────────────────
+  const getValue     = (key)        => key in edits ? edits[key] : (content[key] || '')
+  const handleChange = (key, val)   => { setSaved(false); setEdits(p => ({ ...p, [key]: val })) }
   const hasChanges   = Object.keys(edits).length > 0
 
   const handleSave = async () => {
@@ -219,11 +284,11 @@ export default function AdminContent() {
     setSaving(false)
   }
 
-  // ── Section kezelés ──────────────────────────────────────
+  // ── Section kezelés ─────────────────────────────────────
   const openNewSect = () => {
     setEditingSect(null)
     setSectForm({ ...EMPTY_SECTION, sort_order: sections.length })
-    setSectError('')
+    setSectError(''); setNewImgUrl(''); setNewImgPos('above'); setNewImgWidth(38); setImgError('')
     setShowSectForm(true)
   }
 
@@ -242,8 +307,9 @@ export default function AdminContent() {
       visible:     s.visible     !== false,
       sort_order:  s.sort_order  ?? 0,
       fields:      Array.isArray(s.fields) ? JSON.parse(JSON.stringify(s.fields)) : [],
+      images:      Array.isArray(s.images) ? JSON.parse(JSON.stringify(s.images)) : [],
     })
-    setSectError('')
+    setSectError(''); setNewImgUrl(''); setNewImgPos('above'); setNewImgWidth(38); setImgError('')
     setShowSectForm(true)
   }
 
@@ -254,7 +320,7 @@ export default function AdminContent() {
 
   const setAlign = (field, value) => setSectForm(p => ({ ...p, [field]: value }))
 
-  // Extra mezők
+  // ── Extra mezők ──────────────────────────────────────────
   const addField = () => {
     setSectForm(p => ({
       ...p,
@@ -276,6 +342,57 @@ export default function AdminContent() {
     setSectForm(p => ({ ...p, fields: p.fields.filter((_, i) => i !== idx) }))
   }
 
+  // ── Képkezelés ───────────────────────────────────────────
+  const addImage = () => {
+    const url = newImgUrl.trim()
+    if (!url) { setImgError('Add meg a kép Cloudinary URL-jét.'); return }
+    if (!url.startsWith('http')) { setImgError('Érvénytelen URL.'); return }
+
+    const isSide = POS_OPTIONS.find(p => p.value === newImgPos)?.side
+    const existing = sectForm.images
+
+    // Limit check
+    if (isSide) {
+      const sideCount = existing.filter(img =>
+        POS_OPTIONS.find(p => p.value === img.position)?.side
+      ).length
+      if (sideCount >= 2) { setImgError('Oldalt maximum 2 kép helyezhető el.'); return }
+    } else {
+      const posCount = existing.filter(img => img.position === newImgPos).length
+      if (posCount >= 3) {
+        setImgError(`${newImgPos === 'above' ? 'Fent' : 'Lent'} maximum 3 kép helyezhető el.`)
+        return
+      }
+    }
+
+    setImgError('')
+    setSectForm(p => ({
+      ...p,
+      images: [
+        ...p.images,
+        {
+          id:       `img_${Date.now()}`,
+          url,
+          position: newImgPos,
+          width:    isSide ? newImgWidth : null,
+        }
+      ]
+    }))
+    setNewImgUrl('')
+  }
+
+  const removeImage = (imgId) => {
+    setSectForm(p => ({ ...p, images: p.images.filter(img => img.id !== imgId) }))
+  }
+
+  const updateImgWidth = (imgId, width) => {
+    setSectForm(p => ({
+      ...p,
+      images: p.images.map(img => img.id === imgId ? { ...img, width } : img)
+    }))
+  }
+
+  // ── Section mentés ───────────────────────────────────────
   const handleSectSave = async (e) => {
     e.preventDefault()
     if (!sectForm.body_hu.trim() && !sectForm.title_hu.trim()) {
@@ -363,7 +480,6 @@ export default function AdminContent() {
                         value={getValue(field.key)}
                         onChange={e => handleChange(field.key, e.target.value)} />
                     )}
-                    {/* Igazítás */}
                     {field.hasAlign && (
                       <div className="acms-field-options">
                         <span className="acms-field-opt-label">Igazítás:</span>
@@ -373,7 +489,6 @@ export default function AdminContent() {
                         />
                       </div>
                     )}
-                    {/* Betűméret */}
                     {field.hasSize && (
                       <div className="acms-field-options">
                         <span className="acms-field-opt-label">Betűméret:</span>
@@ -414,7 +529,6 @@ export default function AdminContent() {
             <div className="acms-sect-list">
               {sections.map(s => (
                 <div key={s.id} className="acms-sect-item">
-                  {/* Status badge */}
                   <div className="acms-sect-status">
                     <span className={`acms-status-badge ${s.visible ? 'acms-status-visible' : 'acms-status-hidden'}`}>
                       {s.visible ? 'Látható' : 'Elrejtett'}
@@ -436,6 +550,7 @@ export default function AdminContent() {
                       <span className="acms-tag">sorköz {s.line_height || '1.75'}</span>
                       <span className="acms-tag">{FONT_SIZE_OPTIONS.find(f => f.value === (s.font_size || 'normal'))?.label} betű</span>
                       {s.fields?.length > 0 && <span className="acms-tag">{s.fields.length} extra mező</span>}
+                      {s.images?.length > 0 && <span className="acms-tag">{s.images.length} kép</span>}
                     </div>
                   </div>
 
@@ -463,6 +578,7 @@ export default function AdminContent() {
             </div>
 
             <form onSubmit={handleSectSave} className="acms-form">
+
               {/* Globális */}
               <div className="acms-form-divider">Globális beállítások</div>
               <div className="acms-form-row acms-form-row--3">
@@ -563,9 +679,7 @@ export default function AdminContent() {
                         <textarea className="acms-input acms-textarea" value={field.value}
                           onChange={e => updateField(idx, 'value', e.target.value)} rows={2} />
                       ) : (
-                        <input
-                          className="acms-input"
-                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal' }}
+                        <input className="acms-input"
                           type={field.type === 'number' ? 'number' : 'text'}
                           value={field.value}
                           onChange={e => updateField(idx, 'value', e.target.value)}
@@ -574,8 +688,7 @@ export default function AdminContent() {
                     </div>
                     <div className="acms-form-group" style={{ flex: 3 }}>
                       <label>Igazítás</label>
-                      <AlignPicker
-                        value={field.align || sectForm.body_align}
+                      <AlignPicker value={field.align || sectForm.body_align}
                         onChange={v => updateField(idx, 'align', v)} />
                     </div>
                   </div>
@@ -586,6 +699,109 @@ export default function AdminContent() {
                 + Új mező hozzáadása
               </button>
 
+              {/* ── KÉPEK ── */}
+              <div className="acms-form-divider">
+                Képek
+                <span className="acms-hint" style={{ marginLeft: '0.6rem' }}>
+                  Fent / Lent: max 3 · Oldalt: max 2
+                </span>
+              </div>
+
+              {/* Meglévő képek listája */}
+              {sectForm.images.length > 0 && (
+                <div className="acms-img-list">
+                  {sectForm.images.map(img => {
+                    const posLabel = POS_OPTIONS.find(p => p.value === img.position)?.label || img.position
+                    const isSide   = POS_OPTIONS.find(p => p.value === img.position)?.side
+                    return (
+                      <div key={img.id} className="acms-img-item">
+                        <img
+                          src={thumbUrl(img.url)}
+                          alt=""
+                          className="acms-img-thumb"
+                          onError={e => { e.target.style.display = 'none' }}
+                        />
+                        <div className="acms-img-meta">
+                          <span className="acms-tag">{posLabel}</span>
+                          {isSide && img.width && (
+                            <span className="acms-tag">
+                              {WIDTH_OPTIONS.find(w => w.value === img.width)?.label || `${img.width}%`}
+                            </span>
+                          )}
+                        </div>
+                        {/* Szélesség szerkesztő csak oldalkép esetén */}
+                        {isSide && (
+                          <div className="acms-img-width-picker">
+                            <span className="acms-field-opt-label">Szélesség:</span>
+                            <div className="acms-align-picker">
+                              {WIDTH_OPTIONS.map(w => (
+                                <button key={w.value} type="button"
+                                  className={`acms-align-btn ${img.width === w.value ? 'active' : ''}`}
+                                  onClick={() => updateImgWidth(img.id, w.value)}>
+                                  {w.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <button type="button" className="acms-btn-sm acms-btn-danger"
+                          onClick={() => removeImage(img.id)}>
+                          ✕ Töröl
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Új kép hozzáadása */}
+              <div className="acms-img-upload">
+                <div className="acms-form-group">
+                  <label>Hová kerüljön a kép?</label>
+                  <div className="acms-align-picker">
+                    {POS_OPTIONS.map(p => (
+                      <button key={p.value} type="button"
+                        className={`acms-align-btn ${newImgPos === p.value ? 'active' : ''}`}
+                        onClick={() => setNewImgPos(p.value)}>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {POS_OPTIONS.find(p => p.value === newImgPos)?.side && (
+                  <div className="acms-form-group">
+                    <label>Kép szélessége</label>
+                    <div className="acms-align-picker">
+                      {WIDTH_OPTIONS.map(w => (
+                        <button key={w.value} type="button"
+                          className={`acms-align-btn ${newImgWidth === w.value ? 'active' : ''}`}
+                          onClick={() => setNewImgWidth(w.value)}>
+                          {w.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="acms-form-group">
+                  <label>Cloudinary URL</label>
+                  <input
+                    className="acms-input"
+                    value={newImgUrl}
+                    onChange={e => { setNewImgUrl(e.target.value); setImgError('') }}
+                    placeholder="https://res.cloudinary.com/dpeavk0xh/image/upload/..."
+                  />
+                </div>
+
+                {imgError && <div className="acms-error acms-error--inline">{imgError}</div>}
+
+                <button type="button" className="acms-btn-secondary" onClick={addImage}>
+                  + Kép hozzáadása
+                </button>
+              </div>
+
+              {/* Élő előnézet */}
               <div className="acms-form-divider">Élő előnézet – Magyar</div>
               <SectionPreview form={sectForm} />
 

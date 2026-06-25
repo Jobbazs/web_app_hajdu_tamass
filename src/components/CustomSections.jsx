@@ -8,52 +8,18 @@ const FONT_SIZE_MAP = {
   large:  'clamp(1.15rem, 2.5vw, 1.4rem)',
 }
 
-/*
-  Igazítási logika – egyetlen blokk, margin + textAlign:
-
-  left:         teljes szélesség, bal igazítás
-  center-left:  25%-tól 100%-ig, bal igazítás  (marginLeft: 25%)
-  center:       teljes szélesség, közép igazítás
-  center-right: 0%-tól 75%-ig, jobb igazítás   (marginRight: 25%)
-  right:        teljes szélesség, jobb igazítás
-*/
 const blockStyle = (align) => {
   switch (align) {
     case 'center-left':
-      return {
-        marginLeft:  '25%',
-        marginRight: '0',
-        textAlign:   'left',
-        width:       '75%',
-      }
+      return { marginLeft: '25%', marginRight: '0',    textAlign: 'left',   width: '75%' }
     case 'center-right':
-      return {
-        marginLeft:  '0',
-        marginRight: '25%',
-        textAlign:   'right',
-        width:       '75%',
-      }
+      return { marginLeft: '0',   marginRight: '25%',  textAlign: 'right',  width: '75%' }
     case 'center':
-      return {
-        marginLeft:  'auto',
-        marginRight: 'auto',
-        textAlign:   'center',
-        width:       '100%',
-      }
+      return { marginLeft: 'auto', marginRight: 'auto', textAlign: 'center', width: '100%' }
     case 'right':
-      return {
-        marginLeft:  'auto',
-        marginRight: '0',
-        textAlign:   'right',
-        width:       '100%',
-      }
-    default: // left
-      return {
-        marginLeft:  '0',
-        marginRight: 'auto',
-        textAlign:   'left',
-        width:       '100%',
-      }
+      return { marginLeft: 'auto', marginRight: '0',   textAlign: 'right',  width: '100%' }
+    default:
+      return { marginLeft: '0',   marginRight: 'auto', textAlign: 'left',   width: '100%' }
   }
 }
 
