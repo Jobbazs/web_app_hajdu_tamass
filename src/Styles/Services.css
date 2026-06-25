@@ -6,6 +6,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
   margin-top: 3rem;
+  overflow: hidden; /* sor utolsó kártyájának scale ne tágítsa az oldalt */
 }
 
 .service-name {
