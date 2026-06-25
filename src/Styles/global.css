@@ -185,7 +185,7 @@ body { font-size: 18px; }
   .hero-title { font-size: clamp(3.2rem, 15vw, 5.5rem); }
   .hero-subtitle { font-size: 0.95rem; max-width: 100%; }
   .hero-cta { width: 100%; text-align: center; }
-  .scroll-hint { display: none; } /* mobilon felesleges */
+  /* scroll-hint: Hero.css kezeli */
 
   /* Contact form: egymás alá */
   .form-row { grid-template-columns: 1fr; gap: 0; }
