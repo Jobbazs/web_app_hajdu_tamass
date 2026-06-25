@@ -124,10 +124,19 @@
   }
 
   .service-desc {
-    font-size: 1rem;
-    line-height: 1.65;
-    transition: none;
-  }
+  /* transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.3s ease,
+              transform 0.3s ease; */
+  /* Stabil sortörés – ne rendezze át a szavakat ////////////*/
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+  /* Fix sor-magasság hogy ne ugorjon //////////////////*/
+  line-height: 1.8;
+  min-height: 5rem;   /* kb. 3 sor helye mindig foglalt ////////////////*
+}
+
+
 
   .service-number { font-size: 2.2rem; transition: none; }
 
