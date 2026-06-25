@@ -74,7 +74,7 @@
 
 /* Hover: cím nő */
 .service-card:hover .service-name {
-  font-size: 4rem;
+  font-size: 3rem;
   letter-spacing: 0.04em;
 }
 
