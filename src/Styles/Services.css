@@ -4,8 +4,7 @@
 .services-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: var(--border-subtle);
+  gap: 0;
   margin-top: 3rem;
 }
 
@@ -34,12 +33,15 @@
   position: relative;
   padding: 2.5rem;
   overflow: hidden;
+  /* Kártya saját bordere – nincs üres grid cella probléma */
+  border: 1px solid var(--border-subtle);
+  margin-top: -1px;
+  margin-left: -1px;
   transition:
     transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94),
     background 0.35s ease,
     border-color 0.35s ease;
   cursor: default;
-  /* Stabil elrendezés – ne mozgassa a szöveg magasságát */
   display: flex;
   flex-direction: column;
 }
@@ -59,26 +61,18 @@
   transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               letter-spacing 0.4s ease,
               transform 0.4s ease;
-  /* Megakadályozzuk a szó-tördelést hover-re */
   word-break: keep-all;
   overflow-wrap: normal;
   hyphens: none;
 }
 
 .service-desc {
-  transition: font-size 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              opacity 0.3s ease,
-              transform 0.3s ease;
-  /* Stabil sortörés – ne rendezze át a szavakat */
   word-break: normal;
   overflow-wrap: break-word;
   hyphens: none;
-  /* Fix sor-magasság hogy ne ugorjon */
-  line-height: 1.7;
-  min-height: 4.5rem;   /* kb. 3 sor helye mindig foglalt */
 }
 
-/* Hover: cím nő, leírás finom emelkedés – kisebb növekedés hogy ne törjön */
+/* Hover: cím nő */
 .service-card:hover .service-name {
   font-size: 2rem;
   letter-spacing: 0.04em;
@@ -111,44 +105,37 @@
    SERVICES – reszponzív finomhangolás
    ============================================================ */
 
-/* Tableten: 2 kártya / sor – már beállítva a @media 1023px-ban */
+@media (max-width: 1023px) {
+  .services-grid { grid-template-columns: repeat(2, 1fr); }
+}
 
-/* Mobilon: 1 kártya / sor, olvasható méretekkel */
 @media (max-width: 767px) {
-  .services-grid {
-    grid-template-columns: 1fr;
-  }
+  .services-grid { grid-template-columns: 1fr; }
 
   .service-card {
     padding: 1.8rem;
-    clip-path: none;   /* mobilon levesszük a vágott sarkot */
+    clip-path: none;
+    transition: none;
   }
 
   .service-name {
     font-size: 1.5rem;
-    /* Hover animáció ki mobilon – nincs hover touch-on */
     transition: none;
   }
 
   .service-desc {
     font-size: 1rem;
     line-height: 1.65;
-    min-height: unset;   /* mobilon ne foglaljon fix helyet */
     transition: none;
   }
 
-  .service-number {
-    font-size: 2.2rem;
-    transition: none;
-  }
+  .service-number { font-size: 2.2rem; transition: none; }
 
-  /* Hover hatások mobilon tiltva */
-  .service-card:hover .service-name { font-size: 1.5rem; }
-  .service-card:hover .service-desc { font-size: 1rem; transform: none; }
+  .service-card:hover .service-name   { font-size: 1.5rem; }
+  .service-card:hover .service-desc   { font-size: 1rem; transform: none; }
   .service-card:hover .service-number { opacity: 1; transform: none; }
 }
 
-/* Kis mobil */
 @media (max-width: 479px) {
   .service-card { padding: 1.5rem; }
   .service-name { font-size: 1.4rem; }
