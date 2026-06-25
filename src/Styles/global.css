@@ -165,8 +165,7 @@ body { font-size: 18px; }
   .hero-year { display: none; }
   .hero-content { padding-right: 0; max-width: 100%; }
 
-  /* Services: max 2 kártya / sor tableten */
-  .services-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Services breakpoints: Services.css kezeli */
 
   /* Footer */
   footer {
