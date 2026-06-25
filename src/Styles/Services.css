@@ -115,7 +115,7 @@
   }
 
   .service-card:hover .service-name {
-    transform: scale(1.4);
+    transform: scale(1.8);
   }
 
   .service-desc {
@@ -136,6 +136,6 @@
 
   /* Kis képernyőn még kisebb növekedés: 1.4rem × 1.3 ≈ 1.82rem */
   .service-card:hover .service-name {
-    transform: scale(1.3);
+    transform: scale(1.5);
   }
 }
