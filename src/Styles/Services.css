@@ -105,13 +105,17 @@
   .service-card {
     padding: 1.8rem;
     clip-path: none;
-    transition: none;
+    /* transition megmarad – DollyZoom mobilon is él */
   }
 
   .service-name {
     font-size: 1.5rem;
-    transition: none;
-    display: block; /* mobilon nincs hover, inline-block nem kell */
+    display: inline-block; /* scale-hez kell */
+    /* Arányosan kisebb növekedés: 1.5rem × 1.4 ≈ 2.1rem */
+  }
+
+  .service-card:hover .service-name {
+    transform: scale(1.4);
   }
 
   .service-desc {
@@ -122,17 +126,16 @@
     min-height: 5rem;
   }
 
-  .service-number { font-size: 2.2rem; transition: none; }
-
-  /* Hover hatások mobilon tiltva */
-  .service-card:hover             { overflow: hidden; z-index: auto; }
-  .service-card:hover .service-name   { transform: none; font-size: 1.5rem; }
-  .service-card:hover .service-desc   { transform: none; font-size: 1rem; }
-  .service-card:hover .service-number { opacity: 1; transform: none; }
+  .service-number { font-size: 2.2rem; }
 }
 
 @media (max-width: 479px) {
   .service-card { padding: 1.5rem; }
   .service-name { font-size: 1.4rem; }
   .service-desc { font-size: 0.95rem; }
+
+  /* Kis képernyőn még kisebb növekedés: 1.4rem × 1.3 ≈ 1.82rem */
+  .service-card:hover .service-name {
+    transform: scale(1.3);
+  }
 }
