@@ -74,14 +74,14 @@
 
 /* Hover: cím nő */
 .service-card:hover .service-name {
-  font-size: 2rem;
+  font-size: 4rem;
   letter-spacing: 0.04em;
 }
 
-.service-card:hover .service-desc {
+/* .service-card:hover .service-desc {
   font-size: 1.05rem;
   transform: translateY(-4px);
-}
+} */
 
 /* Finom háttér változás */
 .service-card:hover {
@@ -133,7 +133,7 @@
   hyphens: none;
   /* Fix sor-magasság hogy ne ugorjon //////////////////*/
   line-height: 1.8;
-  min-height: 5rem;   /* kb. 3 sor helye mindig foglalt ////////////////*
+  min-height: 5rem;   /* kb. 3 sor helye mindig foglalt ///////////////*/
 }
 
 
