@@ -73,20 +73,20 @@
 
 /* 1 kép: középre, max 40% szélesség */
 .cs-img-row--1 .cs-img-item {
-  max-width: 40%;
+  max-width: 28%;
   flex: 0 0 auto;
 }
 
 /* 2 kép: egyforma, max 40% */
 .cs-img-row--2 .cs-img-item {
   flex: 0 0 auto;
-  max-width: 40%;
+  max-width: 26%;
 }
 
 /* 3 kép: egyforma, max 37% */
 .cs-img-row--3 .cs-img-item {
   flex: 0 0 auto;
-  max-width: 37%;
+  max-width: 24%;
 }
 
 .cs-img-item {
