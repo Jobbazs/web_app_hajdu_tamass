@@ -133,7 +133,7 @@
 @media (max-width: 1023px) {
   .cs-main--side {
     display: flex !important;
-    flex-direction: column;
+    flex-direction: row;
     gap: 2rem;
   }
 
