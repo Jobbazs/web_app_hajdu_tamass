@@ -71,22 +71,22 @@
 .cs-img-row--above { margin-bottom: 2.5rem; }
 .cs-img-row--below { margin-top: 2.5rem; }
 
-/* 1 kép: középre, max 60% szélesség */
+/* 1 kép: középre, max 25% szélesség */
 .cs-img-row--1 .cs-img-item {
-  max-width: 60%;
+  max-width: 25%;
   flex: 0 0 auto;
 }
 
-/* 2 kép: egyforma szélesség, max 45% */
+/* 2 kép: egyforma, max 25% */
 .cs-img-row--2 .cs-img-item {
-  flex: 1 1 0;
-  max-width: 45%;
+  flex: 0 0 auto;
+  max-width: 25%;
 }
 
-/* 3 kép: egyforma szélesség, max 30% */
+/* 3 kép: egyforma, max 22% */
 .cs-img-row--3 .cs-img-item {
-  flex: 1 1 0;
-  max-width: 30%;
+  flex: 0 0 auto;
+  max-width: 22%;
 }
 
 .cs-img-item {
@@ -157,9 +157,9 @@
 
 /* Mobilon fent/lent képek is összehúzódnak */
 @media (max-width: 767px) {
-  .cs-img-row--1 .cs-img-item { max-width: 85%; }
-  .cs-img-row--2 .cs-img-item { max-width: calc(50% - 0.6rem); }
-  .cs-img-row--3 .cs-img-item { max-width: calc(50% - 0.6rem); }
+  .cs-img-row--1 .cs-img-item { max-width: 50%; }
+  .cs-img-row--2 .cs-img-item { max-width: 45%; }
+  .cs-img-row--3 .cs-img-item { max-width: 30%; }
 
   .cs-img-row { gap: 0.8rem; }
   .cs-img-row--above { margin-bottom: 1.8rem; }

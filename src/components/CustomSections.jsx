@@ -58,8 +58,9 @@ export default function CustomSections() {
         const hasLeft   = leftImgs.length  > 0
         const hasRight  = rightImgs.length > 0
 
-        const leftW  = hasLeft  ? (leftImgs[0].width  || 38) : 0
-        const rightW = hasRight ? (rightImgs[0].width || 38) : 0
+        // Oldalkép oszlop: mindig 25% (fix méret)
+        const leftW  = 25
+        const rightW = 25
         let gridCols = ''
         if (hasLeft && hasRight) gridCols = `${leftW}% 1fr ${rightW}%`
         else if (hasLeft)  gridCols = `${leftW}% 1fr`

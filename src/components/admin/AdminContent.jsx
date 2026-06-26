@@ -74,13 +74,7 @@ const POS_OPTIONS = [
 ]
 
 // Kép szélesség opciók oldalnézethez (user-barát nevek)
-const WIDTH_OPTIONS = [
-  { value: 25, label: 'Kis sáv'     },
-  { value: 38, label: 'Normál'      },
-  { value: 50, label: 'Félbe-félbe' },
-  { value: 62, label: 'Hangsúlyos'  },
-  { value: 72, label: 'Nagy kép'    },
-]
+// Oldalkép szélessége mindig 25% (Kis sáv) – fix érték
 
 const EMPTY_SECTION = {
   title_hu: '', title_en: '',
@@ -264,7 +258,6 @@ export default function AdminContent() {
   // Új kép hozzáadás state
   const [newImgUrl,   setNewImgUrl]   = useState('')
   const [newImgPos,   setNewImgPos]   = useState('above')
-  const [newImgWidth, setNewImgWidth] = useState(38)
   const [imgError,    setImgError]    = useState('')
 
   // ── Rögzített szövegek ──────────────────────────────────
@@ -374,7 +367,7 @@ export default function AdminContent() {
           id:       `img_${Date.now()}`,
           url,
           position: newImgPos,
-          width:    isSide ? newImgWidth : null,
+          width:    isSide ? 25 : null,
         }
       ]
     }))
@@ -383,13 +376,6 @@ export default function AdminContent() {
 
   const removeImage = (imgId) => {
     setSectForm(p => ({ ...p, images: p.images.filter(img => img.id !== imgId) }))
-  }
-
-  const updateImgWidth = (imgId, width) => {
-    setSectForm(p => ({
-      ...p,
-      images: p.images.map(img => img.id === imgId ? { ...img, width } : img)
-    }))
   }
 
   // ── Section mentés ───────────────────────────────────────
@@ -723,27 +709,7 @@ export default function AdminContent() {
                         />
                         <div className="acms-img-meta">
                           <span className="acms-tag">{posLabel}</span>
-                          {isSide && img.width && (
-                            <span className="acms-tag">
-                              {WIDTH_OPTIONS.find(w => w.value === img.width)?.label || `${img.width}%`}
-                            </span>
-                          )}
                         </div>
-                        {/* Szélesség szerkesztő csak oldalkép esetén */}
-                        {isSide && (
-                          <div className="acms-img-width-picker">
-                            <span className="acms-field-opt-label">Szélesség:</span>
-                            <div className="acms-align-picker">
-                              {WIDTH_OPTIONS.map(w => (
-                                <button key={w.value} type="button"
-                                  className={`acms-align-btn ${img.width === w.value ? 'active' : ''}`}
-                                  onClick={() => updateImgWidth(img.id, w.value)}>
-                                  {w.label}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                         <button type="button" className="acms-btn-sm acms-btn-danger"
                           onClick={() => removeImage(img.id)}>
                           ✕ Töröl
@@ -768,21 +734,6 @@ export default function AdminContent() {
                     ))}
                   </div>
                 </div>
-
-                {POS_OPTIONS.find(p => p.value === newImgPos)?.side && (
-                  <div className="acms-form-group">
-                    <label>Kép szélessége</label>
-                    <div className="acms-align-picker">
-                      {WIDTH_OPTIONS.map(w => (
-                        <button key={w.value} type="button"
-                          className={`acms-align-btn ${newImgWidth === w.value ? 'active' : ''}`}
-                          onClick={() => setNewImgWidth(w.value)}>
-                          {w.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 <div className="acms-form-group">
                   <label>Cloudinary URL</label>
