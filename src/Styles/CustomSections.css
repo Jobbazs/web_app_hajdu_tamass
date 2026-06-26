@@ -71,22 +71,22 @@
 .cs-img-row--above { margin-bottom: 2.5rem; }
 .cs-img-row--below { margin-top: 2.5rem; }
 
-/* 1 kép: középre, max 25% szélesség */
+/* 1 kép: középre, max 40% szélesség */
 .cs-img-row--1 .cs-img-item {
-  max-width: 25%;
+  max-width: 40%;
   flex: 0 0 auto;
 }
 
-/* 2 kép: egyforma, max 25% */
+/* 2 kép: egyforma, max 40% */
 .cs-img-row--2 .cs-img-item {
   flex: 0 0 auto;
-  max-width: 25%;
+  max-width: 40%;
 }
 
-/* 3 kép: egyforma, max 22% */
+/* 3 kép: egyforma, max 37% */
 .cs-img-row--3 .cs-img-item {
   flex: 0 0 auto;
-  max-width: 22%;
+  max-width: 37%;
 }
 
 .cs-img-item {
@@ -129,41 +129,47 @@
    RESZPONZÍV
    ============================================================ */
 
-/* Tableten oldalkép a szöveg alá kerül */
+/* ── Desktop: bottom row rejtve, side images láthatók ── */
+.cs-bottom-row { display: none; }
+
+/* ── Tablet/mobil (≤1023px) ── */
 @media (max-width: 1023px) {
+
+  /* Oldalkép grid → egyszerű blokk (csak szöveg látszik) */
   .cs-main--side {
-    display: flex !important;
-    flex-direction: row;
-    gap: 2rem;
+    display: block !important;
   }
 
-  /* Ha bal kép, a szöveg jön először */
-  .cs-main--left  .cs-side-imgs { order: 2; }
-  .cs-main--left  .cs-text-block { order: 1; }
-  .cs-main--right .cs-side-imgs { order: 2; }
-  .cs-main--right .cs-text-block { order: 1; }
+  /* Oldalsó képek elrejtve a grid-ből – a cs-bottom-row veszi át */
+  .cs-side-desktop { display: none; }
 
-  .cs-side-imgs {
-    flex-direction: row;
-    flex-wrap: wrap;
+  /* Bottom row: bal + jobb + alatti képek 1 sorban, nowrap, max 5 */
+  .cs-bottom-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.8rem;
+    margin-top: 2rem;
+    width: 100%;
   }
 
-  .cs-img-item--side {
+  .cs-bottom-row .cs-img-item {
     flex: 1 1 0;
-    min-width: 120px;
-    max-width: calc(50% - 0.5rem);
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    display: block;
   }
-}
 
-/* Mobilon fent/lent képek is összehúzódnak */
-@media (max-width: 767px) {
-  .cs-img-row--1 .cs-img-item { max-width: 50%; }
-  .cs-img-row--2 .cs-img-item { max-width: 45%; }
-  .cs-img-row--3 .cs-img-item { max-width: 30%; }
-
-  .cs-img-row { gap: 0.8rem; }
+  /* Above/below önálló sorok mobilon */
   .cs-img-row--above { margin-bottom: 1.8rem; }
   .cs-img-row--below { margin-top: 1.8rem; }
+}
 
+/* ── Kis mobil ── */
+@media (max-width: 767px) {
+  .cs-img-row { gap: 0.6rem; }
+  .cs-bottom-row { gap: 0.5rem; }
   .custom-section { padding: 3.5rem 1.2rem; }
 }
