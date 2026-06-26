@@ -346,10 +346,11 @@ export default function AdminContent() {
 
     // Limit check
     if (isSide) {
-      const sideCount = existing.filter(img =>
-        POS_OPTIONS.find(p => p.value === img.position)?.side
-      ).length
-      if (sideCount >= 2) { setImgError('Oldalt maximum 2 kép helyezhető el.'); return }
+      const thisSideCount = existing.filter(img => img.position === newImgPos).length
+      if (thisSideCount >= 3) {
+        setImgError(`${newImgPos === 'left' ? 'Bal oldalon' : 'Jobb oldalon'} maximum 3 kép helyezhető el.`)
+        return
+      }
     } else {
       const posCount = existing.filter(img => img.position === newImgPos).length
       if (posCount >= 3) {
@@ -689,7 +690,7 @@ export default function AdminContent() {
               <div className="acms-form-divider">
                 Képek
                 <span className="acms-hint" style={{ marginLeft: '0.6rem' }}>
-                  Fent / Lent: max 3 · Oldalt: max 2
+                  Fent / Lent: max 3 · Bal / Jobb: max 3
                 </span>
               </div>
 

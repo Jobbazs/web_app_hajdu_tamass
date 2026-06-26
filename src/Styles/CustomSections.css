@@ -71,22 +71,22 @@
 .cs-img-row--above { margin-bottom: 2.5rem; }
 .cs-img-row--below { margin-top: 2.5rem; }
 
-/* 1 kép: középre, max 25% szélesség */
+/* 1 kép: középre, max 40% szélesség */
 .cs-img-row--1 .cs-img-item {
-  max-width: 25%;
+  max-width: 40%;
   flex: 0 0 auto;
 }
 
-/* 2 kép: egyforma, max 25% */
+/* 2 kép: egyforma, max 40% */
 .cs-img-row--2 .cs-img-item {
   flex: 0 0 auto;
-  max-width: 25%;
+  max-width: 40%;
 }
 
-/* 3 kép: egyforma, max 22% */
+/* 3 kép: egyforma, max 37% */
 .cs-img-row--3 .cs-img-item {
   flex: 0 0 auto;
-  max-width: 22%;
+  max-width: 37%;
 }
 
 .cs-img-item {
