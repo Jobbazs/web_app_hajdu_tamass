@@ -102,6 +102,15 @@
    ============================================================ */
 
 @media (max-width: 1023px) {
+  .services-grid { 
+  grid-template-columns: repeat(2, 1fr); 
+  transform: scale(1.5);
+  }
+
+}
+
+
+@media (max-width: 1023px) {
   .services-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -129,7 +138,7 @@
   }
 
   .service-card:hover .service-name {
-    transform: scale(1.8);
+    transform: scale(1.4);
   }
 
   .service-desc {
