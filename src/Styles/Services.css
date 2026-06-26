@@ -60,7 +60,7 @@
 .service-card:hover {
   overflow: visible;
   z-index: 2;
-  background: var(--bg-secondary, #2A2520);
+  background-color: rgba(235, 121, 60, 0.4);
   border-color: rgba(196,97,42,0.4) !important;
 }
 
@@ -115,8 +115,7 @@
      a desktop overflow:visible itt okozna oldalsó scrollt */
   .service-card:hover {
     overflow: hidden;
-    background-color: rgba(235, 121, 60, 0.4);
-    transition: cubic-bezier(0.95, 0.05, 0.795, 0.035);
+    
   }
 
   .service-name {
