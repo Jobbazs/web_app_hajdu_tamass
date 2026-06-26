@@ -78,7 +78,7 @@
 }
 
 .service-card:hover .service-desc {
-  color: rgb(24, 24, 24);
+  color: rgb(182, 182, 182);
   font-weight: bold;
   transform: scale(1.05);
 }
