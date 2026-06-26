@@ -79,7 +79,8 @@
 
 .service-card:hover .service-desc {
   color: rgb(0, 0, 0);
-  font-weight: bolder;
+  font-weight: bold;
+  transform: scale(1.05);
 }
 
 /* Cím scale-el nő – 1.7rem × 1.76 ≈ 3rem vizuálisan */
