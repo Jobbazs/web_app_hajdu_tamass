@@ -101,7 +101,7 @@
    SERVICES – reszponzív finomhangolás
    ============================================================ */
 
-@media (max-width: 1023px) {
+@media (max-width: 1250px) {
   .services-grid { 
   grid-template-columns: repeat(2, 1fr); 
   }
@@ -141,7 +141,7 @@
   }
 
   .service-card:hover .service-name {
-    transform: scale(1.2);
+    transform: scale(1.4);
   }
 
   .service-desc {
@@ -161,6 +161,6 @@
   .service-desc { font-size: 0.95rem; }
 
   .service-card:hover .service-name {
-    transform: scale(1.2);
+    transform: scale(1.3);
   }
 }
