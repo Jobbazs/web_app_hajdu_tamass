@@ -281,7 +281,7 @@ export default function AdminContent() {
   const openNewSect = () => {
     setEditingSect(null)
     setSectForm({ ...EMPTY_SECTION, sort_order: sections.length })
-    setSectError(''); setNewImgUrl(''); setNewImgPos('above'); setNewImgWidth(38); setImgError('')
+    setSectError(''); setNewImgUrl(''); setNewImgPos('above'); setImgError('')
     setShowSectForm(true)
   }
 
@@ -302,7 +302,7 @@ export default function AdminContent() {
       fields:      Array.isArray(s.fields) ? JSON.parse(JSON.stringify(s.fields)) : [],
       images:      Array.isArray(s.images) ? JSON.parse(JSON.stringify(s.images)) : [],
     })
-    setSectError(''); setNewImgUrl(''); setNewImgPos('above'); setNewImgWidth(38); setImgError('')
+    setSectError(''); setNewImgUrl(''); setNewImgPos('above'); setImgError('')
     setShowSectForm(true)
   }
 
