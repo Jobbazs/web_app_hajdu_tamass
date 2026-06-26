@@ -60,7 +60,7 @@
 .service-card:hover {
   overflow: visible;
   z-index: 2;
-  background-color: rgba(235, 121, 60, 0.4);
+  background-color: rgba(92, 60, 42, 0.4);
   border-color: rgba(196,97,42,0.4) !important;
 }
 
