@@ -176,23 +176,18 @@
 
   .cs-img-row {
     gap: 0.6rem;
+    justify-content: center;
+  }
+
+  /* Minden felső/alsó képsorban max. 2 kép legyen egy sorban */
+  .cs-img-row .cs-img-item {
+    flex: 0 0 calc(50% - 0.3rem) !important;
+    max-width: calc(50% - 0.3rem) !important;
+    width: calc(50% - 0.3rem) !important;
+    height: auto;
   }
 
   .cs-bottom-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
     gap: 0.5rem;
-  }
-
-  .cs-bottom-row .cs-img-item {
-    flex: 0 0 calc(50% - 0.25rem) !important;
-    max-width: calc(50% - 0.25rem) !important;
-    min-width: calc(50% - 0.25rem) !important;
-
-    width: calc(50% - 0.25rem);
-
-    aspect-ratio: 3 / 2;
-    object-fit: cover;
   }
 }
