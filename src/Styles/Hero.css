@@ -108,7 +108,7 @@
 
 @media (max-width: 767px) {
   #hero {
-    height: 75svh;
+    
     min-height: 480px;
     align-items: center;        /* tartalom középre, nem az aljára */
     padding: 0 1.2rem 3rem;
@@ -127,7 +127,7 @@
 
 @media (max-width: 479px) {
   #hero {
-    height: 70svh;
+    height: 90svh;
     min-height: 420px;
     padding: 0 1rem 2.5rem;
   }
