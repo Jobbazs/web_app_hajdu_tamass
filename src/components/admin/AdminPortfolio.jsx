@@ -5,11 +5,10 @@ import '../../Styles/AdminPortfolio.css'
 
 const EMPTY_ITEM = {
   title: '', category_id: '', cloudinary_url: '',
-  video_url: '', span: 'medium', visible: true, sort_order: 0,
+  video_url: '', visible: true, sort_order: 0,
 }
 
 const EMPTY_CAT = { slug: '', label_hu: '', label_en: '', sort_order: 0 }
-const SPANS = ['large', 'medium', 'small']
 
 export default function AdminPortfolio() {
   const { items,      loading,      refetch }                      = usePortfolio()
@@ -42,7 +41,6 @@ export default function AdminPortfolio() {
       category_id:    item.category_id,
       cloudinary_url: item.cloudinary_url,
       video_url:      item.video_url || '',
-      span:           item.span,
       visible:        item.visible,
       sort_order:     item.sort_order,
     })
@@ -67,7 +65,6 @@ export default function AdminPortfolio() {
       category_id:    form.category_id,
       cloudinary_url: form.cloudinary_url.trim(),
       video_url:      form.video_url.trim() || null,
-      span:           form.span,
       visible:        form.visible,
       sort_order:     parseInt(form.sort_order) || 0,
     }
@@ -216,7 +213,6 @@ export default function AdminPortfolio() {
                   <div className="acms-list-name">{item.title}</div>
                   <div className="acms-list-meta">
                     <span className="acms-tag">{getCatLabel(item.category_id)}</span>
-                    <span className="acms-tag">{item.span}</span>
                     {item.video_url && <span className="acms-tag">▶ videó</span>}
                     {!item.visible && <span className="acms-tag acms-tag--dim">rejtett</span>}
                   </div>
