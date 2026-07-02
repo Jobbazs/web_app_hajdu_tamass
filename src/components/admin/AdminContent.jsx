@@ -28,6 +28,7 @@ const FIXED_GROUPS = [
       { key: 'about_bio2_en', label: 'Bio paragraph 2 – EN',     type: 'textarea', hasAlign: true, hasSize: true },
       { key: 'about_bio3_en', label: 'Bio paragraph 3 – EN',     type: 'textarea', hasAlign: true, hasSize: true },
     ],
+    hasTags: true,   // különleges flag: a TagEditor komponenst rendereli
   },
 ]
 
@@ -239,6 +240,95 @@ function SectionPreview({ form }) {
 }
 
 // ════════════════════════════════════════════════════════════
+
+// ── TagEditor – Rólam szekció tag kezelő ────────────────────
+function TagEditor({ getValue, handleChange }) {
+  const [newTagHu, setNewTagHu] = useState('')
+  const [newTagEn, setNewTagEn] = useState('')
+
+  // Tagek kiolvasása (vesszővel elválasztott string → tömb)
+  const tagsHu = getValue('about_tags_hu')
+    ? getValue('about_tags_hu').split(',').map(t => t.trim()).filter(Boolean)
+    : []
+  const tagsEn = getValue('about_tags_en')
+    ? getValue('about_tags_en').split(',').map(t => t.trim()).filter(Boolean)
+    : []
+
+  const saveHu = (arr) => handleChange('about_tags_hu', arr.join(', '))
+  const saveEn  = (arr) => handleChange('about_tags_en', arr.join(', '))
+
+  const addTag = () => {
+    const hu = newTagHu.trim()
+    const en = newTagEn.trim()
+    if (!hu) return
+    saveHu([...tagsHu, hu])
+    saveEn([...tagsEn, en || hu])   // ha nincs EN verzió, a HU-t duplikálja
+    setNewTagHu('')
+    setNewTagEn('')
+  }
+
+  const removeTag = (idx) => {
+    saveHu(tagsHu.filter((_, i) => i !== idx))
+    saveEn(tagsEn.filter((_, i) => i !== idx))
+  }
+
+  return (
+    <div className="acms-tag-editor">
+      <div className="acms-tag-editor-label">
+        Tagek (pl. Rendezvény, Urbex, Portré)
+      </div>
+
+      {/* Meglévő tagek */}
+      <div className="acms-tag-list">
+        {tagsHu.length === 0 && (
+          <span className="acms-tag-empty">Még nincs tag</span>
+        )}
+        {tagsHu.map((tag, idx) => (
+          <div key={idx} className="acms-tag-item">
+            <span className="acms-tag-hu">{tag}</span>
+            {tagsEn[idx] && tagsEn[idx] !== tag && (
+              <span className="acms-tag-en">/ {tagsEn[idx]}</span>
+            )}
+            <button
+              type="button"
+              className="acms-tag-remove"
+              onClick={() => removeTag(idx)}
+              title="Törlés"
+            >✕</button>
+          </div>
+        ))}
+      </div>
+
+      {/* Új tag hozzáadása */}
+      <div className="acms-tag-add-row">
+        <input
+          type="text"
+          className="acms-input acms-input--sm"
+          placeholder="Új tag – Magyar"
+          value={newTagHu}
+          onChange={e => setNewTagHu(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
+        />
+        <input
+          type="text"
+          className="acms-input acms-input--sm"
+          placeholder="New tag – English"
+          value={newTagEn}
+          onChange={e => setNewTagEn(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
+        />
+        <button
+          type="button"
+          className="acms-btn-secondary"
+          onClick={addTag}
+          style={{ whiteSpace: 'nowrap' }}
+        >+ Hozzáad</button>
+      </div>
+      <span className="acms-hint">Enter vagy + Hozzáad gomb – HU és EN egyszerre szerkeszthető</span>
+    </div>
+  )
+}
+
 export default function AdminContent() {
   const { content, loading: contentLoading, refetch: refetchContent } = useSiteContent()
   const [edits,  setEdits]  = useState({})
@@ -488,6 +578,13 @@ export default function AdminContent() {
                   </div>
                 ))}
               </div>
+              {/* Tag szerkesztő – csak a Rólam szekciónál */}
+              {group.hasTags && (
+                <TagEditor
+                  getValue={getValue}
+                  handleChange={handleChange}
+                />
+              )}
             </div>
           ))}
 

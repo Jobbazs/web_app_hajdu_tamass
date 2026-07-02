@@ -43,6 +43,12 @@ export default function About() {
   const bio2Size  = content[`about_bio2_${lang}_size`]  || 'normal'
   const bio3Size  = content[`about_bio3_${lang}_size`]  || 'normal'
 
+  // Tagek – site_content-ből, fallback a LangContext fix tömbre
+  const rawTags = content[`about_tags_${lang}`]
+  const tags = rawTags
+    ? rawTags.split(',').map(t => t.trim()).filter(Boolean)
+    : a.tags
+
   return (
     <section id="about">
       <div className="container about-grid">
@@ -81,7 +87,7 @@ export default function About() {
           </p>
 
           <div className="about-tags">
-            {a.tags.map(tag => <span key={tag} className="tag">{tag}</span>)}
+            {tags.map(tag => <span key={tag} className="tag">{tag}</span>)}
           </div>
         </div>
 
