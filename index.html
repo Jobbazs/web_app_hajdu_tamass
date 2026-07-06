@@ -48,6 +48,18 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://hajdutamas.hu" />
 
+    <!-- Font preconnect – korai kapcsolat a Google Fonts szerverrel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Fontok betöltése display=optional-lal: nincs FOUT villanás.
+         Az első látogatásnál ha a font nem tölt be 100ms-on belül,
+         a böngésző várja a cachet – a második látogatástól tökéletes. -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,300&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=optional"
+    />
+
     <!-- Strukturált adat (JSON-LD) – helyi szolgáltatás Google számára -->
     <script type="application/ld+json">
     {

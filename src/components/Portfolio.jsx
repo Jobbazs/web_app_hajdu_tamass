@@ -1,27 +1,26 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useLang } from '../LangContext'
-import { usePortfolio, useCategories } from '../hooks'
+import { usePortfolio, useCategories, useSiteContent } from '../hooks'
 import '../Styles/Portfolio.css'
 import MediaModal from './MediaModal'
 
-// Fix kategória lista – slug, magyar és angol név
 const FIXED_CATEGORIES = [
-  { slug: 'nightlife',       label_hu: 'Nightlife',        label_en: 'Nightlife'        },
-  { slug: 'studio',          label_hu: 'Studio',           label_en: 'Studio'           },
-  { slug: 'rendezveny',      label_hu: 'Rendezvény',       label_en: 'Events'           },
-  { slug: 'sport-kultura',   label_hu: 'Sport & Kultúra',  label_en: 'Sport & Culture'  },
-  { slug: 'kreativ',         label_hu: 'Kreatív',          label_en: 'Creative'         },
+  { slug: 'nightlife',     label_hu: 'Nightlife',        label_en: 'Nightlife'        },
+  { slug: 'studio',        label_hu: 'Studio',           label_en: 'Studio'           },
+  { slug: 'rendezveny',    label_hu: 'Rendezvény',       label_en: 'Events'           },
+  { slug: 'sport-kultura', label_hu: 'Sport & Kultúra',  label_en: 'Sport & Culture'  },
+  { slug: 'kreativ',       label_hu: 'Kreatív',          label_en: 'Creative'         },
 ]
 
 export default function Portfolio() {
-  const [selected,  setSelected]  = useState(null)
-  const [activeSlug, setActiveSlug] = useState(null) // melyik kategória modal nyitva
+  const [selected,   setSelected]   = useState(null)
+  const [activeSlug, setActiveSlug] = useState(null)
 
   const { lang, t }    = useLang()
   const { items }      = usePortfolio()
   const { categories } = useCategories()
+  const { content }    = useSiteContent()
 
-  // Normalizálás
   const normalized = useMemo(() => items.map(item => ({
     ...item,
     cloudinaryUrl: item.cloudinary_url,
@@ -29,16 +28,21 @@ export default function Portfolio() {
     categorySlug:  item.portfolio_categories?.slug || item.category || '',
   })), [items])
 
-  // Kategória első képe (cover)
-  const getCoverItem = (slug) =>
-    normalized.find(i => i.categorySlug === slug) || null
-
-  // Kategória összes képe (modalhoz)
   const getItemsForCat = useCallback((slug) =>
     normalized.filter(i => i.categorySlug === slug)
   , [normalized])
 
-  // Modal megnyitása – az adott kategória képeit mutatja
+  // Cover kép – site_content-ből választott ID, fallback: első kép a kategóriában
+  const getCoverItem = (slug) => {
+    const coverId = content[`portfolio_cover_${slug}`]
+    const catItems = getItemsForCat(slug)
+    if (coverId) {
+      const chosen = catItems.find(i => i.id === coverId)
+      if (chosen) return chosen
+    }
+    return catItems[0] || null
+  }
+
   const openCategory = (slug, coverItem) => {
     const catItems = getItemsForCat(slug)
     if (catItems.length === 0) return
@@ -46,12 +50,8 @@ export default function Portfolio() {
     setSelected(coverItem || catItems[0])
   }
 
-  const closeModal = () => {
-    setSelected(null)
-    setActiveSlug(null)
-  }
+  const closeModal = () => { setSelected(null); setActiveSlug(null) }
 
-  // Modal navigáció az aktív kategória képein belül
   const modalItems = useMemo(() =>
     activeSlug ? getItemsForCat(activeSlug) : []
   , [activeSlug, getItemsForCat])
@@ -68,11 +68,10 @@ export default function Portfolio() {
     setSelected(modalItems[(idx - 1 + modalItems.length) % modalItems.length])
   }, [selected, modalItems])
 
-  // Megjelenítendő kategóriák – csak azok amikhez van kép
-  const displayCats = FIXED_CATEGORIES.map(cat => {
-    const cover = getCoverItem(cat.slug)
-    return { ...cat, cover }
-  })
+  const displayCats = FIXED_CATEGORIES.map(cat => ({
+    ...cat,
+    cover: getCoverItem(cat.slug),
+  }))
 
   return (
     <>
@@ -100,21 +99,17 @@ export default function Portfolio() {
                   tabIndex={isEmpty ? undefined : 0}
                   onKeyDown={e => !isEmpty && e.key === 'Enter' && openCategory(cat.slug, cat.cover)}
                 >
-                  {/* Cover kép */}
                   <div className="port-cat-img-wrap">
                     {cat.cover?.cloudinaryUrl ? (
                       <img
                         src={cat.cover.cloudinaryUrl}
-                        alt={cat.cover.title ? `${cat.cover.title} — ${label}` : label}
+                        alt={label}
                         className="port-cat-img"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="port-cat-placeholder">
-                        {isEmpty ? '—' : '?'}
-                      </div>
+                      <div className="port-cat-placeholder">{isEmpty ? '—' : '?'}</div>
                     )}
-                    {/* Overlay */}
                     <div className="port-cat-overlay">
                       {!isEmpty && (
                         <span className="port-cat-count">
@@ -123,8 +118,6 @@ export default function Portfolio() {
                       )}
                     </div>
                   </div>
-
-                  {/* Kategória neve */}
                   <div className="port-cat-label">{label}</div>
                 </div>
               )

@@ -435,3 +435,36 @@
   flex: 1;
   min-width: 120px;
 }
+
+/* Social sor */
+.acms-social-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+.acms-social-row .acms-input--sm { flex: 1; min-width: 120px; }
+
+/* Cover kép sor */
+.acms-cover-row label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+.acms-cover-input-wrap { display: flex; gap: 0.8rem; align-items: flex-start; }
+.acms-cover-input-wrap .acms-input { flex: 1; }
+.acms-cover-thumb {
+  width: 72px; height: 48px; flex-shrink: 0;
+  overflow: hidden; border: 1px solid var(--border-mid);
+}
+.acms-cover-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+@media (max-width: 767px) {
+  .acms-social-row { flex-direction: column; align-items: stretch; }
+  .acms-cover-input-wrap { flex-direction: column; }
+  .acms-cover-thumb { width: 100%; height: 60px; }
+}

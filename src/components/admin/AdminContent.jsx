@@ -345,6 +345,22 @@ export default function AdminContent() {
 
   const [tab, setTab] = useState('fixed')
 
+  // Footer social state
+  const [socialSaving, setSocialSaving] = useState(false)
+  const [socialError,  setSocialError]  = useState('')
+  const getSocials = () => {
+    try { const r = getValue('footer_socials'); return r ? JSON.parse(r) : [] }
+    catch { return [] }
+  }
+  const saveSocials = async (arr) => {
+    setSocialSaving(true); setSocialError('')
+    const { error } = await supabase.from('site_content')
+      .upsert({ key: 'footer_socials', value: JSON.stringify(arr) }, { onConflict: 'key' })
+    if (error) setSocialError('Hiba: ' + error.message)
+    else { await refetchContent() }
+    setSocialSaving(false)
+  }
+
   // Új kép hozzáadás state
   const [newImgUrl,   setNewImgUrl]   = useState('')
   const [newImgPos,   setNewImgPos]   = useState('above')
@@ -508,7 +524,7 @@ export default function AdminContent() {
         {tab === 'sections' && (
           <button className="acms-btn-primary" onClick={openNewSect}>+ Új szekció</button>
         )}
-        {tab === 'fixed' && hasChanges && (
+        {(tab === 'fixed' || tab === 'footer' || tab === 'portfolio' || tab === 'popup') && hasChanges && (
           <button className="acms-btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Mentés...' : `Mentés (${Object.keys(edits).length})`}
           </button>
@@ -521,6 +537,15 @@ export default function AdminContent() {
         </button>
         <button className={`acms-subtab ${tab === 'sections' ? 'active' : ''}`} onClick={() => setTab('sections')}>
           Egyedi szekciók {sections.length > 0 && `(${sections.length})`}
+        </button>
+        <button className={`acms-subtab ${tab === 'footer' ? 'active' : ''}`} onClick={() => setTab('footer')}>
+          Footer & Portré
+        </button>
+        <button className={`acms-subtab ${tab === 'portfolio' ? 'active' : ''}`} onClick={() => setTab('portfolio')}>
+          Portfólió coverek
+        </button>
+        <button className={`acms-subtab ${tab === 'popup' ? 'active' : ''}`} onClick={() => setTab('popup')}>
+          Popup szövegek
         </button>
       </div>
 
@@ -650,6 +675,151 @@ export default function AdminContent() {
             </div>
           )}
         </>
+      )}
+
+
+
+      {/* ── FOOTER & PORTRÉ ── */}
+      {tab === 'footer' && (
+        <>
+          <div className="acms-content-group">
+            <div className="acms-content-group-label">Portré kép (Rólam szekció)</div>
+            <div className="acms-form-group">
+              <label>Cloudinary kép URL</label>
+              <input type="text" className="acms-input"
+                value={getValue('about_portrait_url')}
+                onChange={e => handleChange('about_portrait_url', e.target.value)}
+                placeholder="https://res.cloudinary.com/..." />
+              <span className="acms-hint">Ez jelenik meg a Rólam szekció bal oldalán</span>
+            </div>
+            {getValue('about_portrait_url') && (
+              <div className="acms-preview" style={{width:100,height:130}}>
+                <img src={getValue('about_portrait_url')} alt="előnézet" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+              </div>
+            )}
+          </div>
+
+          <div className="acms-content-group">
+            <div className="acms-content-group-label">Footer – Social linkek</div>
+            <div className="acms-hint" style={{marginBottom:'1rem'}}>
+              Hozzáadhatsz bármilyen platformot (Instagram, TikTok, Behance, YouTube stb.)
+            </div>
+            {getSocials().length === 0 && (
+              <div className="admin-empty" style={{marginBottom:'1rem'}}>Még nincs social link</div>
+            )}
+            {getSocials().map((s, idx) => (
+              <div key={idx} className="acms-social-row">
+                <input type="text" className="acms-input acms-input--sm"
+                  placeholder="Felirat (pl. Instagram)"
+                  value={s.label}
+                  onChange={e => {
+                    const arr = [...getSocials()]
+                    arr[idx] = { ...arr[idx], label: e.target.value }
+                    handleChange('footer_socials', JSON.stringify(arr))
+                  }} />
+                <input type="text" className="acms-input acms-input--sm"
+                  placeholder="URL (pl. https://instagram.com/...)"
+                  value={s.url}
+                  onChange={e => {
+                    const arr = [...getSocials()]
+                    arr[idx] = { ...arr[idx], url: e.target.value }
+                    handleChange('footer_socials', JSON.stringify(arr))
+                  }} />
+                <button type="button" className="acms-btn-sm acms-btn-danger"
+                  onClick={() => {
+                    const arr = getSocials().filter((_, i) => i !== idx)
+                    handleChange('footer_socials', JSON.stringify(arr))
+                  }}>✕</button>
+              </div>
+            ))}
+            <button type="button" className="acms-btn-secondary" style={{marginTop:'0.6rem'}}
+              onClick={() => {
+                const arr = [...getSocials(), { label: '', url: '' }]
+                handleChange('footer_socials', JSON.stringify(arr))
+              }}>
+              + Új social link
+            </button>
+            {socialError && <div className="acms-error">{socialError}</div>}
+          </div>
+        </>
+      )}
+
+      {/* ── PORTFÓLIÓ COVEREK ── */}
+      {tab === 'portfolio' && (
+        <div className="acms-content-group">
+          <div className="acms-content-group-label">Kategória borítóképek</div>
+          <div className="acms-hint" style={{marginBottom:'1.2rem'}}>
+            Minden kategóriához kiválaszthatod melyik kép jelenjen meg borítóként.
+            Cloudinary URL-t adj meg – ha üresen hagyod, az első feltöltött kép lesz a borító.
+          </div>
+          {[
+            {slug:'nightlife',     label:'Nightlife'},
+            {slug:'studio',        label:'Studio'},
+            {slug:'rendezveny',    label:'Rendezvény'},
+            {slug:'sport-kultura', label:'Sport & Kultúra'},
+            {slug:'kreativ',       label:'Kreatív'},
+          ].map(cat => (
+            <div key={cat.slug} className="acms-form-group acms-cover-row">
+              <label>{cat.label}</label>
+              <div className="acms-cover-input-wrap">
+                <input type="text" className="acms-input"
+                  value={getValue(`portfolio_cover_${cat.slug}`)}
+                  onChange={e => handleChange(`portfolio_cover_${cat.slug}`, e.target.value)}
+                  placeholder="Cloudinary kép URL (üresen = első kép)" />
+                {getValue(`portfolio_cover_${cat.slug}`) && (
+                  <div className="acms-cover-thumb">
+                    <img src={getValue(`portfolio_cover_${cat.slug}`)} alt={cat.label} />
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── POPUP SZÖVEGEK ── */}
+      {tab === 'popup' && (
+        <div className="acms-content-group">
+          <div className="acms-content-group-label">Köszönő popup szövegek</div>
+          <div className="acms-content-fields">
+            {[
+              {key:'thankyou_eyebrow_hu',   label:'Eyebrow – Magyar',         type:'text'},
+              {key:'thankyou_title1_hu',    label:'Cím 1. sor – Magyar',      type:'text'},
+              {key:'thankyou_title2_hu',    label:'Cím 2. sor – Magyar',      type:'text'},
+              {key:'thankyou_body_hu',      label:'Szöveg – Magyar',          type:'textarea'},
+              {key:'thankyou_body_name_hu', label:'Szöveg névvel – Magyar',   type:'textarea'},
+              {key:'thankyou_closebtn_hu',  label:'Gomb felirat – Magyar',    type:'text'},
+              {key:'thankyou_dismiss_hu',   label:'Bezárás felirat – Magyar', type:'text'},
+              {key:'thankyou_eyebrow_en',   label:'Eyebrow – EN',             type:'text'},
+              {key:'thankyou_title1_en',    label:'Title line 1 – EN',        type:'text'},
+              {key:'thankyou_title2_en',    label:'Title line 2 – EN',        type:'text'},
+              {key:'thankyou_body_en',      label:'Body – EN',                type:'textarea'},
+              {key:'thankyou_body_name_en', label:'Body with name – EN',      type:'textarea'},
+              {key:'thankyou_closebtn_en',  label:'Button label – EN',        type:'text'},
+              {key:'thankyou_dismiss_en',   label:'Dismiss label – EN',       type:'text'},
+            ].map(field => (
+              <div key={field.key} className="acms-form-group">
+                <label>
+                  {field.label}
+                  {edits[field.key] !== undefined && <span className="acms-changed-dot" />}
+                </label>
+                {field.type === 'textarea' ? (
+                  <textarea className="acms-input acms-textarea"
+                    value={getValue(field.key)}
+                    onChange={e => handleChange(field.key, e.target.value)}
+                    rows={2} />
+                ) : (
+                  <input type="text" className="acms-input"
+                    value={getValue(field.key)}
+                    onChange={e => handleChange(field.key, e.target.value)} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="acms-hint" style={{marginTop:'0.8rem'}}>
+            A névvel ellátott szövegben a <code>&#123;name&#125;</code> helyére a küldő neve kerül.
+          </div>
+        </div>
       )}
 
       {/* ── SECTION FORM MODAL ── */}
