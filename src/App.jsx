@@ -10,8 +10,10 @@ import Services  from './components/Services'
 import Contact        from './components/Contact'
 import CustomSections from './components/CustomSections'
 import Footer         from './components/Footer'
-import Admin     from './components/Admin'
-import Login     from './components/Login'
+import Admin          from './components/Admin'
+import Login          from './components/Login'
+import Booking        from './components/Booking'
+import Confirm        from './components/Confirm'
 
 import './Styles/global.css'
 
@@ -46,6 +48,10 @@ function AppInner() {
     return session ? <Admin /> : <Login />
   }
 
+  if (path === '/confirm' || path === '/cancel') {
+    return <Confirm />
+  }
+
   return (
     <>
       <Navbar />
@@ -56,6 +62,7 @@ function AppInner() {
         <Portfolio />
         <div className="rust-divider" />
         <Services />
+        <Booking />
         <CustomSections />
         <Contact />
       </main>

@@ -5,12 +5,14 @@ import '../Styles/Admin.css'
 import AdminPortfolio from './admin/AdminPortfolio'
 import AdminServices  from './admin/AdminServices'
 import AdminContent   from './admin/AdminContent'
+import AdminBookings  from './admin/AdminBookings'
 
 const TABS = [
   { key: 'messages',  label: 'Üzenetek' },
   { key: 'portfolio', label: 'Portfólió' },
   { key: 'services',  label: 'Szolgáltatások' },
   { key: 'content',   label: 'Tartalom' },
+  { key: 'bookings',  label: 'Foglalások' },
 ]
 
 export default function Admin() {
@@ -50,6 +52,7 @@ export default function Admin() {
         {activeTab === 'portfolio' && <AdminPortfolio />}
         {activeTab === 'services'  && <AdminServices />}
         {activeTab === 'content'   && <AdminContent />}
+        {activeTab === 'bookings'  && <AdminBookings />}
       </div>
     </div>
   )

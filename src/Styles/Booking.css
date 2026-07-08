@@ -1,0 +1,205 @@
+/* ============================================================
+   BOOKING – Időpontfoglalás
+   ============================================================ */
+
+#booking {
+  padding: 5rem 2rem;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Betöltés / üres állapot */
+.booking-empty {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 4rem 0;
+  border: 1px dashed var(--border-subtle);
+}
+
+/* Nap csoport */
+.booking-groups { display: flex; flex-direction: column; gap: 2.5rem; }
+
+.booking-day-label {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Slot kártyák */
+.booking-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+.booking-slot {
+  border: 1px solid var(--border-subtle);
+  padding: 1.4rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: var(--bg-card);
+}
+
+.booking-slot:hover {
+  border-color: var(--accent);
+  background: var(--bg-secondary);
+}
+
+.booking-slot--full {
+  opacity: 0.6;
+  border-style: dashed;
+  cursor: pointer; /* várólistára lehet feliratkozni */
+}
+
+.booking-slot-time {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 0.4rem;
+}
+
+.booking-slot-title {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.booking-slot-type {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+}
+
+.booking-slot-status {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  display: inline-block;
+  border: 1px solid;
+}
+
+.booking-slot-status.free   { color: var(--accent); border-color: var(--accent); }
+.booking-slot-status.almost { color: #e09050; border-color: #e09050; }
+.booking-slot-status.full   { color: var(--text-muted); border-color: var(--border-mid); }
+
+/* Form wrapper */
+.booking-form-wrap { max-width: 640px; }
+
+.booking-back {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1.8rem;
+  display: inline-block;
+  transition: color 0.2s;
+}
+.booking-back:hover { color: var(--accent); }
+
+/* Kiválasztott slot info */
+.booking-selected-info {
+  border-left: 3px solid var(--accent);
+  padding: 0.8rem 1.2rem;
+  margin-bottom: 2rem;
+  background: var(--bg-primary);
+}
+
+.booking-selected-date {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.3rem;
+}
+
+.booking-selected-time {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.booking-selected-title {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-top: 0.3rem;
+}
+
+/* Megerősítő megjegyzés */
+.booking-confirm-note {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 1.2rem;
+  line-height: 1.7;
+}
+
+.booking-waitlist-note {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.7;
+}
+
+/* Siker üzenet */
+.booking-success-wrap { max-width: 560px; }
+
+.booking-success {
+  border: 1px solid var(--border-mid);
+  padding: 2.5rem;
+  text-align: center;
+  background: var(--bg-card);
+}
+
+.booking-success-icon {
+  font-size: 2rem;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.booking-success h3 {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  margin-bottom: 0.8rem;
+}
+
+.booking-success p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+/* Reszponzív */
+@media (max-width: 767px) {
+  .booking-slots { grid-template-columns: 1fr; }
+  .booking-slot-time { font-size: 1.4rem; }
+}
+
+@media (max-width: 479px) {
+  #booking { padding: 4rem 1rem; }
+}

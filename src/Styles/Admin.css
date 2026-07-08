@@ -509,3 +509,98 @@
     z-index: 10;
   }
 }
+
+/* ── Booking kártyák ── */
+.acms-booking-filters {
+  display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+}
+.acms-booking-card {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  padding: 1.2rem;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.acms-booking-card:hover { border-color: var(--border-mid); }
+.acms-booking-card-header {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;
+}
+.acms-booking-name {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem; letter-spacing: 0.06em; color: var(--text-primary);
+}
+.acms-booking-contact {
+  font-family: 'Space Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.1em; color: var(--text-muted);
+}
+.acms-booking-status {
+  font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  white-space: nowrap; flex-shrink: 0;
+}
+.acms-booking-slot-info {
+  font-size: 0.85rem; color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+.acms-booking-message {
+  font-size: 0.9rem; color: var(--text-secondary);
+  border-left: 2px solid var(--border-mid);
+  padding-left: 0.8rem; margin: 0.6rem 0;
+  line-height: 1.6;
+}
+.acms-booking-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem; }
+.acms-booking-meta {
+  font-family: 'Space Mono', monospace; font-size: 0.58rem;
+  color: var(--text-muted); margin-top: 0.6rem;
+}
+
+/* ── Slot kártyák ── */
+.acms-slot-card {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  padding: 1.2rem; margin-bottom: 8px;
+}
+.acms-slot-header {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;
+}
+.acms-slot-date {
+  font-family: 'Space Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.12em; color: var(--accent); margin-bottom: 0.2rem;
+}
+.acms-slot-title {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.3rem; letter-spacing: 0.06em; color: var(--text-primary);
+}
+.acms-slot-capacity {
+  display: flex; flex-direction: column; align-items: flex-end;
+  font-family: 'Space Mono', monospace; font-size: 0.72rem;
+  color: var(--text-muted); flex-shrink: 0;
+}
+
+/* ── Reliability kártyák ── */
+.acms-reliability-card {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  padding: 1.2rem; margin-bottom: 8px;
+}
+.acms-reliability-header {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;
+}
+.acms-reliability-level {
+  font-family: 'Space Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.12em; font-weight: bold; flex-shrink: 0;
+}
+.acms-reliability-stats {
+  display: flex; gap: 1.2rem; flex-wrap: wrap;
+  font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.1em; color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+
+/* ── rrule preset gombok ── */
+.acms-booking-rrule-presets {
+  display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem;
+}

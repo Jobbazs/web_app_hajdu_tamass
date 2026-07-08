@@ -117,3 +117,83 @@ export function useCustomSections() {
   useEffect(() => { fetch() }, [fetch])
   return { sections, loading, refetch: fetch }
 }
+
+// ─── Időpontfoglalás – elérhető slotok (publikus) ────────────
+export function useAvailableSlots() {
+  const [slots,   setSlots]   = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('available_slots')   // a view-t olvassa
+      .select('*')
+      .order('slot_date', { ascending: true })
+    setSlots(data || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetch() }, [fetch])
+  return { slots, loading, refetch: fetch }
+}
+
+// ─── Admin: összes slot (látható és rejtett) ──────────────────
+export function useAllSlots() {
+  const [slots,   setSlots]   = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('appointment_slots')
+      .select('*')
+      .order('slot_date', { ascending: true })
+    setSlots(data || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetch() }, [fetch])
+  return { slots, loading, refetch: fetch }
+}
+
+// ─── Admin: foglalások ────────────────────────────────────────
+export function useAppointments(filter = 'all') {
+  const [appointments, setAppointments] = useState([])
+  const [loading,      setLoading]      = useState(true)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    let query = supabase
+      .from('appointments')
+      .select('*, appointment_slots(title, slot_date, start_time, end_time, service_type)')
+      .order('created_at', { ascending: false })
+
+    if (filter !== 'all') query = query.eq('status', filter)
+
+    const { data } = await query
+    setAppointments(data || [])
+    setLoading(false)
+  }, [filter])
+
+  useEffect(() => { fetch() }, [fetch])
+  return { appointments, loading, refetch: fetch }
+}
+
+// ─── Admin: megbízhatósági lista ──────────────────────────────
+export function useClientReliability() {
+  const [clients, setClients] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('client_reliability')
+      .select('*')
+      .order('reliability_level', { ascending: false })
+    setClients(data || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetch() }, [fetch])
+  return { clients, loading, refetch: fetch }
+}
