@@ -3,7 +3,7 @@
 // .env fájlba: VITE_RESEND_API_KEY=re_xxxxxxxxx
 // ============================================================
 
-const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || 'PLACEHOLDER_ADD_YOUR_KEY'
+const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || 're_xxxxxxxxxre_TwXSyM73_CYsjkrV1J7DKzkKxes6CsioK'
 const FROM_EMAIL     = 'foglalas@hajdutamas.hu'
 const FROM_NAME      = 'Hajdú Tamás — NOX'
 
