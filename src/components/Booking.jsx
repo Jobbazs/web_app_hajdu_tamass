@@ -256,7 +256,7 @@ export default function Booking() {
           <div className="booking-success-wrap">
             <div className="booking-success">
               <div className="booking-success-icon">✓</div>
-              <h3>{lang === 'hu' ? 'Majdnem kész!' : 'Almost there!'}</h3>
+              <h2>{lang === 'hu' ? 'Majdnem kész!' : 'Almost there!'}</h2>
               <p>
                 {lang === 'hu'
                   ? `Elküldtük a megerősítő emailt a ${form.email} címre. Kattints a linkre 10 percen belül a foglalás véglegesítéséhez.`
