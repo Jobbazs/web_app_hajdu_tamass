@@ -75,7 +75,7 @@ export default function Booking() {
     }
 
     // Email küldés (Supabase Edge Function-nel, vagy EmailJS fallback)
-    await sendConfirmationEmail(form, selectedSlot, token, lang)
+    await sendConfirmationEmail(form, selectedSlot, token)
 
     setStep('success')
     setSending(false)
@@ -317,28 +317,21 @@ function renderFields(form, handleChange, lang) {
   )
 }
 
-// ── Email küldés placeholder ──────────────────────────────────
-// A tényleges email küldés Supabase Edge Function-nel történik.
-// Addig EmailJS-t hívunk ha konfigurálva van, különben csak DB-be mentjük.
-async function sendConfirmationEmail(form, slot, token, lang) {
-  const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  || ''
-  const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_BOOKING_TEMPLATE_ID || ''
-  const EMAILJS_PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  || ''
-
-  if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) return
-
+// ── Email küldés – Resend.com ────────────────────────────────
+async function sendConfirmationEmail(form, slot, token) {
   try {
-    const { default: emailjs } = await import('@emailjs/browser')
-    const confirmUrl = `${window.location.origin}/confirm?token=${token}`
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email:     form.email,
-      to_name:      form.name,
-      slot_title:   slot.title,
-      slot_date:    slot.slot_date,
-      slot_time:    `${slot.start_time?.slice(0,5)} – ${slot.end_time?.slice(0,5)}`,
-      confirm_url:  confirmUrl,
-    }, EMAILJS_PUBLIC_KEY)
+    const { sendBookingConfirmation } = await import('../lib/resend.js')
+    await sendBookingConfirmation({
+      to:           form.email,
+      name:         form.name,
+      slotTitle:    slot.title,
+      slotDate:     slot.slot_date,
+      startTime:    slot.start_time?.slice(0,5),
+      endTime:      slot.end_time?.slice(0,5),
+      confirmToken: token,
+    })
   } catch (e) {
-    console.warn('EmailJS booking confirmation error:', e)
+    console.warn('Resend confirmation error:', e)
+    // Nem blokkolja a foglalást ha az email küldés hibázik
   }
 }

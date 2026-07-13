@@ -253,6 +253,13 @@ export default function AdminBookings() {
                       Lemondás
                     </button>
                   )}
+                  <button className="acms-btn-sm acms-btn-danger" onClick={async () => {
+                    if (!window.confirm('Véglegesen törlöd ezt a foglalást?')) return
+                    await supabase.from('appointments').delete().eq('id', a.id)
+                    refetchAppts()
+                  }}>
+                    Töröl
+                  </button>
                 </div>
                 <div className="acms-booking-meta">
                   {new Date(a.created_at).toLocaleString('hu-HU')}

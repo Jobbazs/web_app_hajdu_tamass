@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useSiteContent, useAllCustomSections } from '../../hooks'
 import '../../Styles/AdminContent.css'
@@ -345,6 +345,69 @@ export default function AdminContent() {
 
   const [tab, setTab] = useState('fixed')
 
+  // Szekció sorrend state
+  const SECTION_LABELS = {
+    about:     'Rólam',
+    portfolio: 'Portfólió',
+    services:  'Szolgáltatások',
+    booking:   'Időpontfoglalás',
+    custom:    'Egyedi szekciók',
+    contact:   'Kapcsolat',
+  }
+
+  const DEFAULT_SECTIONS = [
+    { key: 'about',     visible: true },
+    { key: 'portfolio', visible: true },
+    { key: 'services',  visible: true },
+    { key: 'booking',   visible: true },
+    { key: 'custom',    visible: true },
+    { key: 'contact',   visible: true },
+  ]
+
+  const [sectionOrder, setSectionOrder] = useState(null)   // null = betöltés alatt
+  const [sectSavingO,  setSectSavingO]  = useState(false)
+  const [dragIdx,      setDragIdx]      = useState(null)
+
+  // Betöltés site_content-ből
+  useEffect(() => {
+    const raw = content['sections_order']
+    if (raw) {
+      try { setSectionOrder(JSON.parse(raw)) } catch { setSectionOrder(DEFAULT_SECTIONS) }
+    } else {
+      setSectionOrder(DEFAULT_SECTIONS)
+    }
+  }, [content])
+
+  const saveSectionsOrder = async (newOrder) => {
+    setSectSavingO(true)
+    await supabase.from('site_content')
+      .upsert({ key: 'sections_order', value: JSON.stringify(newOrder) }, { onConflict: 'key' })
+    await refetchContent()
+    setSectSavingO(false)
+  }
+
+  const toggleSectionVisible = (idx) => {
+    const updated = (sectionOrder || DEFAULT_SECTIONS).map((s, i) => i === idx ? { ...s, visible: !s.visible } : s)
+    setSectionOrder(updated)
+    saveSectionsOrder(updated)
+  }
+
+  // Drag and drop
+  const handleDragStart = (idx) => setDragIdx(idx)
+  const handleDragOver  = (e, idx) => {
+    e.preventDefault()
+    if (dragIdx === null || dragIdx === idx) return
+    const updated = [...(sectionOrder || DEFAULT_SECTIONS)]
+    const [moved] = updated.splice(dragIdx, 1)
+    updated.splice(idx, 0, moved)
+    setSectionOrder(updated)
+    setDragIdx(idx)
+  }
+  const handleDragEnd = () => {
+    setDragIdx(null)
+    saveSectionsOrder(sectionOrder || DEFAULT_SECTIONS)
+  }
+
   // Footer social state
   const [socialSaving, setSocialSaving] = useState(false)
   const [socialError,  setSocialError]  = useState('')
@@ -546,6 +609,9 @@ export default function AdminContent() {
         </button>
         <button className={`acms-subtab ${tab === 'popup' ? 'active' : ''}`} onClick={() => setTab('popup')}>
           Popup szövegek
+        </button>
+        <button className={`acms-subtab ${tab === 'order' ? 'active' : ''}`} onClick={() => setTab('order')}>
+          Szekció sorrend
         </button>
       </div>
 
@@ -819,6 +885,47 @@ export default function AdminContent() {
           <div className="acms-hint" style={{marginTop:'0.8rem'}}>
             A névvel ellátott szövegben a <code>&#123;name&#125;</code> helyére a küldő neve kerül.
           </div>
+        </div>
+      )}
+
+      {/* ── SZEKCIÓ SORREND ── */}
+      {tab === 'order' && (
+        <div className="acms-content-group">
+          <div className="acms-content-group-label">Szekció sorrend & láthatóság</div>
+          <div className="acms-hint" style={{marginBottom:'1.2rem'}}>
+            Húzd át a szekciókat a kívánt sorrendbe. A Hero mindig az oldal tetején marad.
+            {sectSavingO && <span style={{marginLeft:'1rem', color:'var(--accent)'}}>Mentés...</span>}
+          </div>
+
+          {/* Hero – fix, nem mozgatható */}
+          <div className="acms-order-item acms-order-item--fixed">
+            <span className="acms-order-handle">⠿</span>
+            <span className="acms-order-label">Hero</span>
+            <span className="acms-order-badge">Fix – nem mozgatható</span>
+          </div>
+
+          {/* Többi szekció – drag-and-drop */}
+          {(sectionOrder || DEFAULT_SECTIONS).map((s, idx) => (
+            <div
+              key={s.key}
+              className={`acms-order-item ${dragIdx === idx ? 'acms-order-item--dragging' : ''} ${!s.visible ? 'acms-hidden' : ''}`}
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={e => handleDragOver(e, idx)}
+              onDragEnd={handleDragEnd}
+            >
+              <span className="acms-order-handle" title="Húzd ide">⠿</span>
+              <span className="acms-order-label">{SECTION_LABELS[s.key] || s.key}</span>
+              <div style={{display:'flex', gap:'0.5rem', marginLeft:'auto'}}>
+                <button
+                  className="acms-btn-sm"
+                  onClick={() => toggleSectionVisible(idx)}
+                >
+                  {s.visible ? 'Elrejt' : 'Megjelenit'}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
