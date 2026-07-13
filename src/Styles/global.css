@@ -63,7 +63,7 @@ section {
    ============================================================ */
 .section-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-weight: 900;
+  font-weight: 500;
   font-size: clamp(2.4rem, 6vw, 5rem);
   line-height: 0.95;
   letter-spacing: 0.03em;
