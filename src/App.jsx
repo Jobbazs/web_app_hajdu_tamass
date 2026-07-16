@@ -55,7 +55,7 @@ function useSectionsOrder() {
       .from('site_content')
       .select('value')
       .eq('key', 'sections_order')
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data?.value) {
           try { setOrder(JSON.parse(data.value)) } catch {}
