@@ -176,12 +176,14 @@ export default function Booking() {
                           {SERVICE_LABELS[slot.service_type]?.[lang] || slot.service_type}
                         </div>
                         <div className={`booking-slot-status ${isFull(slot) ? 'full' : isAlmost(slot) ? 'almost' : 'free'}`}>
-                          {isFull(slot)
-                            ? (lang === 'hu' ? 'Foglalt – várólistára' : 'Full – join waitlist')
-                            : isAlmost(slot)
-                              ? (lang === 'hu' ? 'Utolsó hely!' : 'Last spot!')
-                              : (lang === 'hu' ? 'Szabad' : 'Available')}
-                        </div>
+  {isFull(slot)
+    ? (lang === 'hu' ? 'Foglalt – várólistára' : 'Full – join waitlist')
+    : isAlmost(slot)
+      ? (lang === 'hu' ? 'Utolsó hely!' : 'Last spot!')
+      : (lang === 'hu'
+          ? `${slot.available_spots} szabad hely`
+          : `${slot.available_spots} spots available`)}
+</div>
                       </div>
                     ))}
                   </div>

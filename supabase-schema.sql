@@ -484,27 +484,35 @@ create trigger set_updated_at_reliability
 
 create or replace function public.update_slot_booked_count()
 returns trigger language plpgsql as $$
+declare
+  v_old_active boolean;
+  v_new_active boolean;
 begin
-  -- INSERT: csak akkor növeljük ha már megerősített állapot
-  -- (pending_confirmation-nál még nem számít, a hely csak a megerősítéskor foglal)
-  if TG_OP = 'INSERT' and new.status in ('confirmed','approved','completed') then
-    update public.appointment_slots
-      set booked_count = booked_count + 1
-      where id = new.slot_id;
+  -- "Aktív" = ténylegesen foglalja a helyet.
+  -- pending_confirmation NEM aktív: a hely csak megerősítés után foglalt.
+  v_new_active := new.status in ('confirmed','approved','completed');
 
-  elsif TG_OP = 'UPDATE' then
-    -- Ha cancelled/no_show-ra vált, csökkentjük
-    if old.status not in ('cancelled','no_show')
-       and new.status in ('cancelled','no_show') then
-      update public.appointment_slots
-        set booked_count = greatest(0, booked_count - 1)
-        where id = new.slot_id;
-    end if;
-    -- Ha cancelled/no_show-ból aktív státuszra vált, növeljük
-    if old.status in ('cancelled','no_show')
-       and new.status not in ('cancelled','no_show') then
+  if TG_OP = 'INSERT' then
+    if v_new_active then
       update public.appointment_slots
         set booked_count = booked_count + 1
+        where id = new.slot_id;
+    end if;
+
+  elsif TG_OP = 'UPDATE' then
+    v_old_active := old.status in ('confirmed','approved','completed');
+
+    -- inaktív → aktív: növel  (pl. pending_confirmation → confirmed)
+    if not v_old_active and v_new_active then
+      update public.appointment_slots
+        set booked_count = booked_count + 1
+        where id = new.slot_id;
+    end if;
+
+    -- aktív → inaktív: csökkent  (pl. confirmed → cancelled / no_show)
+    if v_old_active and not v_new_active then
+      update public.appointment_slots
+        set booked_count = greatest(0, booked_count - 1)
         where id = new.slot_id;
     end if;
   end if;
@@ -543,19 +551,7 @@ as
 
 
 -- ============================================================================
--- VÉGE
--- Táblák: messages, portfolio_categories, portfolio_items, services,
---          site_content, custom_sections,
---          appointment_slots, appointments, appointment_waitlist,
---          client_reliability
--- Views:  available_slots
--- Triggers: set_updated_at_reliability, trg_update_booked_count
--- Storage: attachments (public bucket)
--- ============================================================================
-
--- ============================================================================
--- WAITLIST LÁNC MIGRATION
--- Supabase Dashboard → SQL Editor → New query → Paste → Run
+-- 9. WAITLIST LÁNC — automatikus értesítés a következő várólistásnak
 -- ============================================================================
 
 -- ── Trigger: ha egy foglalás lemondódik/no-show, értesíti a várólistán
@@ -714,13 +710,12 @@ create trigger trg_notify_waitlist_decline
   after update of response on public.appointment_waitlist
   for each row execute function public.notify_next_on_decline();
 
--- ============================================================
--- PG_CRON – Régi foglalások automatikus törlése
--- Supabase Dashboard → SQL Editor → New query → Paste → Run
---
--- Futtatás előtt ellenőrizd hogy a pg_cron extension engedélyezve van:
--- Supabase Dashboard → Database → Extensions → pg_cron → Enable
--- ============================================================
+
+-- ============================================================================
+-- 10. PG_CRON — régi foglalások automatikus törlése
+-- Előfeltétel: Supabase Dashboard → Database → Extensions → pg_cron → Enable
+-- Ez a blokk kihagyható ha nem kell automatikus takarítás.
+-- ============================================================================
 
 -- Extension engedélyezése (ha még nem fut)
 create extension if not exists pg_cron;
@@ -769,3 +764,17 @@ select cron.schedule(
 -- select cron.unschedule('delete-old-appointments');
 -- select cron.unschedule('delete-old-waitlist');
 -- select cron.unschedule('delete-old-slots');
+
+
+
+-- ============================================================================
+-- VÉGE
+-- Táblák:   messages, portfolio_categories, portfolio_items, services,
+--           site_content, custom_sections, appointment_slots, appointments,
+--           appointment_waitlist, client_reliability
+-- View:     available_slots
+-- Trigger:  set_updated_at_reliability, trg_update_booked_count,
+--           trg_notify_waitlist, trg_notify_waitlist_decline
+-- Storage:  attachments (public bucket)
+-- Cron:     delete-old-appointments, delete-old-waitlist, delete-old-slots
+-- ============================================================================

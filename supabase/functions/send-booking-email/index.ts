@@ -85,7 +85,16 @@ serve(async (req) => {
     const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
-      body: JSON.stringify({ from: `${FROM_NAME} <${FROM_EMAIL}>`, to: [to], subject, html }),
+body: JSON.stringify({
+  from: `${FROM_NAME} <${FROM_EMAIL}>`,
+  to: [to],
+  subject,
+  html,
+  text: isWaitlist
+    ? `Kedves ${name}!\n\nFelszabadult egy hely: ${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nAz ajánlat 30 percig érvényes.\n\nElfogadom: ${origin}/confirm?waitlist=${offerToken}&action=accept\nNem kérem: ${origin}/confirm?waitlist=${offerToken}&action=decline\n\nhajdutamas.hu`
+    : `Kedves ${name}!\n\nFoglalási kérelmed megérkezett:\n${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nErősítsd meg 10 percen belül:\n${origin}/confirm?token=${confirmToken}\n\nHa nem te kezdeményezted, hagyd figyelmen kívül.\n\nhajdutamas.hu`,
+  reply_to: 'info@hajdutamas.hu',
+}),
     })
 
     if (!resendRes.ok) {
