@@ -75,7 +75,7 @@ export default function Booking() {
     }
 
     // Email küldés (Supabase Edge Function-nel, vagy EmailJS fallback)
-    await sendConfirmationEmail(form, selectedSlot, token)
+    await sendConfirmationEmail(form, selectedSlot, token)  // supabase passed via closure
 
     setStep('success')
     setSending(false)
@@ -319,19 +319,22 @@ function renderFields(form, handleChange, lang) {
 
 // ── Email küldés – Resend.com ────────────────────────────────
 async function sendConfirmationEmail(form, slot, token) {
+  // Edge Function hívás – szerveroldalon fut, biztonságos API kulccsal
   try {
-    const { sendBookingConfirmation } = await import('../lib/resend.js')
-    await sendBookingConfirmation({
-      to:           form.email,
-      name:         form.name,
-      slotTitle:    slot.title,
-      slotDate:     slot.slot_date,
-      startTime:    slot.start_time?.slice(0,5),
-      endTime:      slot.end_time?.slice(0,5),
-      confirmToken: token,
+    const { error } = await supabase.functions.invoke('send-booking-email', {
+      body: {
+        to:           form.email,
+        name:         form.name,
+        slotTitle:    slot.title,
+        slotDate:     slot.slot_date,
+        startTime:    slot.start_time?.slice(0, 5),
+        endTime:      slot.end_time?.slice(0, 5),
+        confirmToken: token,
+      },
     })
+    if (error) console.warn('Edge function email error:', error)
   } catch (e) {
-    console.warn('Resend confirmation error:', e)
+    console.warn('sendConfirmationEmail error:', e)
     // Nem blokkolja a foglalást ha az email küldés hibázik
   }
 }

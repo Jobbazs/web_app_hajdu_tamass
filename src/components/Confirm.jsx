@@ -129,16 +129,19 @@ export default function Confirm() {
         .eq('id', next.id)
 
       const slot = next.appointment_slots
-      const { sendWaitlistOffer } = await import('../lib/resend.js')
-      await sendWaitlistOffer({
-        to:         next.email,
-        name:       next.name,
-        slotTitle:  slot.title,
-        slotDate:   slot.slot_date,
-        startTime:  slot.start_time?.slice(0,5),
-        endTime:    slot.end_time?.slice(0,5),
-        offerToken,
+      const { error: emailErr } = await supabase.functions.invoke('send-booking-email', {
+        body: {
+          to:         next.email,
+          name:       next.name,
+          slotTitle:  slot.title,
+          slotDate:   slot.slot_date,
+          startTime:  slot.start_time?.slice(0, 5),
+          endTime:    slot.end_time?.slice(0, 5),
+          isWaitlist: true,
+          offerToken,
+        },
       })
+      if (emailErr) console.warn('Waitlist email error:', emailErr)
     } catch (e) {
       console.warn('Next waitlist notify error:', e)
     }
