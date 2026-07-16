@@ -150,11 +150,11 @@ export default function Confirm() {
   // ── Megjelenítés ─────────────────────────────────────────
   const messages = {
     loading:          { icon: '…', title: 'Feldolgozás...',           body: 'Egy pillanat.' },
-    confirmed:        { icon: '✓', title: 'Foglalás megerősítve!',    body: 'Hamarosan visszajelzünk a részletekkel.' },
+    confirmed:        { icon: '✓', title: 'Foglalás megerősítve!',    body: 'Várlak szeretettel!' },
     cancelled:        { icon: '✓', title: 'Foglalás lemondva.',        body: 'Az időpont felszabadult.' },
     expired:          { icon: '✕', title: 'A link lejárt.',            body: 'Kérlek foglalj új időpontot.' },
     error:            { icon: '✕', title: 'Érvénytelen link.',         body: 'Kérlek ellenőrizd az emailt.' },
-    waitlist_accepted:{ icon: '✓', title: 'Időpont elfogadva!',        body: 'Foglalásod rögzítettük. Hamarosan írunk.' },
+    waitlist_accepted:{ icon: '✓', title: 'Időpont elfogadva!',        body: 'Foglalásod rögzítettük. Várlak szeretettel!' },
     waitlist_declined:{ icon: '✓', title: 'Rendben.',                  body: 'Az ajánlatot visszautasítottad. Ha megváltoztatod a döntésed, írj nekünk.' },
   }
 
