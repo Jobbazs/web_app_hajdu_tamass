@@ -7,7 +7,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? ''
-const FROM_EMAIL     = 'foglalas@hajdutamas.hu'
+const FROM_EMAIL     = 'noreply@hajdutamas.hu'
 const FROM_NAME      = 'Hajdú Tamás — NOX'
 
 const corsHeaders = {
@@ -58,7 +58,11 @@ serve(async (req) => {
     </td>
   </tr></table>
   <hr style="border-color:#2A2520;margin:2rem 0;"/>
-  <p style="font-size:0.7rem;color:#555;">hajdutamas.hu</p>
+  <p style="font-size:0.7rem;color:#555;line-height:1.6;">
+    Ez egy automatikus üzenet – <strong>erre az e-mailre ne válaszolj</strong>, mert nem érkezik meg hozzánk.<br/>
+    Ha kérdésed van, írj a hajdutamas.hu oldal Kapcsolat űrlapján.
+  </p>
+  <p style="font-size:0.7rem;color:#555;margin-top:0.8rem;">hajdutamas.hu</p>
 </div>`
     } else {
       const confirmUrl = `${origin}/confirm?token=${confirmToken}`
@@ -78,23 +82,26 @@ serve(async (req) => {
   <a href="${confirmUrl}" style="display:inline-block;background:#C4612A;color:#fff;padding:0.9rem 2rem;text-decoration:none;font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:bold;">Foglalás megerősítése →</a>
   <p style="margin-top:2rem;font-size:0.75rem;color:#666;line-height:1.6;">⚠ Ez a link <strong>10 percig érvényes</strong>.<br/>Ha nem te kezdeményezted, hagyd figyelmen kívül.</p>
   <hr style="border-color:#2A2520;margin:2rem 0;"/>
-  <p style="font-size:0.7rem;color:#555;">hajdutamas.hu</p>
+  <p style="font-size:0.7rem;color:#555;line-height:1.6;">
+    Ez egy automatikus üzenet – <strong>erre az e-mailre ne válaszolj</strong>, mert nem érkezik meg hozzánk.<br/>
+    Ha kérdésed van, írj a hajdutamas.hu oldal Kapcsolat űrlapján.
+  </p>
+  <p style="font-size:0.7rem;color:#555;margin-top:0.8rem;">hajdutamas.hu</p>
 </div>`
     }
 
     const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
-body: JSON.stringify({
-  from: `${FROM_NAME} <${FROM_EMAIL}>`,
-  to: [to],
-  subject,
-  html,
-  text: isWaitlist
-    ? `Kedves ${name}!\n\nFelszabadult egy hely: ${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nAz ajánlat 30 percig érvényes.\n\nElfogadom: ${origin}/confirm?waitlist=${offerToken}&action=accept\nNem kérem: ${origin}/confirm?waitlist=${offerToken}&action=decline\n\nhajdutamas.hu`
-    : `Kedves ${name}!\n\nFoglalási kérelmed megérkezett:\n${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nErősítsd meg 10 percen belül:\n${origin}/confirm?token=${confirmToken}\n\nHa nem te kezdeményezted, hagyd figyelmen kívül.\n\nhajdutamas.hu`,
-  reply_to: 'info@hajdutamas.hu',
-}),
+      body: JSON.stringify({
+        from: `${FROM_NAME} <${FROM_EMAIL}>`,
+        to: [to],
+        subject,
+        html,
+        text: isWaitlist
+          ? `Kedves ${name}!\n\nFelszabadult egy hely: ${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nAz ajanlat 30 percig ervenyes.\n\nElfogadom: ${origin}/confirm?waitlist=${offerToken}&action=accept\nNem kerem: ${origin}/confirm?waitlist=${offerToken}&action=decline\n\n---\nEz egy automatikus uzenet - erre az e-mailre ne valaszolj, mert nem erkezik meg hozzank.\nKerdes eseten irj a hajdutamas.hu oldal Kapcsolat urlapjan.`
+          : `Kedves ${name}!\n\nFoglalasi kerelmed megerkezett:\n${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nErositsd meg 10 percen belul:\n${origin}/confirm?token=${confirmToken}\n\nHa nem te kezdemenyezted, hagyd figyelmen kivul.\n\n---\nEz egy automatikus uzenet - erre az e-mailre ne valaszolj, mert nem erkezik meg hozzank.\nKerdes eseten irj a hajdutamas.hu oldal Kapcsolat urlapjan.`,
+      }),
     })
 
     if (!resendRes.ok) {
