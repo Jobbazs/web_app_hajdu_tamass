@@ -3,16 +3,23 @@ import { useLang } from '../LangContext'
 import { useSiteContent } from '../hooks'
 import '../Styles/ThankYou.css'
 
-export default function ThankYou({ visible, name, onClose }) {
+export default function ThankYou({
+  visible, name, onClose,
+  // Opcionális override – ha nincs megadva, a site_content / LangContext szöveg jön
+  eyebrow: eyebrowProp,
+  titleLine1: title1Prop,
+  titleLine2: title2Prop,
+  body: bodyProp,
+}) {
   const { lang, t }  = useLang()
   const { content }  = useSiteContent()
   const ty = t.thankYou
 
   // Szövegek site_content-ből, fallback LangContext-re
-  const eyebrow     = content[`thankyou_eyebrow_${lang}`]     || ty.eyebrow
-  const titleLine1  = content[`thankyou_title1_${lang}`]      || ty.titleLine1
-  const titleLine2  = content[`thankyou_title2_${lang}`]      || ty.titleLine2
-  const body        = content[`thankyou_body_${lang}`]        || ty.body
+  const eyebrow     = eyebrowProp ?? (content[`thankyou_eyebrow_${lang}`] || ty.eyebrow)
+  const titleLine1  = title1Prop  ?? (content[`thankyou_title1_${lang}`]  || ty.titleLine1)
+  const titleLine2  = title2Prop  ?? (content[`thankyou_title2_${lang}`]  || ty.titleLine2)
+  const body        = bodyProp    ?? (content[`thankyou_body_${lang}`]    || ty.body)
   const bodyName    = content[`thankyou_body_name_${lang}`]   || ty.bodyWithName
   const closeBtn    = content[`thankyou_closebtn_${lang}`]    || ty.closeBtn
   const dismiss     = content[`thankyou_dismiss_${lang}`]     || ty.dismiss
@@ -46,9 +53,10 @@ export default function ThankYou({ visible, name, onClose }) {
 
   if (!rendered) return null
 
-  const bodyText = name
-    ? bodyName.replace('{name}', name)
-    : body
+  // Ha bodyProp van, az már kész szöveg – nincs {name} helyettesítés
+  const bodyText = bodyProp
+    ? bodyProp
+    : (name ? bodyName.replace('{name}', name) : body)
 
   return (
     <div className={`ty-backdrop ${active ? 'ty-active' : ''}`} onClick={onClose} aria-modal="true" role="dialog">

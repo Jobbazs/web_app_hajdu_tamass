@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { useLang } from '../LangContext'
 import { useAvailableSlots } from '../hooks'
 import '../Styles/Booking.css'
+import ThankYou from './ThankYou'
 
 const SERVICE_LABELS = {
   portrait:   { hu: 'Portré & Stúdió',   en: 'Portrait & Studio'  },
@@ -26,14 +27,17 @@ function formatTime(t) {
 
 export default function Booking() {
   const { lang } = useLang()
-  const { slots, loading } = useAvailableSlots()
+  const { slots, loading, refetch } = useAvailableSlots()
 
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [form,         setForm]         = useState(EMPTY_FORM)
-  const [step,         setStep]         = useState('list')   // 'list' | 'form' | 'success' | 'waitlist'
+  const [step,         setStep]         = useState('list')   // 'list' | 'form'
   const [sending,      setSending]      = useState(false)
   const [error,        setError]        = useState('')
   const [waitlistDone, setWaitlistDone] = useState(false)
+  const [showThanks,   setShowThanks]   = useState(false)
+  const [thanksKind,   setThanksKind]   = useState('booking')  // 'booking' | 'waitlist'
+  const [sentEmail,    setSentEmail]    = useState('')
 
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
 
@@ -77,7 +81,15 @@ export default function Booking() {
     // Email küldés (Supabase Edge Function-nel, vagy EmailJS fallback)
     await sendConfirmationEmail(form, selectedSlot, token)  // supabase passed via closure
 
-    setStep('success')
+    // A lista marad a helyén (nem zsugorodik a szekció → nincs ugrás),
+    // a visszajelzés popupban érkezik
+    setSentEmail(form.email)
+    setThanksKind('booking')
+    setShowThanks(true)
+    setStep('list')
+    setSelectedSlot(null)
+    setForm(EMPTY_FORM)
+    refetch()
     setSending(false)
   }
 
@@ -110,7 +122,12 @@ export default function Booking() {
       setSending(false); return
     }
 
-    setWaitlistDone(true)
+    setSentEmail(form.email)
+    setThanksKind('waitlist')
+    setShowThanks(true)
+    setStep('list')
+    setSelectedSlot(null)
+    setForm(EMPTY_FORM)
     setSending(false)
   }
 
@@ -176,14 +193,12 @@ export default function Booking() {
                           {SERVICE_LABELS[slot.service_type]?.[lang] || slot.service_type}
                         </div>
                         <div className={`booking-slot-status ${isFull(slot) ? 'full' : isAlmost(slot) ? 'almost' : 'free'}`}>
-  {isFull(slot)
-    ? (lang === 'hu' ? 'Foglalt – várólistára' : 'Full – join waitlist')
-    : isAlmost(slot)
-      ? (lang === 'hu' ? 'Utolsó hely!' : 'Last spot!')
-      : (lang === 'hu'
-          ? `${slot.available_spots} szabad hely`
-          : `${slot.available_spots} spots available`)}
-</div>
+                          {isFull(slot)
+                            ? (lang === 'hu' ? 'Foglalt – várólistára' : 'Full – join waitlist')
+                            : isAlmost(slot)
+                              ? (lang === 'hu' ? 'Utolsó hely!' : 'Last spot!')
+                              : (lang === 'hu' ? 'Szabad' : 'Available')}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -254,23 +269,27 @@ export default function Booking() {
         )}
 
         {/* ── SIKER ── */}
-        {step === 'success' && (
-          <div className="booking-success-wrap">
-            <div className="booking-success">
-              <div className="booking-success-icon">✓</div>
-              <h2>{lang === 'hu' ? 'Majdnem kész!' : 'Almost there!'}</h2>
-              <p>
-                {lang === 'hu'
-                  ? `Elküldtük a megerősítő emailt a ${form.email} címre. Kattints a linkre 10 percen belül a foglalás véglegesítéséhez.`
-                  : `We've sent a confirmation email to ${form.email}. Click the link within 10 minutes to finalize your booking.`}
-              </p>
-              <button className="booking-back" onClick={() => { setStep('list'); setForm(EMPTY_FORM) }}>
-                {lang === 'hu' ? '← Vissza a listához' : '← Back to slots'}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Visszajelző popup – a szekció nem zsugorodik, nincs görgetés-ugrás */}
+      <ThankYou
+        visible={showThanks}
+        onClose={() => setShowThanks(false)}
+        eyebrow={lang === 'hu' ? 'Foglalás' : 'Booking'}
+        titleLine1={thanksKind === 'waitlist'
+          ? (lang === 'hu' ? 'Felkerültél a'   : "You're on the")
+          : (lang === 'hu' ? 'Majdnem'          : 'Almost')}
+        titleLine2={thanksKind === 'waitlist'
+          ? (lang === 'hu' ? 'várólistára.'     : 'waitlist.')
+          : (lang === 'hu' ? 'kész!'            : 'there!')}
+        body={thanksKind === 'waitlist'
+          ? (lang === 'hu'
+              ? 'Ha felszabadul egy hely, azonnal értesítünk emailben. Az ajánlat 30 percig lesz érvényes.'
+              : "We'll email you as soon as a spot opens up. The offer will be valid for 30 minutes.")
+          : (lang === 'hu'
+              ? `Elküldtük a megerősítő emailt a ${sentEmail} címre. Kattints a linkre 10 percen belül a foglalás véglegesítéséhez.`
+              : `We've sent a confirmation email to ${sentEmail}. Click the link within 10 minutes to finalize your booking.`)}
+      />
     </section>
   )
 }
