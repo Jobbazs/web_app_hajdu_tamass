@@ -776,3 +776,54 @@
   border: 1px solid var(--border-subtle);
   padding: 0.2rem 0.5rem;
 }
+
+/* ── Publikáló sáv – fix az admin alján, füllektől függetlenül ── */
+.pub-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 2rem;
+  padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
+  background: var(--bg-nav);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border-mid);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.35);
+}
+
+.pub-bar-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+
+.pub-bar-label {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent);
+}
+
+.pub-bar-hint {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.08em; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.pub-bar-btn {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--bg-primary); background: var(--accent);
+  border: none; padding: 0.7rem 1.4rem; min-height: 42px;
+  cursor: pointer; white-space: nowrap; transition: opacity 0.2s;
+}
+.pub-bar-btn:hover:not(:disabled) { opacity: 0.85; }
+.pub-bar-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* A tartalom ne kerüljön a sáv alá */
+.acms-content { padding-bottom: 90px; }
+
+@media (max-width: 767px) {
+  .pub-bar { padding: 0.7rem 1rem; padding-bottom: max(0.7rem, env(safe-area-inset-bottom)); }
+  .pub-bar-btn { font-size: 0.56rem; padding: 0.6rem 0.9rem; min-height: 38px; }
+  .pub-bar-hint { font-size: 0.55rem; }
+}

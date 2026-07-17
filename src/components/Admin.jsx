@@ -6,6 +6,7 @@ import AdminPortfolio from './admin/AdminPortfolio'
 import AdminServices  from './admin/AdminServices'
 import AdminContent   from './admin/AdminContent'
 import AdminBookings  from './admin/AdminBookings'
+import PublishBar     from './admin/PublishBar'
 
 const TABS = [
   { key: 'messages',  label: 'Üzenetek' },
@@ -54,6 +55,9 @@ export default function Admin() {
         {activeTab === 'content'   && <AdminContent />}
         {activeTab === 'bookings'  && <AdminBookings />}
       </div>
+
+      {/* Fix publikáló sáv – füllektől függetlenül mindig látszik */}
+      <PublishBar />
     </div>
   )
 }
