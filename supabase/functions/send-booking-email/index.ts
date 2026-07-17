@@ -82,10 +82,11 @@ serve(async (req) => {
   </div>
   <a href="${confirmUrl}" style="display:inline-block;background:#C4612A;color:#fff;padding:0.9rem 2rem;text-decoration:none;font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:bold;">Foglalás megerősítése →</a>
   <p style="margin-top:2rem;font-size:0.75rem;color:#666;line-height:1.6;">⚠ Ez a link <strong>10 percig érvényes</strong>.<br/>Ha nem te kezdeményezted, hagyd figyelmen kívül.</p>
-  ${cancelUrl ? `<div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #2A2520;">
-    <p style="font-size:0.8rem;color:#C8B89A;margin-bottom:0.5rem;">Mégsem tudsz eljönni?</p>
-    <a href="${cancelUrl}" style="font-size:0.8rem;color:#8B6A4A;">Időpont lemondása →</a>
-    <p style="font-size:0.7rem;color:#555;margin-top:0.5rem;">Ezt a linket őrizd meg – később is bármikor lemondhatod vele az időpontot.</p>
+  ${cancelUrl ? `<div style="margin-top:2rem;background:#241E18;border-left:3px solid #8B6A4A;padding:1.3rem 1.5rem;">
+    <p style="font-size:1.05rem;color:#ffffff;font-weight:bold;margin:0 0 0.4rem;">Mégsem tudsz eljönni?</p>
+    <p style="font-size:0.88rem;color:#C8B89A;margin:0 0 1.1rem;line-height:1.6;">Nem gond – mondd le, hogy más foglalhassa el a helyet.</p>
+    <a href="${cancelUrl}" style="display:inline-block;border:1px solid #8B6A4A;color:#C8B89A;padding:0.75rem 1.5rem;text-decoration:none;font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:bold;">Időpont lemondása</a>
+    <p style="font-size:0.72rem;color:#7a6a58;margin:1rem 0 0;line-height:1.5;">Ezt a linket őrizd meg – később is bármikor lemondhatod vele az időpontot.</p>
   </div>` : ''}
   <hr style="border-color:#2A2520;margin:2rem 0;"/>
   <p style="font-size:0.7rem;color:#555;line-height:1.6;">
