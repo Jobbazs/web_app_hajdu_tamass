@@ -195,15 +195,15 @@ export default function Booking() {
                         <div className={`booking-slot-status ${isFull(slot) ? 'full' : isAlmost(slot) ? 'almost' : 'free'}`}>
                           {isFull(slot)
                             ? (lang === 'hu'
-                                ? `Betelt · ${slot.capacity}/${slot.capacity} – várólistára`
-                                : `Full · ${slot.capacity}/${slot.capacity} – join waitlist`)
+                                ? `${slot.booked_count}/${slot.capacity} Betelt – várólistára`
+                                : `${slot.booked_count}/${slot.capacity} Full – join waitlist`)
                             : isAlmost(slot)
                               ? (lang === 'hu'
-                                  ? `Utolsó hely! · ${slot.available_spots}/${slot.capacity}`
-                                  : `Last spot! · ${slot.available_spots}/${slot.capacity}`)
+                                  ? `${slot.booked_count}/${slot.capacity} Foglalt · Utolsó hely!`
+                                  : `${slot.booked_count}/${slot.capacity} booked · Last spot!`)
                               : (lang === 'hu'
-                                  ? `${slot.available_spots}/${slot.capacity} szabad hely`
-                                  : `${slot.available_spots}/${slot.capacity} spots free`)}
+                                  ? `${slot.booked_count}/${slot.capacity} Foglalt`
+                                  : `${slot.booked_count}/${slot.capacity} booked`)}
                         </div>
                       </div>
                     ))}
