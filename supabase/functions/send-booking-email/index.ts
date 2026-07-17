@@ -21,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { to, name, slotTitle, slotDate, startTime, endTime, confirmToken, isWaitlist, offerToken } = await req.json()
+    const { to, name, slotTitle, slotDate, startTime, endTime, confirmToken, cancelToken, isWaitlist, offerToken } = await req.json()
 
     if (!to || !name) {
       return new Response(JSON.stringify({ error: 'Hiányzó mezők: to, name' }), {
@@ -66,6 +66,7 @@ serve(async (req) => {
 </div>`
     } else {
       const confirmUrl = `${origin}/confirm?token=${confirmToken}`
+      const cancelUrl  = cancelToken ? `${origin}/cancel?token=${cancelToken}` : null
       subject = `Foglalás megerősítése – ${slotTitle}`
       html = `
 <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:2rem;background:#1a1510;color:#C8B89A;">
@@ -81,6 +82,11 @@ serve(async (req) => {
   </div>
   <a href="${confirmUrl}" style="display:inline-block;background:#C4612A;color:#fff;padding:0.9rem 2rem;text-decoration:none;font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase;font-weight:bold;">Foglalás megerősítése →</a>
   <p style="margin-top:2rem;font-size:0.75rem;color:#666;line-height:1.6;">⚠ Ez a link <strong>10 percig érvényes</strong>.<br/>Ha nem te kezdeményezted, hagyd figyelmen kívül.</p>
+  ${cancelUrl ? `<div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #2A2520;">
+    <p style="font-size:0.8rem;color:#C8B89A;margin-bottom:0.5rem;">Mégsem tudsz eljönni?</p>
+    <a href="${cancelUrl}" style="font-size:0.8rem;color:#8B6A4A;">Időpont lemondása →</a>
+    <p style="font-size:0.7rem;color:#555;margin-top:0.5rem;">Ezt a linket őrizd meg – később is bármikor lemondhatod vele az időpontot.</p>
+  </div>` : ''}
   <hr style="border-color:#2A2520;margin:2rem 0;"/>
   <p style="font-size:0.7rem;color:#555;line-height:1.6;">
     Ez egy automatikus üzenet – <strong>erre az e-mailre ne válaszolj</strong>, mert nem érkezik meg hozzánk.<br/>
@@ -100,7 +106,7 @@ serve(async (req) => {
         html,
         text: isWaitlist
           ? `Kedves ${name}!\n\nFelszabadult egy hely: ${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nAz ajanlat 30 percig ervenyes.\n\nElfogadom: ${origin}/confirm?waitlist=${offerToken}&action=accept\nNem kerem: ${origin}/confirm?waitlist=${offerToken}&action=decline\n\n---\nEz egy automatikus uzenet - erre az e-mailre ne valaszolj, mert nem erkezik meg hozzank.\nKerdes eseten irj a hajdutamas.hu oldal Kapcsolat urlapjan.`
-          : `Kedves ${name}!\n\nFoglalasi kerelmed megerkezett:\n${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nErositsd meg 10 percen belul:\n${origin}/confirm?token=${confirmToken}\n\nHa nem te kezdemenyezted, hagyd figyelmen kivul.\n\n---\nEz egy automatikus uzenet - erre az e-mailre ne valaszolj, mert nem erkezik meg hozzank.\nKerdes eseten irj a hajdutamas.hu oldal Kapcsolat urlapjan.`,
+          : `Kedves ${name}!\n\nFoglalasi kerelmed megerkezett:\n${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nErositsd meg 10 percen belul:\n${origin}/confirm?token=${confirmToken}\n\nHa nem te kezdemenyezted, hagyd figyelmen kivul.${cancelUrl ? `\n\nMegsem tudsz eljonni? Idopont lemondasa:\n${cancelUrl}\n(Ezt a linket orizd meg - kesobb is barmikor lemondhatod vele.)` : ''}\n\n---\nEz egy automatikus uzenet - erre az e-mailre ne valaszolj, mert nem erkezik meg hozzank.\nKerdes eseten irj a hajdutamas.hu oldal Kapcsolat urlapjan.`,
       }),
     })
 

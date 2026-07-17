@@ -546,7 +546,9 @@ as
   from public.appointment_slots s
   where s.visible = true
     and s.slot_date >= current_date
-    and s.booked_count < s.capacity
+  -- A betelt időpontok SZÁNDÉKOSAN bennmaradnak: a látogató lássa hogy
+  -- betelt, és fel tudjon iratkozni a várólistára. A szűrést a frontend
+  -- végzi (booked_count >= capacity -> várólistás ág).
   order by s.slot_date, s.start_time;
 
 
@@ -764,7 +766,6 @@ select cron.schedule(
 -- select cron.unschedule('delete-old-appointments');
 -- select cron.unschedule('delete-old-waitlist');
 -- select cron.unschedule('delete-old-slots');
-
 
 
 -- ============================================================================

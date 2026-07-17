@@ -79,7 +79,7 @@ export default function Booking() {
     }
 
     // Email küldés (Supabase Edge Function-nel, vagy EmailJS fallback)
-    await sendConfirmationEmail(form, selectedSlot, token)  // supabase passed via closure
+    await sendConfirmationEmail(form, selectedSlot, token, cancelTok)
 
     // A lista marad a helyén (nem zsugorodik a szekció → nincs ugrás),
     // a visszajelzés popupban érkezik
@@ -194,10 +194,16 @@ export default function Booking() {
                         </div>
                         <div className={`booking-slot-status ${isFull(slot) ? 'full' : isAlmost(slot) ? 'almost' : 'free'}`}>
                           {isFull(slot)
-                            ? (lang === 'hu' ? 'Foglalt – várólistára' : 'Full – join waitlist')
+                            ? (lang === 'hu'
+                                ? `Betelt · ${slot.capacity}/${slot.capacity} – várólistára`
+                                : `Full · ${slot.capacity}/${slot.capacity} – join waitlist`)
                             : isAlmost(slot)
-                              ? (lang === 'hu' ? 'Utolsó hely!' : 'Last spot!')
-                              : (lang === 'hu' ? 'Szabad' : 'Available')}
+                              ? (lang === 'hu'
+                                  ? `Utolsó hely! · ${slot.available_spots}/${slot.capacity}`
+                                  : `Last spot! · ${slot.available_spots}/${slot.capacity}`)
+                              : (lang === 'hu'
+                                  ? `${slot.available_spots}/${slot.capacity} szabad hely`
+                                  : `${slot.available_spots}/${slot.capacity} spots free`)}
                         </div>
                       </div>
                     ))}
@@ -339,7 +345,7 @@ function renderFields(form, handleChange, lang) {
 }
 
 // ── Email küldés – Resend.com ────────────────────────────────
-async function sendConfirmationEmail(form, slot, token) {
+async function sendConfirmationEmail(form, slot, token, cancelToken) {
   // Edge Function hívás – szerveroldalon fut, biztonságos API kulccsal
   try {
     const { error } = await supabase.functions.invoke('send-booking-email', {
@@ -351,6 +357,7 @@ async function sendConfirmationEmail(form, slot, token) {
         startTime:    slot.start_time?.slice(0, 5),
         endTime:      slot.end_time?.slice(0, 5),
         confirmToken: token,
+        cancelToken,
       },
     })
     if (error) console.warn('Edge function email error:', error)
