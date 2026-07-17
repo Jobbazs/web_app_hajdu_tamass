@@ -106,7 +106,7 @@ serve(async (req) => {
         html,
         text: isWaitlist
           ? `Kedves ${name}!\n\nFelszabadult egy hely: ${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nAz ajanlat 30 percig ervenyes.\n\nElfogadom: ${origin}/confirm?waitlist=${offerToken}&action=accept\nNem kerem: ${origin}/confirm?waitlist=${offerToken}&action=decline\n\n---\nEz egy automatikus uzenet - erre az e-mailre ne valaszolj, mert nem erkezik meg hozzank.\nKerdes eseten irj a hajdutamas.hu oldal Kapcsolat urlapjan.`
-          : `Kedves ${name}!\n\nFoglalasi kerelmed megerkezett:\n${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nErositsd meg 10 percen belul:\n${origin}/confirm?token=${confirmToken}\n\nHa nem te kezdemenyezted, hagyd figyelmen kivul.${cancelUrl ? `\n\nMegsem tudsz eljonni? Idopont lemondasa:\n${cancelUrl}\n(Ezt a linket orizd meg - kesobb is barmikor lemondhatod vele.)` : ''}\n\n---\nEz egy automatikus uzenet - erre az e-mailre ne valaszolj, mert nem erkezik meg hozzank.\nKerdes eseten irj a hajdutamas.hu oldal Kapcsolat urlapjan.`,
+          : `Kedves ${name}!\n\nFoglalasi kerelmed megerkezett:\n${slotTitle}\n${slotDate} ${startTime}-${endTime}\n\nErositsd meg 10 percen belul:\n${origin}/confirm?token=${confirmToken}\n\nHa nem te kezdemenyezted, hagyd figyelmen kivul.${cancelToken ? `\n\nMegsem tudsz eljonni? Idopont lemondasa:\n${origin}/cancel?token=${cancelToken}\n(Ezt a linket orizd meg - kesobb is barmikor lemondhatod vele.)` : ''}\n\n---\nEz egy automatikus uzenet - erre az e-mailre ne valaszolj, mert nem erkezik meg hozzank.\nKerdes eseten irj a hajdutamas.hu oldal Kapcsolat urlapjan.`,
       }),
     })
 
