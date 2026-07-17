@@ -777,53 +777,58 @@
   padding: 0.2rem 0.5rem;
 }
 
-/* ── Publikáló sáv – fix az admin alján, füllektől függetlenül ── */
-.pub-bar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 3000;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.85rem 2rem;
-  padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
-  background: var(--bg-nav);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid var(--border-mid);
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.35);
+/* ── Haladó beállítások – publikálás ── */
+.adv-doc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 1.5rem;
+}
+.adv-doc p { margin-bottom: 0.9rem; }
+.adv-doc strong { color: var(--text-primary); }
+
+.adv-doc-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 1.4rem 0;
 }
 
-.pub-bar-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.adv-doc-col {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  padding: 1rem 1.2rem;
+}
 
-.pub-bar-label {
+.adv-doc-col-title {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--accent);
+  font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+.adv-doc-col-title--yes { color: var(--accent); }
+.adv-doc-col-title--no  { color: var(--text-muted); }
+
+.adv-doc-col ul { margin: 0; padding-left: 1.1rem; }
+.adv-doc-col li { font-size: 0.88rem; line-height: 1.7; }
+
+.adv-doc-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-left: 2px solid var(--border-mid);
+  padding-left: 0.9rem;
+  margin-top: 1.2rem !important;
 }
 
-.pub-bar-hint {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.62rem; letter-spacing: 0.08em; color: var(--text-muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.adv-publish-row {
+  display: flex; align-items: center; gap: 1.2rem;
+  flex-wrap: wrap;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border-subtle);
 }
-
-.pub-bar-btn {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--bg-primary); background: var(--accent);
-  border: none; padding: 0.7rem 1.4rem; min-height: 42px;
-  cursor: pointer; white-space: nowrap; transition: opacity 0.2s;
-}
-.pub-bar-btn:hover:not(:disabled) { opacity: 0.85; }
-.pub-bar-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-
-/* A tartalom ne kerüljön a sáv alá */
-.acms-content { padding-bottom: 90px; }
+.adv-publish-status { min-height: 1.2rem; }
 
 @media (max-width: 767px) {
-  .pub-bar { padding: 0.7rem 1rem; padding-bottom: max(0.7rem, env(safe-area-inset-bottom)); }
-  .pub-bar-btn { font-size: 0.56rem; padding: 0.6rem 0.9rem; min-height: 38px; }
-  .pub-bar-hint { font-size: 0.55rem; }
+  .adv-doc-split { grid-template-columns: 1fr; gap: 0.8rem; }
+  .adv-publish-row { flex-direction: column; align-items: stretch; }
+  .adv-publish-row .acms-btn-primary { width: 100%; }
 }

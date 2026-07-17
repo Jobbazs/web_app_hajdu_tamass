@@ -6,7 +6,7 @@ import AdminPortfolio from './admin/AdminPortfolio'
 import AdminServices  from './admin/AdminServices'
 import AdminContent   from './admin/AdminContent'
 import AdminBookings  from './admin/AdminBookings'
-import PublishBar     from './admin/PublishBar'
+import AdminAdvanced  from './admin/AdminAdvanced'
 
 const TABS = [
   { key: 'messages',  label: 'Üzenetek' },
@@ -14,6 +14,7 @@ const TABS = [
   { key: 'services',  label: 'Szolgáltatások' },
   { key: 'content',   label: 'Tartalom' },
   { key: 'bookings',  label: 'Foglalások' },
+  { key: 'advanced',  label: 'Haladó beállítások' },
 ]
 
 export default function Admin() {
@@ -54,10 +55,8 @@ export default function Admin() {
         {activeTab === 'services'  && <AdminServices />}
         {activeTab === 'content'   && <AdminContent />}
         {activeTab === 'bookings'  && <AdminBookings />}
+        {activeTab === 'advanced'  && <AdminAdvanced />}
       </div>
-
-      {/* Fix publikáló sáv – füllektől függetlenül mindig látszik */}
-      <PublishBar />
     </div>
   )
 }
