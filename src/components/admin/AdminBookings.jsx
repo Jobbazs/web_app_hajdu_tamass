@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useAppointments, useAllSlots, useClientReliability } from '../../hooks'
 
@@ -42,19 +42,82 @@ export default function AdminBookings() {
   const [manualName,  setManualName]  = useState('')
   const [showManual,  setShowManual]  = useState(false)
 
+  // ── Táblázat állapot ──────────────────────────────────────
+  const [search,    setSearch]    = useState('')
+  const [expanded,  setExpanded]  = useState(null)   // melyik sor részletei nyitva
+  const [copiedId,  setCopiedId]  = useState(null)   // melyik lemondó link lett most másolva
+
   const { appointments, loading: apptLoading, refetch: refetchAppts } = useAppointments(filter)
   const { slots,        loading: slotsLoading, refetch: refetchSlots } = useAllSlots()
   const { clients,      loading: relLoading,   refetch: refetchRel }   = useClientReliability()
 
+  // ── Keresés (kliensoldali, a státusz-szűrő tetején) ──────
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return appointments
+    return appointments.filter(a =>
+      (a.name  || '').toLowerCase().includes(q) ||
+      (a.email || '').toLowerCase().includes(q) ||
+      (a.phone || '').toLowerCase().includes(q)
+    )
+  }, [appointments, search])
+
   // ── Foglalás státusz változtatás ─────────────────────────
   const updateStatus = async (id, status) => {
+    // A 'cancelled' státusz ugyanazon az úton megy, mint az ügyfél lemondása
+    // (a link is csak status='cancelled'-re állít) → a várólista-trigger lefut,
+    // a hely felszabadul, a következő várólistást a rendszer értesíti.
     await supabase.from('appointments').update({ status }).eq('id', id)
     refetchAppts()
-    // Ha no_show → reliability szint növelése
     if (status === 'no_show') {
       const appt = appointments.find(a => a.id === id)
       if (appt) await bumpReliability(appt.email, appt.name, 'no_show')
     }
+  }
+
+  // ── Lemondó link vágólapra ───────────────────────────────
+  const copyCancelLink = async (a) => {
+    if (!a.cancellation_token) {
+      window.alert('Ehhez a foglaláshoz nincs lemondó token. (Régi rekord?)')
+      return
+    }
+    const url = `${window.location.origin}/cancel?token=${a.cancellation_token}`
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      // fallback régi böngészőkre
+      const ta = document.createElement('textarea')
+      ta.value = url; document.body.appendChild(ta); ta.select()
+      document.execCommand('copy'); document.body.removeChild(ta)
+    }
+    setCopiedId(a.id)
+    setTimeout(() => setCopiedId(c => (c === a.id ? null : c)), 2000)
+  }
+
+  // ── CSV export (a jelenleg szűrt/keresett lista) ─────────
+  const exportCsv = () => {
+    const rows = filtered
+    const header = ['Dátum','Kezdés','Vége','Cím','Név','Email','Telefon','Státusz','Üzenet','Létrehozva','Megerősítve']
+    const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
+    const body = rows.map(a => {
+      const s = a.appointment_slots || {}
+      return [
+        s.slot_date, s.start_time?.slice(0,5), s.end_time?.slice(0,5), s.title,
+        a.name, a.email, a.phone,
+        STATUS_LABELS[a.status]?.hu || a.status,
+        a.message,
+        a.created_at   ? new Date(a.created_at).toLocaleString('hu-HU')   : '',
+        a.confirmed_at ? new Date(a.confirmed_at).toLocaleString('hu-HU') : '',
+      ].map(esc).join(',')
+    })
+    const csv = '\uFEFF' + [header.map(esc).join(','), ...body].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url  = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `foglalasok-${new Date().toISOString().slice(0,10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   // ── Reliability növelés ───────────────────────────────────
@@ -201,72 +264,175 @@ export default function AdminBookings() {
         </button>
       </div>
 
-      {/* ── FOGLALÁSOK ── */}
+      {/* ── FOGLALÁSOK (táblázat) ── */}
       {subTab === 'appointments' && (
         <>
-          <div className="acms-booking-filters">
-            {FILTER_TABS.map(t => (
-              <button key={t.key}
-                className={`filter-btn ${filter === t.key ? 'active' : ''}`}
-                onClick={() => setFilter(t.key)}>
-                {t.label}
-              </button>
-            ))}
+          <div className="acms-booking-toolbar">
+            <input
+              className="acms-input acms-booking-search"
+              placeholder="Keresés név / email / telefon..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <div className="acms-booking-filters">
+              {FILTER_TABS.map(t => (
+                <button key={t.key}
+                  className={`filter-btn ${filter === t.key ? 'active' : ''}`}
+                  onClick={() => setFilter(t.key)}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <button className="acms-btn-secondary acms-booking-export"
+              onClick={exportCsv} disabled={filtered.length === 0}>
+              ⬇ CSV
+            </button>
           </div>
-          {apptLoading ? <div className="admin-empty">Betöltés...</div>
-          : appointments.length === 0 ? <div className="admin-empty">Nincs foglalás.</div>
-          : appointments.map(a => {
-            const sl = STATUS_LABELS[a.status]
-            const slot = a.appointment_slots
-            return (
-              <div key={a.id} className="acms-booking-card">
-                <div className="acms-booking-card-header">
-                  <div>
-                    <div className="acms-booking-name">{a.name}</div>
-                    <div className="acms-booking-contact">{a.email}{a.phone ? ` · ${a.phone}` : ''}</div>
-                  </div>
-                  <span className="acms-booking-status" style={{ color: sl?.color }}>
-                    {sl?.hu}
-                  </span>
-                </div>
-                {slot && (
-                  <div className="acms-booking-slot-info">
-                    📅 {slot.slot_date} · {slot.start_time?.slice(0,5)}–{slot.end_time?.slice(0,5)} · {slot.title}
-                  </div>
-                )}
-                {a.message && (
-                  <div className="acms-booking-message">{a.message}</div>
-                )}
-                <div className="acms-booking-actions">
-                  {a.status === 'confirmed' && (
-                    <button className="acms-btn-sm" onClick={() => updateStatus(a.id, 'completed')}>
-                      ✓ Teljesítve
-                    </button>
-                  )}
-                  {['confirmed','approved','pending_confirmation'].includes(a.status) && (
-                    <button className="acms-btn-sm acms-btn-danger" onClick={() => updateStatus(a.id, 'no_show')}>
-                      Nem jelent meg
-                    </button>
-                  )}
-                  {!['cancelled','completed'].includes(a.status) && (
-                    <button className="acms-btn-sm" onClick={() => updateStatus(a.id, 'cancelled')}>
-                      Lemondás
-                    </button>
-                  )}
-                  <button className="acms-btn-sm acms-btn-danger" onClick={async () => {
-                    if (!window.confirm('Véglegesen törlöd ezt a foglalást?')) return
-                    await supabase.from('appointments').delete().eq('id', a.id)
-                    refetchAppts()
-                  }}>
-                    Töröl
-                  </button>
-                </div>
-                <div className="acms-booking-meta">
-                  {new Date(a.created_at).toLocaleString('hu-HU')}
-                </div>
-              </div>
-            )
-          })}
+
+          {apptLoading ? (
+            <div className="admin-empty">Betöltés...</div>
+          ) : filtered.length === 0 ? (
+            <div className="admin-empty">
+              {search ? 'Nincs találat a keresésre.' : 'Nincs foglalás.'}
+            </div>
+          ) : (
+            <div className="acms-table-wrap">
+              <table className="acms-table">
+                <thead>
+                  <tr>
+                    <th style={{width:'2rem'}}></th>
+                    <th>Időpont</th>
+                    <th>Ügyfél</th>
+                    <th>Státusz</th>
+                    <th>Létrehozva</th>
+                    <th style={{textAlign:'right'}}>Műveletek</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(a => {
+                    const sl   = STATUS_LABELS[a.status]
+                    const slot = a.appointment_slots
+                    const isOpen = expanded === a.id
+                    const cancelUrl = a.cancellation_token
+                      ? `${window.location.origin}/cancel?token=${a.cancellation_token}`
+                      : null
+                    return (
+                      <Fragment key={a.id}>
+                        <tr className={isOpen ? 'acms-row-open' : ''}>
+                          <td>
+                            <button className="acms-row-toggle"
+                              onClick={() => setExpanded(isOpen ? null : a.id)}
+                              title="Részletek">
+                              {isOpen ? '▾' : '▸'}
+                            </button>
+                          </td>
+                          <td>
+                            {slot ? (
+                              <>
+                                <div className="acms-cell-strong">{slot.slot_date}</div>
+                                <div className="acms-cell-sub">
+                                  {slot.start_time?.slice(0,5)}–{slot.end_time?.slice(0,5)} · {slot.title}
+                                </div>
+                              </>
+                            ) : <span className="acms-cell-sub">—</span>}
+                          </td>
+                          <td>
+                            <div className="acms-cell-strong">{a.name}</div>
+                            <div className="acms-cell-sub">
+                              {a.email}{a.phone ? ` · ${a.phone}` : ''}
+                            </div>
+                          </td>
+                          <td>
+                            <span className="acms-status-pill" style={{ color: sl?.color, borderColor: sl?.color }}>
+                              {sl?.hu || a.status}
+                            </span>
+                          </td>
+                          <td className="acms-cell-sub">
+                            {a.created_at ? new Date(a.created_at).toLocaleString('hu-HU') : '—'}
+                          </td>
+                          <td>
+                            <div className="acms-row-actions">
+                              <button className="acms-btn-sm"
+                                onClick={() => copyCancelLink(a)}
+                                disabled={!a.cancellation_token}
+                                title="Lemondó link az ügyfélnek – vágólapra másol">
+                                {copiedId === a.id ? '✓ Másolva' : 'Lemondó link'}
+                              </button>
+
+                              {a.status === 'confirmed' && (
+                                <button className="acms-btn-sm" onClick={() => updateStatus(a.id, 'completed')}>
+                                  ✓ Teljesítve
+                                </button>
+                              )}
+                              {['confirmed','approved','pending_confirmation'].includes(a.status) && (
+                                <button className="acms-btn-sm acms-btn-danger"
+                                  onClick={() => updateStatus(a.id, 'no_show')}>
+                                  Nem jelent meg
+                                </button>
+                              )}
+                              {!['cancelled','completed'].includes(a.status) && (
+                                <button className="acms-btn-sm"
+                                  onClick={() => {
+                                    if (!window.confirm('Lemondod ezt a foglalást? A hely felszabadul, és a várólista-logika lefut.')) return
+                                    updateStatus(a.id, 'cancelled')
+                                  }}>
+                                  Lemondás
+                                </button>
+                              )}
+                              <button className="acms-btn-sm acms-btn-danger"
+                                onClick={async () => {
+                                  if (!window.confirm('Véglegesen törlöd ezt a foglalást? (Nem futtatja a várólistát – erre a "Lemondás" való.)')) return
+                                  await supabase.from('appointments').delete().eq('id', a.id)
+                                  refetchAppts()
+                                }}>
+                                Töröl
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+
+                        {isOpen && (
+                          <tr className="acms-table-detail">
+                            <td></td>
+                            <td colSpan={5}>
+                              <div className="acms-detail-grid">
+                                <div><span className="acms-detail-k">Email</span><span>{a.email || '—'}</span></div>
+                                <div><span className="acms-detail-k">Telefon</span><span>{a.phone || '—'}</span></div>
+                                <div><span className="acms-detail-k">Státusz</span><span style={{color: sl?.color}}>{sl?.hu || a.status}</span></div>
+                                <div><span className="acms-detail-k">Létrehozva</span><span>{a.created_at ? new Date(a.created_at).toLocaleString('hu-HU') : '—'}</span></div>
+                                <div><span className="acms-detail-k">Megerősítve</span><span>{a.confirmed_at ? new Date(a.confirmed_at).toLocaleString('hu-HU') : '—'}</span></div>
+                                {slot && (
+                                  <div><span className="acms-detail-k">Időpont</span><span>{slot.slot_date} · {slot.start_time?.slice(0,5)}–{slot.end_time?.slice(0,5)} · {slot.title}</span></div>
+                                )}
+                              </div>
+                              {a.message && (
+                                <div className="acms-detail-message">
+                                  <span className="acms-detail-k">Üzenet</span>
+                                  <div>{a.message}</div>
+                                </div>
+                              )}
+                              {cancelUrl && (
+                                <div className="acms-detail-cancel">
+                                  <span className="acms-detail-k">Lemondó link</span>
+                                  <div className="acms-detail-cancel-row">
+                                    <input className="acms-input acms-input--sm" readOnly value={cancelUrl}
+                                      onFocus={e => e.target.select()} />
+                                    <button className="acms-btn-sm" onClick={() => copyCancelLink(a)}>
+                                      {copiedId === a.id ? '✓' : 'Másol'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 
