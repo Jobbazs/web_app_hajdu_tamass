@@ -1,6 +1,38 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from './supabaseClient'
 
+// ─────────────────────────────────────────────────────────────
+//  Realtime segéd: a megadott táblák változásaira újratölt.
+//  Egyetlen csatorna / hook, több táblára is feliratkozhat.
+//  Kis debounce, hogy a gyors egymásutáni események ne
+//  indítsanak fölösleges lekérdezés-áradatot (free tier-barát).
+//
+//  FONTOS: a táblákon a Realtime-nak engedélyezve kell lennie
+//  (a mellékelt SQL 5) blokkja ezt beállítja), és a Realtime
+//  tiszteletben tartja az RLS-t – anonim kliens csak azt kapja
+//  meg, amit amúgy is olvashat.
+// ─────────────────────────────────────────────────────────────
+function useRealtimeRefetch(tables, refetch) {
+  useEffect(() => {
+    let timer = null
+    const bump = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => { refetch() }, 250)
+    }
+
+    const channel = supabase.channel(`rt_${tables.join('_')}_${Math.random().toString(36).slice(2, 8)}`)
+    tables.forEach(table => {
+      channel.on('postgres_changes', { event: '*', schema: 'public', table }, bump)
+    })
+    channel.subscribe()
+
+    return () => {
+      clearTimeout(timer)
+      supabase.removeChannel(channel)
+    }
+  }, [refetch]) // a refetch useCallback-stabil, csak akkor változik, ha kell (pl. filter)
+}
+
 // ─── Portfólió elemek ────────────────────────────────────────
 export function usePortfolio() {
   const [items,   setItems]   = useState([])
@@ -20,6 +52,7 @@ export function usePortfolio() {
   }, [])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['portfolio_items', 'portfolio_categories'], fetch)
   return { items, loading, error, refetch: fetch }
 }
 
@@ -39,6 +72,7 @@ export function useCategories() {
   }, [])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['portfolio_categories'], fetch)
   return { categories, loading, refetch: fetch }
 }
 
@@ -58,6 +92,7 @@ export function useServices() {
   }, [])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['services'], fetch)
   return { services, loading, refetch: fetch }
 }
 
@@ -76,6 +111,7 @@ export function useSiteContent() {
   }, [])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['site_content'], fetch)
   return { content, loading, refetch: fetch }
 }
 
@@ -95,6 +131,7 @@ export function useAllCustomSections() {
   }, [])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['custom_sections'], fetch)
   return { sections, loading, refetch: fetch }
 }
 
@@ -115,10 +152,15 @@ export function useCustomSections() {
   }, [])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['custom_sections'], fetch)
   return { sections, loading, refetch: fetch }
 }
 
 // ─── Időpontfoglalás – elérhető slotok (publikus) ────────────
+//     Csak az appointment_slots-ra iratkozik fel: a foglalások
+//     a booked_count oszlopon keresztül propagálódnak ide (a
+//     trigger frissíti), így a publikus oldal NEM kap PII-t
+//     (nevek / emailek) a realtime csatornán.
 export function useAvailableSlots() {
   const [slots,   setSlots]   = useState([])
   const [loading, setLoading] = useState(true)
@@ -134,6 +176,7 @@ export function useAvailableSlots() {
   }, [])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['appointment_slots'], fetch)
   return { slots, loading, refetch: fetch }
 }
 
@@ -153,6 +196,7 @@ export function useAllSlots() {
   }, [])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['appointment_slots', 'appointments'], fetch)
   return { slots, loading, refetch: fetch }
 }
 
@@ -176,6 +220,7 @@ export function useAppointments(filter = 'all') {
   }, [filter])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['appointments'], fetch)
   return { appointments, loading, refetch: fetch }
 }
 
@@ -195,5 +240,6 @@ export function useClientReliability() {
   }, [])
 
   useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['client_reliability'], fetch)
   return { clients, loading, refetch: fetch }
 }

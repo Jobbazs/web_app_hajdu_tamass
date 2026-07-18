@@ -282,11 +282,15 @@ create table if not exists public.appointment_slots (
   recurrence_end   date,                             -- meddig generálódjon
 
   -- Láthatóság
-  visible          boolean not null default true,
-
-  -- Constraint: booked_count nem haladhatja meg a kapacitást
-  constraint booked_not_exceed_capacity check (booked_count <= capacity)
+  visible          boolean not null default true
 );
+
+-- A booked_count > capacity (túlfoglalás) MEGENGEDETT, hogy a valós szám
+-- mindig látszódjon. A régi CHECK constraint hibát dobna az újraszámoló
+-- triggernél / visszatöltésnél, ezért eltávolítjuk. A "betelt" állapotot a
+-- frontend a booked_count >= capacity összehasonlítással kezeli.
+alter table public.appointment_slots
+  drop constraint if exists booked_not_exceed_capacity;
 
 alter table public.appointment_slots enable row level security;
 
@@ -480,51 +484,69 @@ create trigger set_updated_at_reliability
   for each row execute function public.set_updated_at();
 
 
--- ── 8f. Trigger: booked_count automatikus növelése/csökkentése ───────────
+-- ── 8f. Trigger: booked_count automatikus karbantartása ──────────────────
+--
+--  EGYETLEN forrás az igazsághoz. A korábbi inkrementális triggert
+--  (update_slot_booked_count / trg_update_booked_count) SZÁNDÉKOSAN
+--  eltávolítjuk, mert:
+--    • nem SECURITY DEFINER volt → anonim (kliens) confirm-nál az
+--      appointment_slots UPDATE-et az RLS csendben eldobta → a szám
+--      sosem frissült,
+--    • ha együtt futott az újraszámolóval, dupláztak.
+--
+--  Az új függvény ABSZOLÚT értékre számol (mindig helyre áll), és
+--  SECURITY DEFINER, így az RLS-t megkerülve tud írni a slot-táblába.
+--  Aktívnak a 'confirmed' / 'approved' / 'completed' státusz számít
+--  (a 'pending_confirmation' nem foglal helyet, az eredeti szándék szerint).
 
-create or replace function public.update_slot_booked_count()
-returns trigger language plpgsql as $$
+-- Régi trigger + függvény takarítása
+drop trigger  if exists trg_update_booked_count on public.appointments;
+drop function if exists public.update_slot_booked_count();
+
+create or replace function public.recalc_slot_booked_count()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
 declare
-  v_old_active boolean;
-  v_new_active boolean;
+  affected uuid;
 begin
-  -- "Aktív" = ténylegesen foglalja a helyet.
-  -- pending_confirmation NEM aktív: a hely csak megerősítés után foglalt.
-  v_new_active := new.status in ('confirmed','approved','completed');
-
-  if TG_OP = 'INSERT' then
-    if v_new_active then
-      update public.appointment_slots
-        set booked_count = booked_count + 1
-        where id = new.slot_id;
-    end if;
-
-  elsif TG_OP = 'UPDATE' then
-    v_old_active := old.status in ('confirmed','approved','completed');
-
-    -- inaktív → aktív: növel  (pl. pending_confirmation → confirmed)
-    if not v_old_active and v_new_active then
-      update public.appointment_slots
-        set booked_count = booked_count + 1
-        where id = new.slot_id;
-    end if;
-
-    -- aktív → inaktív: csökkent  (pl. confirmed → cancelled / no_show)
-    if v_old_active and not v_new_active then
-      update public.appointment_slots
-        set booked_count = greatest(0, booked_count - 1)
-        where id = new.slot_id;
-    end if;
+  affected := coalesce(new.slot_id, old.slot_id);
+  if affected is null then
+    return null;
   end if;
 
-  return new;
+  update public.appointment_slots s
+  set booked_count = (
+    select count(*)
+    from public.appointments a
+    where a.slot_id = affected
+      and a.status in ('confirmed', 'approved', 'completed')
+  )
+  where s.id = affected;
+
+  return null; -- AFTER trigger
 end;
 $$;
 
-drop trigger if exists trg_update_booked_count on public.appointments;
-create trigger trg_update_booked_count
-  after insert or update of status on public.appointments
-  for each row execute function public.update_slot_booked_count();
+-- A név szándékosan '00'-val kezdődik, hogy ALFABÉTIKUSAN a
+-- trg_notify_waitlist ELŐTT fusson: így lemondásnál a booked_count már
+-- friss, amikor a várólista-értesítő trigger megnézi a szabad helyet.
+drop trigger if exists trg_recalc_booked_count on public.appointments;
+drop trigger if exists trg_00_recalc_booked_count on public.appointments;
+create trigger trg_00_recalc_booked_count
+  after insert or update or delete on public.appointments
+  for each row execute function public.recalc_slot_booked_count();
+
+-- Egyszeri visszatöltés: a MOSTANI állapotot azonnal korrigálja
+update public.appointment_slots s
+set booked_count = coalesce((
+  select count(*)
+  from public.appointments a
+  where a.slot_id = s.id
+    and a.status in ('confirmed', 'approved', 'completed')
+), 0);
 
 
 -- ── 8g. View: szabad helyek publikus nézete ──────────────────────────────
@@ -714,7 +736,53 @@ create trigger trg_notify_waitlist_decline
 
 
 -- ============================================================================
--- 10. PG_CRON — régi foglalások automatikus törlése
+-- 10. REALTIME — élő frissítés engedélyezése a szükséges táblákra
+-- A frontend hookok postgres_changes eseményekre iratkoznak fel; ez a blokk
+-- adja hozzá a táblákat a supabase_realtime publikációhoz. Idempotens.
+-- A Realtime tiszteletben tartja az RLS-t: anonim kliens csak azt kapja meg,
+-- amit amúgy is olvashat (a publikus foglalás-oldal csak az appointment_slots-ra
+-- iratkozik fel → nem szivárog PII a realtime csatornán).
+-- ============================================================================
+
+-- Publikáció létrehozása, ha egy tiszta (nem Supabase-managed) telepítésen
+-- még nem létezne
+do $$
+begin
+  if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    create publication supabase_realtime;
+  end if;
+end $$;
+
+do $$
+declare
+  t text;
+  tables text[] := array[
+    'appointment_slots',   -- publikus: booked_count itt frissül (nincs PII)
+    'appointments',        -- admin: foglaláslista élő frissítés
+    'appointment_waitlist',
+    'client_reliability',
+    'portfolio_items',
+    'portfolio_categories',
+    'services',
+    'site_content',
+    'custom_sections'
+  ];
+begin
+  foreach t in array tables loop
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime'
+        and schemaname = 'public'
+        and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+  end loop;
+end $$;
+
+
+-- ============================================================================
+-- 11. PG_CRON — régi foglalások automatikus törlése
 -- Előfeltétel: Supabase Dashboard → Database → Extensions → pg_cron → Enable
 -- Ez a blokk kihagyható ha nem kell automatikus takarítás.
 -- ============================================================================
@@ -774,8 +842,11 @@ select cron.schedule(
 --           site_content, custom_sections, appointment_slots, appointments,
 --           appointment_waitlist, client_reliability
 -- View:     available_slots
--- Trigger:  set_updated_at_reliability, trg_update_booked_count,
+-- Trigger:  set_updated_at_reliability, trg_00_recalc_booked_count,
 --           trg_notify_waitlist, trg_notify_waitlist_decline
+-- Realtime: appointment_slots, appointments, appointment_waitlist,
+--           client_reliability, portfolio_items, portfolio_categories,
+--           services, site_content, custom_sections
 -- Storage:  attachments (public bucket)
 -- Cron:     delete-old-appointments, delete-old-waitlist, delete-old-slots
 -- ============================================================================
