@@ -47,6 +47,12 @@ export default function AdminBookings() {
   const [expanded,  setExpanded]  = useState(null)   // melyik sor részletei nyitva
   const [copiedId,  setCopiedId]  = useState(null)   // melyik lemondó link lett most másolva
 
+  // Időpont-törlés indokkal (ha van rá foglalás)
+  const [delSlot,    setDelSlot]    = useState(null)  // a törlendő slot (modal nyitva ha nem null)
+  const [delReason,  setDelReason]  = useState('')
+  const [delSending, setDelSending] = useState(false)
+  const [delError,   setDelError]   = useState('')
+
   const { appointments, loading: apptLoading, refetch: refetchAppts } = useAppointments(filter)
   const { slots,        loading: slotsLoading, refetch: refetchSlots } = useAllSlots()
   const { clients,      loading: relLoading,   refetch: refetchRel }   = useClientReliability()
@@ -229,6 +235,38 @@ export default function AdminBookings() {
     if (!window.confirm('Törlöd az időpontot és az összes hozzá tartozó foglalást?')) return
     await supabase.from('appointment_slots').delete().eq('id', id)
     refetchSlots()
+  }
+
+  // Törlés indítása: ha van rá foglalás, indok-popup + értesítő emailek;
+  // ha nincs, a sima törlés megy (nincs kit értesíteni).
+  const openDeleteSlot = (slot) => {
+    if (slot.booked_count > 0) {
+      setDelSlot(slot); setDelReason(''); setDelError('')
+    } else {
+      deleteSlot(slot.id)
+    }
+  }
+
+  // Értesítés + törlés az Edge Functionön keresztül (admin JWT-vel).
+  // A függvény kiküldi minden aktív foglalónak az emailt az okkal, majd
+  // törli a slotot (cascade viszi a foglalásokat + várólistát).
+  const confirmDeleteWithNotify = async () => {
+    if (!delSlot) return
+    setDelSending(true); setDelError('')
+    try {
+      const { data, error } = await supabase.functions.invoke('notify-slot-cancelled', {
+        body: { slotId: delSlot.id, reason: delReason.trim() },
+      })
+      if (error || !data?.ok) {
+        setDelError('Hiba történt az értesítés/törlés közben. Próbáld újra.')
+        setDelSending(false); return
+      }
+      setDelSlot(null); setDelReason(''); setDelSending(false)
+      refetchSlots()
+    } catch {
+      setDelError('Hiba történt. Próbáld újra.')
+      setDelSending(false)
+    }
   }
 
   return (
@@ -465,7 +503,7 @@ export default function AdminBookings() {
                   await supabase.from('appointment_slots').update({ visible: !s.visible }).eq('id', s.id)
                   refetchSlots()
                 }}>{s.visible ? 'Elrejt' : 'Megjelenit'}</button>
-                <button className="acms-btn-sm acms-btn-danger" onClick={() => deleteSlot(s.id)}>Töröl</button>
+                <button className="acms-btn-sm acms-btn-danger" onClick={() => openDeleteSlot(s)}>Töröl</button>
               </div>
             </div>
           ))}
@@ -556,6 +594,60 @@ export default function AdminBookings() {
             )
           })}
         </>
+      )}
+
+      {/* ── IDŐPONT TÖRLÉSE INDOKKAL (ha van rá foglalás) ── */}
+      {delSlot && (
+        <div className="acms-modal-backdrop" onClick={() => !delSending && setDelSlot(null)}>
+          <div className="acms-modal" onClick={e => e.stopPropagation()}>
+            <div className="acms-modal-header">
+              <span>Időpont törlése</span>
+              <button className="acms-modal-close" onClick={() => !delSending && setDelSlot(null)}>✕</button>
+            </div>
+            <div className="acms-form">
+              <div className="acms-booking-message" style={{marginTop:0}}>
+                <strong>{delSlot.title}</strong><br />
+                {delSlot.slot_date} · {delSlot.start_time?.slice(0,5)}–{delSlot.end_time?.slice(0,5)}
+              </div>
+              <p className="acms-hint" style={{marginBottom:'1rem', lineHeight:1.6}}>
+                Erre az időpontra <strong>{delSlot.booked_count}</strong> aktív foglalás van.
+                Törléskor mindenki emailben értesítést kap az alábbi okkal, majd az időpont
+                és minden hozzá tartozó foglalás + várólista véglegesen törlődik.
+              </p>
+
+              <div className="acms-form-group">
+                <label>Törlés oka (ez bekerül az emailbe)</label>
+                <textarea className="acms-input acms-textarea" rows={3}
+                  value={delReason}
+                  onChange={e => setDelReason(e.target.value)}
+                  placeholder="pl. Sajnos közbejött egy elkerülhetetlen elfoglaltság…" />
+              </div>
+
+              {/* Előnézet – mit kap az ügyfél */}
+              <div className="acms-sect-live-preview" style={{marginBottom:'1rem'}}>
+                <div style={{fontSize:'0.9rem', lineHeight:1.7, color:'var(--text-secondary)'}}>
+                  Kedves <strong>[Név]</strong>,<br />
+                  ezennel szeretnélek értesíteni, hogy az <strong>{delSlot.title}</strong> időpontot
+                  ({delSlot.slot_date} · {delSlot.start_time?.slice(0,5)}–{delSlot.end_time?.slice(0,5)})
+                  sajnos nem tudom megtartani.<br /><br />
+                  {delReason.trim() && (<><strong>Törlés oka:</strong> {delReason.trim()}<br /><br /></>)}
+                  Köszönöm a megértésedet, és elnézést kérek a kellemetlenségért.
+                  Várlak szeretettel máskor!
+                </div>
+              </div>
+
+              {delError && <div className="acms-error">{delError}</div>}
+              <div className="acms-form-actions">
+                <button type="button" className="acms-btn-secondary"
+                  onClick={() => setDelSlot(null)} disabled={delSending}>Mégse</button>
+                <button type="button" className="acms-btn-primary acms-btn-danger"
+                  onClick={confirmDeleteWithNotify} disabled={delSending}>
+                  {delSending ? 'Értesítés és törlés…' : `Törlés és értesítés (${delSlot.booked_count})`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── SLOT FORM MODAL ── */}
