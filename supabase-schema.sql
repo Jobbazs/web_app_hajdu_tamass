@@ -538,9 +538,8 @@ begin
 end;
 $$;
 
--- A név szándékosan '00'-val kezdődik, hogy ALFABÉTIKUSAN a
--- trg_notify_waitlist ELŐTT fusson: így lemondásnál a booked_count már
--- friss, amikor a várólista-értesítő trigger megnézi a szabad helyet.
+-- A név '00'-val kezdődik, hogy ALFABÉTIKUSAN korán fusson, így a
+-- booked_count minden más appointments-triggernél előbb frissül.
 drop trigger if exists trg_recalc_booked_count on public.appointments;
 drop trigger if exists trg_00_recalc_booked_count on public.appointments;
 create trigger trg_00_recalc_booked_count
@@ -685,7 +684,8 @@ begin
     update public.appointment_waitlist
       set response = 'declined', responded_at = now()
       where id = w.id;
-    -- a trg_notify_waitlist_decline gondoskodik a következő értesítéséről
+    -- A következő várakozót a waitlist-tick értesíti a következő futáskor
+    -- (a slot most szabad kapacitású lett).
     return 'waitlist_declined';
   end if;
 end;
@@ -789,164 +789,30 @@ create trigger trg_rate_limit_messages
 
 
 -- ============================================================================
--- 9. WAITLIST LÁNC — automatikus értesítés a következő várólistásnak
+-- 9. VÁRÓLISTA MOTOR — a waitlist-tick Edge Function felel érte
 -- ============================================================================
+--
+-- A korábbi DB-trigger alapú értesítés (notify_next_waitlist /
+-- notify_next_on_decline) meg lett szüntetve: az csak beállította a
+-- következő várakozónak az offer-tokent, de emailt NEM küldött (azt egy
+-- sosem feldolgozott messages-sor "küldte" volna), így a lánc első embere
+-- csendben kimaradt.
+--
+-- Helyette a teljes logikát a `waitlist-tick` Edge Function végzi, amely
+-- ESEMÉNY-AGNOSZTIKUS: percenként (pg_cron) újraszámolja az állapotot, és
+-- MINDEN szabad kapacitású, mai/jövőbeli slotra értesíti a soron következő
+-- várakozó(ka)t – függetlenül attól, mi szabadította fel a helyet
+-- (lemondás, no-show, elutasítás, lejárat).
+--
+-- A régi triggerek/függvények eldobása (idempotens; meglévő DB-t is tisztít):
+drop trigger  if exists trg_notify_waitlist         on public.appointments;
+drop trigger  if exists trg_notify_waitlist_decline on public.appointment_waitlist;
+drop function if exists public.notify_next_waitlist();
+drop function if exists public.notify_next_on_decline();
 
--- ── Trigger: ha egy foglalás lemondódik/no-show, értesíti a várólistán
---            a következő személyt ──────────────────────────────────────────
-
-create or replace function public.notify_next_waitlist()
-returns trigger language plpgsql as $$
-declare
-  v_next record;
-  v_slot record;
-  v_token text;
-  v_expires timestamptz;
-begin
-  -- Csak akkor fut ha cancelled vagy no_show státuszra vált
-  if NEW.status not in ('cancelled', 'no_show') then
-    return NEW;
-  end if;
-  if OLD.status in ('cancelled', 'no_show') then
-    return NEW; -- már korábban lemondva, ne futtasson újra
-  end if;
-
-  -- Slot adatok
-  select * into v_slot
-    from public.appointment_slots
-    where id = NEW.slot_id;
-
-  -- Van-e szabad hely most?
-  if v_slot.booked_count >= v_slot.capacity then
-    return NEW; -- még tele (a booked_count trigger előbb fut)
-  end if;
-
-  -- Következő nem értesített várólistás
-  select * into v_next
-    from public.appointment_waitlist
-    where slot_id = NEW.slot_id
-      and notified_at is null
-      and (response is null)
-    order by position asc
-    limit 1;
-
-  if v_next is null then
-    return NEW; -- nincs várólistás
-  end if;
-
-  -- Token generálás (30 perces ajánlat)
-  v_token   := gen_random_uuid()::text;
-  v_expires := now() + interval '30 minutes';
-
-  -- Waitlist sor frissítése
-  update public.appointment_waitlist
-    set notified_at      = now(),
-        offer_token      = v_token,
-        offer_expires_at = v_expires
-    where id = v_next.id;
-
-  -- Értesítés tárolása a messages táblában (email küldés frontend olvassa)
-  -- A frontend lekérdezi az olvasatlan waitlist_notification típusú üzeneteket
-  -- és elküldi az emailt, majd olvasottnak jelöli
-  insert into public.messages (
-    name, email, service, message, read
-  ) values (
-    v_next.name,
-    v_next.email,
-    'waitlist_notification',
-    json_build_object(
-      'waitlist_id',    v_next.id,
-      'slot_id',        v_slot.id,
-      'slot_title',     v_slot.title,
-      'slot_date',      v_slot.slot_date,
-      'start_time',     v_slot.start_time,
-      'end_time',       v_slot.end_time,
-      'offer_token',    v_token,
-      'offer_expires',  v_expires,
-      'name',           v_next.name
-    )::text,
-    false
-  );
-
-  return NEW;
-end;
-$$;
-
-drop trigger if exists trg_notify_waitlist on public.appointments;
-create trigger trg_notify_waitlist
-  after update of status on public.appointments
-  for each row execute function public.notify_next_waitlist();
-
--- ── A waitlist elfogadás/elutasítás után a következő értesítése ────────────
-
-create or replace function public.notify_next_on_decline()
-returns trigger language plpgsql as $$
-declare
-  v_next record;
-  v_slot record;
-  v_token text;
-  v_expires timestamptz;
-begin
-  -- Csak ha 'declined'-ra vált
-  if NEW.response != 'declined' or OLD.response = 'declined' then
-    return NEW;
-  end if;
-
-  -- Slot adatok
-  select * into v_slot
-    from public.appointment_slots
-    where id = NEW.slot_id;
-
-  -- Következő nem értesített
-  select * into v_next
-    from public.appointment_waitlist
-    where slot_id = NEW.slot_id
-      and notified_at is null
-      and response is null
-    order by position asc
-    limit 1;
-
-  if v_next is null then
-    return NEW;
-  end if;
-
-  v_token   := gen_random_uuid()::text;
-  v_expires := now() + interval '30 minutes';
-
-  update public.appointment_waitlist
-    set notified_at      = now(),
-        offer_token      = v_token,
-        offer_expires_at = v_expires
-    where id = v_next.id;
-
-  insert into public.messages (
-    name, email, service, message, read
-  ) values (
-    v_next.name,
-    v_next.email,
-    'waitlist_notification',
-    json_build_object(
-      'waitlist_id',    v_next.id,
-      'slot_id',        v_slot.id,
-      'slot_title',     v_slot.title,
-      'slot_date',      v_slot.slot_date,
-      'start_time',     v_slot.start_time,
-      'end_time',       v_slot.end_time,
-      'offer_token',    v_token,
-      'offer_expires',  v_expires,
-      'name',           v_next.name
-    )::text,
-    false
-  );
-
-  return NEW;
-end;
-$$;
-
-drop trigger if exists trg_notify_waitlist_decline on public.appointment_waitlist;
-create trigger trg_notify_waitlist_decline
-  after update of response on public.appointment_waitlist
-  for each row execute function public.notify_next_on_decline();
+-- A waitlist-tick pg_cron ütemezését NEM itt állítjuk be, mert tartalmazza a
+-- CRON_SECRET-et és a projekt URL-t (nem való publikus repóba). A beállító
+-- parancsot külön, egyszeri futtatásra add ki (lásd a kísérő dokumentációt).
 
 
 -- ============================================================================
@@ -1059,9 +925,9 @@ select cron.schedule(
 -- RPC:      confirm_appointment, cancel_appointment, respond_waitlist
 --           (SECURITY DEFINER, token-scope-olt publikus műveletek)
 -- Trigger:  set_updated_at_reliability, trg_00_recalc_booked_count,
---           trg_notify_waitlist, trg_notify_waitlist_decline,
 --           trg_set_waitlist_position,
 --           trg_rate_limit_appointments, trg_rate_limit_messages
+-- Motor:    waitlist-tick Edge Function (várólista értesítés, pg_cron)
 -- Realtime: appointment_slots, appointments, appointment_waitlist,
 --           client_reliability, portfolio_items, portfolio_categories,
 --           services, site_content, custom_sections

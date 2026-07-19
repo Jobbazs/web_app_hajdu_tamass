@@ -1,13 +1,21 @@
 // ============================================================
 // Supabase Edge Function – waitlist-tick
 //
-// Mit old meg: ha egy várólistás nem reagál 30 percen belül az
-// ajánlatra, a lánc eddig megállt – a hely szabadon maradt, a
-// többiek pedig sosem kaptak értesítést.
+// A várólista TELJES motorja. Minden futáskor újraszámolja az
+// állapotot, ezért ESEMÉNY-AGNOSZTIKUS: teljesen mindegy, mi
+// szabadított fel helyet (ügyfél- vagy admin-lemondás, no-show,
+// ajánlat elutasítása vagy 30 perces lejárata) – a következő tick
+// megtalálja a szabad kapacitású, várakozóval bíró slotokat és
+// kiküldi a soron következő(k)nek az ajánlatot.
 //
-// Ez a függvény 5 percenként lefut (pg_cron), megkeresi a lejárt,
-// megválaszolatlan ajánlatokat, lezárja őket, és továbbadja a
-// következő várólistásnak.
+// Két lépés:
+//   1) a lejárt, megválaszolatlan ajánlatok lezárása ('declined'),
+//   2) MINDEN jövőbeli slotra: ha van szabad hely és várakozó, és
+//      nincs elég élő ajánlat kint, a következő(k) értesítése.
+//
+// Ütemezés: pg_cron hívja percenként (net.http_post + x-cron-secret).
+// A hívó parancsot lásd a projekt dokumentációjában (tartalmazza a
+// CRON_SECRET-et, ezért NEM kerül a repóba).
 //
 // Deploy:
 //   supabase functions deploy waitlist-tick --no-verify-jwt
@@ -98,68 +106,99 @@ serve(async (req) => {
   }
 
   const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
-  const now = new Date().toISOString()
-  const report = { expired: 0, notified: 0, errors: [] as string[] }
+  const now   = new Date().toISOString()
+  const today = now.slice(0, 10) // 'YYYY-MM-DD' – csak mai/jövőbeli slotokra ajánlunk
+  const report = { expired: 0, notified: 0, slotsChecked: 0, errors: [] as string[] }
 
   try {
-    // ── 1. Lejárt, megválaszolatlan ajánlatok ──
+    // ── 1. Lejárt, megválaszolatlan ajánlatok lezárása ('declined') ──
     const { data: expired, error: e1 } = await db
       .from('appointment_waitlist')
-      .select('id, slot_id')
+      .select('id')
       .is('response', null)
       .not('notified_at', 'is', null)
       .lt('offer_expires_at', now)
-
     if (e1) throw e1
-    if (!expired?.length) return json({ ok: true, ...report, note: 'nincs lejárt ajánlat' })
 
-    // Lezárjuk őket 'declined'-ként (a DB trigger is erre figyel)
-    const ids = expired.map((r) => r.id)
-    const { error: e2 } = await db
+    if (expired?.length) {
+      const ids = expired.map((r) => r.id)
+      const { error: e2 } = await db
+        .from('appointment_waitlist')
+        .update({ response: 'declined', responded_at: now })
+        .in('id', ids)
+      if (e2) throw e2
+      report.expired = ids.length
+    }
+
+    // ── 2. Esemény-agnosztikus értesítés ──
+    // NEM csak a lejárt ajánlatokból indulunk: minden slotot megnézünk,
+    // amelyre van még nem értesített várakozó. Így bármi szabadított fel
+    // helyet (lemondás/no-show/elutasítás/lejárat), itt derül ki.
+    const { data: waitingRows, error: e3 } = await db
       .from('appointment_waitlist')
-      .update({ response: 'declined', responded_at: now })
-      .in('id', ids)
-    if (e2) throw e2
-    report.expired = ids.length
+      .select('slot_id')
+      .is('response', null)
+      .is('notified_at', null)
+    if (e3) throw e3
 
-    // ── 2. Érintett slotokra a következő várólistás értesítése ──
-    const slotIds = [...new Set(expired.map((r) => r.slot_id))]
+    const slotIds = [...new Set((waitingRows ?? []).map((r) => r.slot_id))]
+    report.slotsChecked = slotIds.length
 
     for (const slotId of slotIds) {
+      // Csak mai/jövőbeli, létező slot
       const { data: slot } = await db
         .from('appointment_slots')
         .select('id, title, slot_date, start_time, end_time, capacity, booked_count')
         .eq('id', slotId)
-        .single()
+        .gte('slot_date', today)
+        .maybeSingle()
+      if (!slot) continue
 
-      // Ha időközben betelt, nincs mit felajánlani
-      if (!slot || slot.booked_count >= slot.capacity) continue
+      const free = slot.capacity - slot.booked_count
+      if (free <= 0) continue
 
-      const { data: next } = await db
+      // Hány élő (még nem lejárt), megválaszolatlan ajánlat van már kint erre a slotra?
+      const { count: activeOffers } = await db
+        .from('appointment_waitlist')
+        .select('id', { count: 'exact', head: true })
+        .eq('slot_id', slotId)
+        .is('response', null)
+        .not('notified_at', 'is', null)
+        .gt('offer_expires_at', now)
+
+      const toOffer = free - (activeOffers ?? 0)
+      if (toOffer <= 0) continue
+
+      // A soron következő 'toOffer' várakozó (pozíció szerint)
+      const { data: nexts } = await db
         .from('appointment_waitlist')
         .select('id, name, email')
         .eq('slot_id', slotId)
         .is('notified_at', null)
         .is('response', null)
         .order('position', { ascending: true })
-        .limit(1)
-        .maybeSingle()
+        .limit(toOffer)
+      if (!nexts?.length) continue
 
-      if (!next) continue
+      for (const next of nexts) {
+        const token     = crypto.randomUUID()
+        const expiresAt = new Date(Date.now() + OFFER_MINUTES * 60_000).toISOString()
 
-      const token = crypto.randomUUID()
-      const expiresAt = new Date(Date.now() + OFFER_MINUTES * 60_000).toISOString()
+        // A .is('notified_at', null) feltétel véd a párhuzamos futás ellen:
+        // csak akkor foglaljuk le a sort, ha még tényleg nincs értesítve.
+        const { data: claimed, error: e4 } = await db
+          .from('appointment_waitlist')
+          .update({ notified_at: now, offer_token: token, offer_expires_at: expiresAt })
+          .eq('id', next.id)
+          .is('notified_at', null)
+          .select('id')
+        if (e4) { report.errors.push(`${next.email}: ${e4.message}`); continue }
+        if (!claimed?.length) continue // időközben más futás elvitte
 
-      const { error: e3 } = await db
-        .from('appointment_waitlist')
-        .update({ notified_at: now, offer_token: token, offer_expires_at: expiresAt })
-        .eq('id', next.id)
-
-      if (e3) { report.errors.push(`${next.email}: ${e3.message}`); continue }
-
-      const sent = await sendOffer(next, slot, token)
-      if (sent) report.notified++
-      else report.errors.push(`${next.email}: email hiba`)
+        const sent = await sendOffer(next, slot, token)
+        if (sent) report.notified++
+        else report.errors.push(`${next.email}: email hiba`)
+      }
     }
 
     console.log('waitlist-tick:', JSON.stringify(report))
