@@ -101,20 +101,14 @@ export default function Booking() {
 
     setSending(true); setError('')
 
-    // Pozíció meghatározása
-    const { data: existing } = await supabase
-      .from('appointment_waitlist')
-      .select('id')
-      .eq('slot_id', selectedSlot.id)
-
-    const position = (existing?.length || 0) + 1
-
+    // A pozíciót a szerveroldali trigger (trg_set_waitlist_position) tölti ki,
+    // így a kliensnek nem kell a várólista-táblát olvasnia (a publikus SELECT
+    // biztonsági okból meg lett szüntetve).
     const { error: dbErr } = await supabase.from('appointment_waitlist').insert({
       slot_id:  selectedSlot.id,
       name:     form.name.trim(),
       email:    form.email.trim(),
       phone:    form.phone.trim() || null,
-      position,
     })
 
     if (dbErr) {

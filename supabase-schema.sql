@@ -352,28 +352,21 @@ drop policy if exists "Public confirm appointment"  on public.appointments;
 drop policy if exists "Public update by token"      on public.appointments;
 drop policy if exists "Admin all appointments"      on public.appointments;
 
--- Bárki foglalhat
+-- Bárki FOGLALHAT, de CSAK megerősítésre váró státusszal.
+-- (Így nem lehet közvetlenül 'confirmed' foglalást beszúrni a megerősítés
+--  kikerülésével. A várólista-elfogadás confirmed foglalását a
+--  respond_waitlist RPC hozza létre, ami SECURITY DEFINER → megkerüli ezt.)
 create policy "Public insert appointments"
   on public.appointments for insert
-  with check (true);
+  with check (status = 'pending_confirmation');
 
--- Kliens olvashatja a saját foglalását token alapján
--- (a frontend token alapján szűr, nem küld vissza más adatot)
-create policy "Public confirm appointment"
-  on public.appointments for select
-  using (true);
-
--- Kliens frissítheti a státuszt token alapján (megerősítés / lemondás)
--- Az alkalmazáskód ellenőrzi hogy a token stimmel és nem járt le
-create policy "Public update by token"
-  on public.appointments for update
-  using (
-    confirmation_token is not null
-    or cancellation_token is not null
-  )
-  with check (
-    status in ('confirmed', 'cancelled')
-  );
+-- FIGYELEM – SZÁNDÉKOSAN NINCS publikus SELECT és UPDATE policy.
+-- Korábban a "Public confirm appointment" (using true) MINDEN foglalást
+-- olvashatóvá tett (PII + tokenek), a "Public update by token" pedig
+-- token ismerete nélkül is engedte a lemondást/megerősítést.
+-- Helyettük token-scope-olt SECURITY DEFINER RPC-k állnak (lásd 8h szekció):
+--   confirm_appointment(token), cancel_appointment(token), respond_waitlist(token, accept)
+-- Az anonim kliens így csak beszúrni tud (fent), olvasni/módosítani nem.
 
 -- Admin mindent lát és módosíthat
 create policy "Admin all appointments"
@@ -417,10 +410,18 @@ drop policy if exists "Public join waitlist"  on public.appointment_waitlist;
 drop policy if exists "Public read waitlist"  on public.appointment_waitlist;
 drop policy if exists "Admin all waitlist"    on public.appointment_waitlist;
 
+-- Bárki feliratkozhat, de csak "friss" sorral: nem állíthat be magának
+-- értesítést / ajánlat-tokent / választ. A position-t trigger tölti ki (8h).
 create policy "Public join waitlist"
-  on public.appointment_waitlist for insert with check (true);
-create policy "Public read waitlist"
-  on public.appointment_waitlist for select using (true);
+  on public.appointment_waitlist for insert
+  with check (
+    response is null
+    and notified_at is null
+    and offer_token is null
+  );
+-- SZÁNDÉKOSAN NINCS publikus SELECT: korábban a "Public read waitlist"
+-- (using true) minden várólistás nevét/emailjét/offer_token-jét kiadta.
+-- Az elfogadás/elutasítás a respond_waitlist RPC-n megy (8h).
 create policy "Admin all waitlist"
   on public.appointment_waitlist for all using (auth.role() = 'authenticated');
 
@@ -572,6 +573,143 @@ as
   -- betelt, és fel tudjon iratkozni a várólistára. A szűrést a frontend
   -- végzi (booked_count >= capacity -> várólistás ág).
   order by s.slot_date, s.start_time;
+
+
+-- ── 8h. BIZTONSÁG: token-scope-olt RPC-k a publikus műveletekhez ──────────
+--
+--  Ezek váltják ki a korábbi, túl megengedő publikus SELECT/UPDATE policy-kat.
+--  Mindegyik SECURITY DEFINER (a tulajdonos jogaival fut, megkerüli az RLS-t),
+--  DE csak egy konkrét, token alapján beazonosított sorra hat, és semmilyen
+--  más adatot nem ad vissza – csak egy státusz-stringet. A search_path
+--  rögzítve van (search_path hijack ellen).
+
+-- Megerősítés: a confirmation_token-hez tartozó foglalást 'confirmed'-re állítja
+create or replace function public.confirm_appointment(p_token text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare r record;
+begin
+  if p_token is null or length(p_token) < 10 then return 'error'; end if;
+
+  select id, status, token_expires_at
+    into r
+    from public.appointments
+    where confirmation_token = p_token;
+
+  if not found then return 'error'; end if;
+  if r.status <> 'pending_confirmation' then return 'confirmed'; end if; -- már megerősítve
+  if r.token_expires_at is not null and r.token_expires_at < now() then return 'expired'; end if;
+
+  update public.appointments
+    set status = 'confirmed', confirmed_at = now()
+    where id = r.id;
+
+  return 'confirmed';
+end;
+$$;
+
+-- Lemondás: a cancellation_token-hez tartozó foglalást 'cancelled'-re állítja
+-- (a recalc + waitlist trigger emiatt lefut → hely felszabadul, következő értesül)
+create or replace function public.cancel_appointment(p_token text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare r record;
+begin
+  if p_token is null or length(p_token) < 10 then return 'error'; end if;
+
+  select id, status
+    into r
+    from public.appointments
+    where cancellation_token = p_token;
+
+  if not found then return 'error'; end if;
+  if r.status = 'cancelled' then return 'cancelled'; end if;
+
+  update public.appointments
+    set status = 'cancelled'
+    where id = r.id;
+
+  return 'cancelled';
+end;
+$$;
+
+-- Várólista-ajánlat elfogadása / elutasítása offer_token alapján
+create or replace function public.respond_waitlist(p_token text, p_accept boolean)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  w record;
+  v_cancel_token text;
+begin
+  if p_token is null or length(p_token) < 10 then return 'error'; end if;
+
+  select * into w
+    from public.appointment_waitlist
+    where offer_token = p_token;
+
+  if not found then return 'expired'; end if;
+  if w.offer_expires_at is not null and w.offer_expires_at < now() then return 'expired'; end if;
+  if w.response is not null then
+    return case when w.response = 'accepted' then 'waitlist_accepted' else 'waitlist_declined' end;
+  end if;
+
+  if p_accept then
+    v_cancel_token := gen_random_uuid()::text;
+    insert into public.appointments
+      (slot_id, name, email, phone, status, confirmed_at, cancellation_token)
+    values
+      (w.slot_id, w.name, w.email, w.phone, 'confirmed', now(), v_cancel_token);
+
+    update public.appointment_waitlist
+      set response = 'accepted', responded_at = now()
+      where id = w.id;
+
+    return 'waitlist_accepted';
+  else
+    update public.appointment_waitlist
+      set response = 'declined', responded_at = now()
+      where id = w.id;
+    -- a trg_notify_waitlist_decline gondoskodik a következő értesítéséről
+    return 'waitlist_declined';
+  end if;
+end;
+$$;
+
+-- A publikus (anon) kliens hívhatja ezeket; más táblaműveletet nem
+grant execute on function public.confirm_appointment(text) to anon, authenticated;
+grant execute on function public.cancel_appointment(text)  to anon, authenticated;
+grant execute on function public.respond_waitlist(text, boolean) to anon, authenticated;
+
+-- Várólista pozíció szerveroldali kiosztása (a kliensnek nem kell a táblát
+-- olvasnia hozzá – így a publikus SELECT megszüntethető volt)
+create or replace function public.set_waitlist_position()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.position is null or new.position = 0 then
+    select coalesce(max(position), 0) + 1
+      into new.position
+      from public.appointment_waitlist
+      where slot_id = new.slot_id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_set_waitlist_position on public.appointment_waitlist;
+create trigger trg_set_waitlist_position
+  before insert on public.appointment_waitlist
+  for each row execute function public.set_waitlist_position();
 
 
 -- ============================================================================
@@ -842,8 +980,11 @@ select cron.schedule(
 --           site_content, custom_sections, appointment_slots, appointments,
 --           appointment_waitlist, client_reliability
 -- View:     available_slots
+-- RPC:      confirm_appointment, cancel_appointment, respond_waitlist
+--           (SECURITY DEFINER, token-scope-olt publikus műveletek)
 -- Trigger:  set_updated_at_reliability, trg_00_recalc_booked_count,
---           trg_notify_waitlist, trg_notify_waitlist_decline
+--           trg_notify_waitlist, trg_notify_waitlist_decline,
+--           trg_set_waitlist_position
 -- Realtime: appointment_slots, appointments, appointment_waitlist,
 --           client_reliability, portfolio_items, portfolio_categories,
 --           services, site_content, custom_sections

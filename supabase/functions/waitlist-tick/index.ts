@@ -90,8 +90,10 @@ async function sendOffer(row: any, slot: any, token: string) {
 }
 
 serve(async (req) => {
-  // ── Megosztott titok ellenőrzése ──
-  if (CRON_SECRET && req.headers.get('x-cron-secret') !== CRON_SECRET) {
+  // ── Megosztott titok ellenőrzése (fail-closed) ──
+  // Ha a CRON_SECRET nincs beállítva, a végpont ZÁRVA van – korábban
+  // ilyenkor bárki futtathatta (service_role-lal, emailküldéssel).
+  if (!CRON_SECRET || req.headers.get('x-cron-secret') !== CRON_SECRET) {
     return json({ error: 'Jogosulatlan' }, 401)
   }
 

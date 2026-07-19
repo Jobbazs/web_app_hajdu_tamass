@@ -21,130 +21,30 @@ export default function Confirm() {
   }, [])
 
   // ── Foglalás megerősítése ────────────────────────────────
+  // A token-ellenőrzés + státuszváltás szerveroldalon, SECURITY DEFINER
+  // RPC-ben történik. A kliens nem olvashatja/írhatja közvetlenül a
+  // foglalás-táblát – csak ezt az egy, tokenre szűkített műveletet hívja.
   const handleConfirm = async (token) => {
-    const now = new Date().toISOString()
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('id, status, token_expires_at')
-      .eq('confirmation_token', token)
-      .single()
-
-    if (error || !data)                         { setStatus('expired');   return }
-    if (data.status !== 'pending_confirmation') { setStatus('confirmed'); return }
-    if (data.token_expires_at < now)            { setStatus('expired');   return }
-
-    await supabase.from('appointments')
-      .update({ status: 'confirmed', confirmed_at: now })
-      .eq('id', data.id)
-
-    setStatus('confirmed')
+    const { data, error } = await supabase.rpc('confirm_appointment', { p_token: token })
+    setStatus(error ? 'error' : (data || 'error'))
   }
 
   // ── Foglalás lemondása ───────────────────────────────────
   const handleCancel = async (token) => {
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('id, status')
-      .eq('cancellation_token', token)
-      .single()
-
-    if (error || !data)           { setStatus('expired');   return }
-    if (data.status === 'cancelled') { setStatus('cancelled'); return }
-
-    await supabase.from('appointments')
-      .update({ status: 'cancelled' })
-      .eq('id', data.id)
-
-    setStatus('cancelled')
+    const { data, error } = await supabase.rpc('cancel_appointment', { p_token: token })
+    setStatus(error ? 'error' : (data || 'error'))
   }
 
   // ── Waitlist ajánlat elfogadás / elutasítás ──────────────
+  // Az elfogadáskori foglalás-létrehozást és a lánc továbbvitelét is az
+  // RPC + a szerveroldali triggerek intézik (trg_notify_waitlist_decline),
+  // ezért itt már nincs kliensoldali "notifyNext".
   const handleWaitlist = async (offerToken, action) => {
-    const now = new Date().toISOString()
-
-    const { data: wl, error } = await supabase
-      .from('appointment_waitlist')
-      .select('*, appointment_slots(title, slot_date, start_time, end_time)')
-      .eq('offer_token', offerToken)
-      .single()
-
-    if (error || !wl)                  { setStatus('expired'); return }
-    if (wl.offer_expires_at < now)     { setStatus('expired'); return }
-    if (wl.response)                   { setStatus(wl.response === 'accepted' ? 'waitlist_accepted' : 'waitlist_declined'); return }
-
-    if (action === 'accept') {
-      // Foglalás létrehozása
-      const cancelTok = crypto.randomUUID()
-      await supabase.from('appointments').insert({
-        slot_id:            wl.slot_id,
-        name:               wl.name,
-        email:              wl.email,
-        phone:              wl.phone || null,
-        status:             'confirmed',
-        confirmed_at:       now,
-        cancellation_token: cancelTok,
-      })
-
-      // Waitlist sor frissítése
-      await supabase.from('appointment_waitlist')
-        .update({ response: 'accepted', responded_at: now })
-        .eq('id', wl.id)
-
-      setStatus('waitlist_accepted')
-
-    } else {
-      // Elutasítás – trigger viszi a következőnek (trg_notify_waitlist_decline)
-      await supabase.from('appointment_waitlist')
-        .update({ response: 'declined', responded_at: now })
-        .eq('id', wl.id)
-
-      // Frontend is küld emailt a következőnek ha van
-      await notifyNextWaitlist(wl.slot_id, wl.id)
-
-      setStatus('waitlist_declined')
-    }
-  }
-
-  // ── Következő várólistás értesítése (ha a trigger nem fut le) ───────────
-  const notifyNextWaitlist = async (slotId, currentWlId) => {
-    try {
-      // Következő nem értesített
-      const { data: next } = await supabase
-        .from('appointment_waitlist')
-        .select('*, appointment_slots(title, slot_date, start_time, end_time)')
-        .eq('slot_id', slotId)
-        .is('notified_at', null)
-        .is('response', null)
-        .order('position', { ascending: true })
-        .limit(1)
-        .single()
-
-      if (!next) return
-
-      const offerToken = crypto.randomUUID()
-      const expires    = new Date(Date.now() + 30 * 60 * 1000).toISOString()
-
-      await supabase.from('appointment_waitlist')
-        .update({ notified_at: new Date().toISOString(), offer_token: offerToken, offer_expires_at: expires })
-        .eq('id', next.id)
-
-      const slot = next.appointment_slots
-      const { error: emailErr } = await supabase.functions.invoke('send-booking-email', {
-        body: {
-          to:         next.email,
-          name:       next.name,
-          slotTitle:  slot.title,
-          slotDate:   slot.slot_date,
-          startTime:  slot.start_time?.slice(0, 5),
-          endTime:    slot.end_time?.slice(0, 5),
-          isWaitlist: true,
-          offerToken,
-        },
-      })
-      if (emailErr) console.warn('Waitlist email error:', emailErr)
-    } catch (e) {
-      console.warn('Next waitlist notify error:', e)
-    }
+    const { data, error } = await supabase.rpc('respond_waitlist', {
+      p_token:  offerToken,
+      p_accept: action === 'accept',
+    })
+    setStatus(error ? 'error' : (data || 'error'))
   }
 
   // ── Megjelenítés ─────────────────────────────────────────

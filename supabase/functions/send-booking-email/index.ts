@@ -29,7 +29,10 @@ serve(async (req) => {
       })
     }
 
-    const origin = req.headers.get('origin') || 'https://hajdutamas.hu'
+    // A linkek domainjét NEM a kérés Origin fejlécéből vesszük (azt a hívó
+    // hamisíthatná → NOX-brandinggel támadó domainre mutató phishing-link),
+    // hanem fix, szerveroldali beállításból.
+    const origin = Deno.env.get('SITE_URL') ?? 'https://hajdutamas.hu'
     let subject: string
     let html: string
 
