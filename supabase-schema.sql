@@ -646,8 +646,11 @@ end;
 $$;
 
 -- Várólista-ajánlat elfogadása / elutasítása offer_token alapján
+-- A visszatérési típus text→jsonb váltás miatt előbb el kell dobni
+-- (a create or replace nem tud return type-ot módosítani meglévő DB-n)
+drop function if exists public.respond_waitlist(text, boolean);
 create or replace function public.respond_waitlist(p_token text, p_accept boolean)
-returns text
+returns jsonb
 language plpgsql
 security definer
 set search_path = public
@@ -656,16 +659,25 @@ declare
   w record;
   v_cancel_token text;
 begin
-  if p_token is null or length(p_token) < 10 then return 'error'; end if;
+  if p_token is null or length(p_token) < 10 then
+    return jsonb_build_object('status', 'error');
+  end if;
 
   select * into w
     from public.appointment_waitlist
     where offer_token = p_token;
 
-  if not found then return 'expired'; end if;
-  if w.offer_expires_at is not null and w.offer_expires_at < now() then return 'expired'; end if;
+  if not found then
+    return jsonb_build_object('status', 'expired');
+  end if;
+  if w.offer_expires_at is not null and w.offer_expires_at < now() then
+    return jsonb_build_object('status', 'expired');
+  end if;
   if w.response is not null then
-    return case when w.response = 'accepted' then 'waitlist_accepted' else 'waitlist_declined' end;
+    return jsonb_build_object(
+      'status',
+      case when w.response = 'accepted' then 'waitlist_accepted' else 'waitlist_declined' end
+    );
   end if;
 
   if p_accept then
@@ -679,14 +691,17 @@ begin
       set response = 'accepted', responded_at = now()
       where id = w.id;
 
-    return 'waitlist_accepted';
+    -- A cancel_token-t visszaadjuk, hogy a kliens ellőhesse a megerősítő
+    -- emailt (benne a lemondó linkkel). Ez a foglalás saját tokene, az
+    -- elfogadó ügyfélé – nála amúgy is szerepel majd az emailben.
+    return jsonb_build_object('status', 'waitlist_accepted', 'cancel_token', v_cancel_token);
   else
     update public.appointment_waitlist
       set response = 'declined', responded_at = now()
       where id = w.id;
     -- A következő várakozót a waitlist-tick értesíti a következő futáskor
     -- (a slot most szabad kapacitású lett).
-    return 'waitlist_declined';
+    return jsonb_build_object('status', 'waitlist_declined');
   end if;
 end;
 $$;

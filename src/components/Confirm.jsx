@@ -36,15 +36,24 @@ export default function Confirm() {
   }
 
   // ── Waitlist ajánlat elfogadás / elutasítás ──────────────
-  // Az elfogadáskori foglalás-létrehozást és a lánc továbbvitelét is az
-  // RPC + a szerveroldali triggerek intézik (trg_notify_waitlist_decline),
-  // ezért itt már nincs kliensoldali "notifyNext".
+  // Az RPC most jsonb-t ad vissza: { status, cancel_token? }. Elfogadáskor
+  // visszakapjuk az új foglalás lemondó tokenét, és ellőjük a megerősítő
+  // emailt (benne a lemondó linkkel) – az UI-t nem blokkolja, ha hibázik.
   const handleWaitlist = async (offerToken, action) => {
     const { data, error } = await supabase.rpc('respond_waitlist', {
       p_token:  offerToken,
       p_accept: action === 'accept',
     })
-    setStatus(error ? 'error' : (data || 'error'))
+    if (error) { setStatus('error'); return }
+
+    const st = data?.status || 'error'
+    setStatus(st)
+
+    if (st === 'waitlist_accepted' && data?.cancel_token) {
+      supabase.functions
+        .invoke('send-booking-email', { body: { accepted: true, cancelToken: data.cancel_token } })
+        .catch((e) => console.warn('accept email error:', e))
+    }
   }
 
   // ── Megjelenítés ─────────────────────────────────────────
