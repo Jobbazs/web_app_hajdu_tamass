@@ -5,10 +5,16 @@
 //   supabase secrets set RESEND_API_KEY=re_xxxxxxxxx
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? ''
+const SUPABASE_URL   = Deno.env.get('SUPABASE_URL') ?? ''
+const SERVICE_ROLE   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const FROM_EMAIL     = 'noreply@hajdutamas.hu'
 const FROM_NAME      = 'Hajdú Tamás — NOX'
+
+// Service-role kliens: csak a token-ellenőrző lekérdezésekhez (RLS-t megkerüli)
+const db = createClient(SUPABASE_URL, SERVICE_ROLE)
 
 const corsHeaders = {
   'Access-Control-Allow-Origin':  '*',
@@ -21,18 +27,62 @@ serve(async (req) => {
   }
 
   try {
-    const { to, name, slotTitle, slotDate, startTime, endTime, confirmToken, cancelToken, isWaitlist, offerToken } = await req.json()
+    // A hívó CSAK egy tokent ad meg. A címzettet és minden adatot a
+    // szerver a DB-ből olvas ki a token alapján → nem lehet a függvényt
+    // nyílt email-relay-ként használni tetszőleges címre / tartalommal.
+    const { confirmToken, isWaitlist, offerToken } = await req.json()
 
-    if (!to || !name) {
-      return new Response(JSON.stringify({ error: 'Hiányzó mezők: to, name' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    // A linkek domainjét fix, szerveroldali beállításból vesszük (nem az
+    // Origin fejlécből → nincs NOX-brandinggel támadó domainre mutató link).
+    const origin = Deno.env.get('SITE_URL') ?? 'https://hajdutamas.hu'
+
+    // ── Token → valódi rekord (service-role) ──
+    let to: string, name: string
+    let slotTitle: string, slotDate: string, startTime: string, endTime: string
+    let cancelToken: string | null = null
+
+    if (isWaitlist) {
+      if (!offerToken) {
+        return new Response(JSON.stringify({ error: 'Hiányzó offerToken' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: w } = await db
+        .from('appointment_waitlist')
+        .select('name, email, appointment_slots(title, slot_date, start_time, end_time)')
+        .eq('offer_token', offerToken)
+        .maybeSingle()
+      if (!w || !w.appointment_slots) {
+        return new Response(JSON.stringify({ error: 'Ismeretlen offerToken' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const s: any = w.appointment_slots
+      to = w.email; name = w.name
+      slotTitle = s.title; slotDate = s.slot_date
+      startTime = String(s.start_time).slice(0, 5); endTime = String(s.end_time).slice(0, 5)
+    } else {
+      if (!confirmToken) {
+        return new Response(JSON.stringify({ error: 'Hiányzó confirmToken' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: a } = await db
+        .from('appointments')
+        .select('name, email, cancellation_token, appointment_slots(title, slot_date, start_time, end_time)')
+        .eq('confirmation_token', confirmToken)
+        .maybeSingle()
+      if (!a || !a.appointment_slots) {
+        return new Response(JSON.stringify({ error: 'Ismeretlen confirmToken' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const s: any = a.appointment_slots
+      to = a.email; name = a.name; cancelToken = a.cancellation_token
+      slotTitle = s.title; slotDate = s.slot_date
+      startTime = String(s.start_time).slice(0, 5); endTime = String(s.end_time).slice(0, 5)
     }
 
-    // A linkek domainjét NEM a kérés Origin fejlécéből vesszük (azt a hívó
-    // hamisíthatná → NOX-brandinggel támadó domainre mutató phishing-link),
-    // hanem fix, szerveroldali beállításból.
-    const origin = Deno.env.get('SITE_URL') ?? 'https://hajdutamas.hu'
     let subject: string
     let html: string
 

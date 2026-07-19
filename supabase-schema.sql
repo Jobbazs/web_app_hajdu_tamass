@@ -238,6 +238,13 @@ insert into storage.buckets (id, name, public)
   values ('attachments', 'attachments', true)
   on conflict (id) do nothing;
 
+-- Feltöltési méret-limit: 10 MB / fájl (a publikus feltöltés így nem
+-- használható a tárhely teleszemetelésére óriásfájlokkal). Csak a méretet
+-- korlátozza, a fájltípust nem – így meglévő feltöltések nem törnek el.
+update storage.buckets
+  set file_size_limit = 10485760   -- 10 MB
+  where id = 'attachments';
+
 drop policy if exists "Public upload attachments" on storage.objects;
 drop policy if exists "Public read attachments"   on storage.objects;
 drop policy if exists "Admin delete attachments"  on storage.objects;
@@ -712,6 +719,75 @@ create trigger trg_set_waitlist_position
   for each row execute function public.set_waitlist_position();
 
 
+-- ── 8i. RATE LIMIT: egyszerű, email-alapú spam-fék ───────────────────────
+--
+--  DB-szintű "lágy" limit: ugyanarról az email-címről óránként legfeljebb
+--  MAX_PER_HOUR publikus foglalás ill. kontakt-üzenet. Kódmentes a
+--  frontenden. FIGYELEM: ez EMAIL-alapú (nem IP), tehát változó címmel
+--  megkerülhető – a durva, ismétlődő spamet fogja meg. Erősebb védelemhez
+--  IP-szintű limit kell (pl. Cloudflare a domain elé), ami a szerver előtt
+--  szűr. A limit értéke bőven a normál használat felett van; tuningolható.
+
+-- Publikus foglalás-spam (csak a pending_confirmation ágra; az admin- és a
+-- várólista-elfogadás confirmed insertjeit NEM érinti)
+create or replace function public.rate_limit_appointments()
+returns trigger
+language plpgsql
+as $$
+declare
+  cnt int;
+  max_per_hour constant int := 5;
+begin
+  if new.status = 'pending_confirmation' and new.email is not null then
+    select count(*) into cnt
+      from public.appointments
+      where lower(email) = lower(new.email)
+        and created_at > now() - interval '1 hour';
+    if cnt >= max_per_hour then
+      raise exception 'RATE_LIMIT: tul sok foglalasi kiserlet errol az email cimrol, probald ujra kesobb'
+        using errcode = '53400';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_rate_limit_appointments on public.appointments;
+create trigger trg_rate_limit_appointments
+  before insert on public.appointments
+  for each row execute function public.rate_limit_appointments();
+
+-- Kontakt-űrlap spam (a rendszer által beszúrt waitlist_notification sorokat
+-- kihagyja, hogy a várólista-értesítés soha ne akadjon el)
+create or replace function public.rate_limit_messages()
+returns trigger
+language plpgsql
+as $$
+declare
+  cnt int;
+  max_per_hour constant int := 5;
+begin
+  if (new.service is distinct from 'waitlist_notification') and new.email is not null then
+    select count(*) into cnt
+      from public.messages
+      where lower(email) = lower(new.email)
+        and (service is distinct from 'waitlist_notification')
+        and created_at > now() - interval '1 hour';
+    if cnt >= max_per_hour then
+      raise exception 'RATE_LIMIT: tul sok uzenet errol az email cimrol, probald ujra kesobb'
+        using errcode = '53400';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_rate_limit_messages on public.messages;
+create trigger trg_rate_limit_messages
+  before insert on public.messages
+  for each row execute function public.rate_limit_messages();
+
+
 -- ============================================================================
 -- 9. WAITLIST LÁNC — automatikus értesítés a következő várólistásnak
 -- ============================================================================
@@ -984,7 +1060,8 @@ select cron.schedule(
 --           (SECURITY DEFINER, token-scope-olt publikus műveletek)
 -- Trigger:  set_updated_at_reliability, trg_00_recalc_booked_count,
 --           trg_notify_waitlist, trg_notify_waitlist_decline,
---           trg_set_waitlist_position
+--           trg_set_waitlist_position,
+--           trg_rate_limit_appointments, trg_rate_limit_messages
 -- Realtime: appointment_slots, appointments, appointment_waitlist,
 --           client_reliability, portfolio_items, portfolio_categories,
 --           services, site_content, custom_sections
