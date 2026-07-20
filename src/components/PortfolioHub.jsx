@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from 'react'
 import { useLang } from '../LangContext'
 import { usePortfolio, useCategories, useSiteContent } from '../hooks'
-import { cldThumb, catLabel } from '../lib/Portfoliopages'
+import { cldThumb, catLabel } from '../lib/PortfolioPages'
 import Navbar from './Navbar'
 import Contact from './Contact'
 import Footer from './Footer'

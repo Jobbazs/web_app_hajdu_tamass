@@ -1,5 +1,5 @@
 import { useLang } from '../LangContext'
-import { catLabel } from '../lib/Portfoliopages'
+import { catLabel } from '../lib/PortfolioPages'
 
 // Bal oldali (desktop, fix) / alsó (mobil, sticky vízszintes) kategória-sáv.
 // Az "összes" a hub oldalra visz.
