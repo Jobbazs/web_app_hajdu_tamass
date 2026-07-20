@@ -8,7 +8,6 @@ export function cldThumb(url, w = 800) {
   return url.replace('/upload/', `/upload/f_auto,q_auto,w_${w}/`)
 }
 
-//asd
 // Igazítási presetek (bal 0-75%, közép 0-100%, jobb 25-100%)
 export const ALIGN_STYLE = {
   left:   { textAlign: 'left',   marginRight: 'auto', maxWidth: '75%'  },
