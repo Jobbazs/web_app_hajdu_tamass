@@ -49,45 +49,56 @@ export default function PortfolioHub() {
     <>
       <Navbar subpage />
       <main className="cat-main hub-main">
-        <Breadcrumb
-          items={[
-            { label: lang === 'hu' ? 'Főoldal' : 'Home', href: '/' },
-            { label: lang === 'hu' ? 'Portfólió' : 'Portfolio' },
-          ]}
-        />
+        <div className="cat-hero-band">
+          <div className="cat-band-inner">
+            <Breadcrumb
+              items={[
+                { label: lang === 'hu' ? 'Főoldal' : 'Home', href: '/' },
+                { label: lang === 'hu' ? 'Portfólió' : 'Portfolio' },
+              ]}
+            />
 
-        <header className="cat-hero">
-          <div style={{ textAlign: 'center', maxWidth: '100%' }}>
-            <h1 className="cat-hero-title pp-sz-large">{t.portfolio.title}</h1>
-            <p className="cat-hero-sub pp-sz-normal">
-              {lang === 'hu'
-                ? 'Válassz kategóriát, és merülj el a munkáimban.'
-                : 'Pick a category and dive into the work.'}
-            </p>
+            <header className="cat-hero">
+              <div style={{ textAlign: 'center', maxWidth: '100%' }}>
+                <div className="cat-hero-eyebrow" style={{ justifyContent: 'center' }}>
+                  {t.portfolio.label || (lang === 'hu' ? 'Munkáim' : 'My work')}
+                </div>
+                <h1 className="cat-hero-title pp-sz-large">{t.portfolio.title}</h1>
+                <p className="cat-hero-sub pp-sz-normal">
+                  {lang === 'hu'
+                    ? 'Válassz kategóriát, és merülj el a munkáimban.'
+                    : 'Pick a category and dive into the work.'}
+                </p>
+              </div>
+            </header>
           </div>
-        </header>
+        </div>
 
-        <section className="hub-grid-wrap">
-          <div className="hub-grid">
-            {cards.map((c) => (
-              <a key={c.slug} href={`/portfolio/${c.slug}`} className="hub-card">
-                <div className="hub-card-img">
-                  {c.cover ? (
-                    <img src={cldThumb(c.cover, 700)} alt={catLabel(c, lang)} loading="lazy" />
-                  ) : (
-                    <div className="hub-card-ph">—</div>
-                  )}
-                </div>
-                <div className="hub-card-meta">
-                  <span className="hub-card-label">{catLabel(c, lang)}</span>
-                  <span className="hub-card-count">
-                    {c.count} {lang === 'hu' ? 'kép' : 'photos'}
-                  </span>
-                </div>
-              </a>
-            ))}
+        <div className="cat-content-band">
+          <div className="cat-band-inner">
+            <section className="hub-grid-wrap">
+              <div className="hub-grid">
+                {cards.map((c) => (
+                  <a key={c.slug} href={`/portfolio/${c.slug}`} className="hub-card">
+                    <div className="hub-card-img">
+                      {c.cover ? (
+                        <img src={cldThumb(c.cover, 700)} alt={catLabel(c, lang)} loading="lazy" />
+                      ) : (
+                        <div className="hub-card-ph">—</div>
+                      )}
+                    </div>
+                    <div className="hub-card-meta">
+                      <span className="hub-card-label">{catLabel(c, lang)}</span>
+                      <span className="hub-card-count">
+                        {c.count} {lang === 'hu' ? 'kép' : 'photos'}
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </section>
           </div>
-        </section>
+        </div>
       </main>
 
       <Contact />

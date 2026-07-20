@@ -120,68 +120,76 @@ export default function CategoryPage({ slug }) {
       <CategoryRail categories={categories} activeSlug={slug} />
 
       <main className="cat-main">
-        <Breadcrumb
-          items={[
-            { label: lang === 'hu' ? 'Főoldal' : 'Home', href: '/' },
-            { label: lang === 'hu' ? 'Portfólió' : 'Portfolio', href: '/portfolio' },
-            { label: label || slug },
-          ]}
-        />
+        <div className="cat-hero-band">
+          <div className="cat-band-inner">
+            <Breadcrumb
+              items={[
+                { label: lang === 'hu' ? 'Főoldal' : 'Home', href: '/' },
+                { label: lang === 'hu' ? 'Portfólió' : 'Portfolio', href: '/portfolio' },
+                { label: label || slug },
+              ]}
+            />
 
-        {/* Hero */}
-        <header className="cat-hero">
-          <div style={alignStyle(category?.hero_align)}>
-            <h1 className={`cat-hero-title ${sizeClass(category?.hero_title_size)}`}>{label}</h1>
-            {subtitle && (
-              <p className={`cat-hero-sub ${sizeClass(category?.hero_subtitle_size)}`}>{subtitle}</p>
+            {/* Hero – kis narancs eyebrow + nagy fehér cím */}
+            <header className="cat-hero">
+              <div style={alignStyle(category?.hero_align)}>
+                <div className="cat-hero-eyebrow">{lang === 'hu' ? 'Portfólió' : 'Portfolio'}</div>
+                <h1 className={`cat-hero-title ${sizeClass(category?.hero_title_size)}`}>{label}</h1>
+                {subtitle && (
+                  <p className={`cat-hero-sub ${sizeClass(category?.hero_subtitle_size)}`}>{subtitle}</p>
+                )}
+              </div>
+            </header>
+
+            {/* Intro szöveg */}
+            {intro && (
+              <section className="cat-intro">
+                <div className={sizeClass(category?.intro_size)} style={alignStyle(category?.intro_align)}>
+                  {intro.split('\n').filter(Boolean).map((p, i) => (
+                    <p key={i}>{p}</p>
+                  ))}
+                </div>
+              </section>
             )}
           </div>
-        </header>
+        </div>
 
-        {/* Intro szöveg */}
-        {intro && (
-          <section className="cat-intro">
-            <div className={sizeClass(category?.intro_size)} style={alignStyle(category?.intro_align)}>
-              {intro.split('\n').filter(Boolean).map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Tartalom: ha vannak szekciók, azokat mutatjuk; különben az
-            egyszerű teljes képgrid (visszafelé kompatibilis). */}
-        {loading ? (
-          <div className="cat-empty">{lang === 'hu' ? 'Betöltés…' : 'Loading…'}</div>
-        ) : catSections.length > 0 ? (
-          <CategorySections sections={catSections} catItems={catItems} onImageClick={setSelected} />
-        ) : (
-          <section className="cat-grid-wrap" aria-label={label}>
-            {catItems.length === 0 ? (
-              <div className="cat-empty">
-                {lang === 'hu' ? 'Ebben a kategóriában még nincs kép.' : 'No photos in this category yet.'}
-              </div>
+        {/* Tartalom sáv (világosabb háttér, hogy a képek elváljanak a herótól) */}
+        <div className="cat-content-band">
+          <div className="cat-band-inner">
+            {loading ? (
+              <div className="cat-empty">{lang === 'hu' ? 'Betöltés…' : 'Loading…'}</div>
+            ) : catSections.length > 0 ? (
+              <CategorySections sections={catSections} catItems={catItems} onImageClick={setSelected} />
             ) : (
-              <div className="cat-grid">
-                {catItems.map((it) => (
-                  <button
-                    key={it.id}
-                    className="cat-tile"
-                    onClick={() => setSelected(it)}
-                    aria-label={it.title || label}
-                  >
-                    <img
-                      src={cldThumb(it.cloudinaryUrl, 800)}
-                      alt={it.title ? `${it.title} — ${label}` : `${label} — Hajdú Tamás fotós`}
-                      loading="lazy"
-                    />
-                    {it.videoUrl && <span className="cat-tile-play">▶</span>}
-                  </button>
-                ))}
-              </div>
+              <section className="cat-grid-wrap" aria-label={label}>
+                {catItems.length === 0 ? (
+                  <div className="cat-empty">
+                    {lang === 'hu' ? 'Ebben a kategóriában még nincs kép.' : 'No photos in this category yet.'}
+                  </div>
+                ) : (
+                  <div className="cat-grid">
+                    {catItems.map((it) => (
+                      <button
+                        key={it.id}
+                        className="cat-tile"
+                        onClick={() => setSelected(it)}
+                        aria-label={it.title || label}
+                      >
+                        <img
+                          src={cldThumb(it.cloudinaryUrl, 800)}
+                          alt={it.title ? `${it.title} — ${label}` : `${label} — Hajdú Tamás fotós`}
+                          loading="lazy"
+                        />
+                        {it.videoUrl && <span className="cat-tile-play">▶</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
             )}
-          </section>
-        )}
+          </div>
+        </div>
       </main>
 
       <Contact />

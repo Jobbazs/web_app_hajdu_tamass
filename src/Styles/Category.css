@@ -11,17 +11,50 @@
 .cat-main {
   min-height: 100vh;
   margin-left: var(--rail-w);
-  padding: calc(var(--pp-nav-h) + 1rem) clamp(1rem, 4vw, 3rem) 2rem;
-  max-width: 1400px;
+  padding-top: calc(var(--pp-nav-h) + 1rem);
 }
 .hub-main { margin-left: 0; }
+
+/* Középre igazított belső tartalom-doboz (a sáv teljes szélességű, a tartalom
+   a rail utáni terület KÖZEPÉRE igazul) */
+.cat-band-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+}
+
+/* ── Háttér-sávok: hero (sötét) → tartalom (világosabb) → kapcsolat (sötét) ── */
+.cat-hero-eyebrow {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent, #C4612A);
+  margin-bottom: 0.85rem;
+}
+.cat-hero-band {
+  background:
+    radial-gradient(ellipse at 75% 25%, rgba(139, 58, 26, 0.14) 0%, transparent 60%),
+    linear-gradient(165deg, #1A1510 0%, #241C13 55%, #1C1610 100%);
+  /* teljes szélesség; fent a nav-terület kitöltése */
+  margin-top: calc(-1 * (var(--pp-nav-h) + 1rem));
+  padding: calc(var(--pp-nav-h) + 2.2rem) 0 2.6rem;
+  position: relative;
+}
+.cat-hero-band .cat-intro { margin-bottom: 0; }
+
+.cat-content-band {
+  background: var(--bg-secondary, #2A2520);
+  padding: 2.8rem 0 3.5rem;
+}
+.cat-content-band .cat-grid-wrap { margin-bottom: 0; }
 
 /* ── Bal oldali fix kategória-sáv (desktop: álló) ── */
 .cat-rail {
   position: fixed;
   top: 0; left: 0; bottom: 0;
   width: var(--rail-w);
-  background: var(--bg-secondary, #201a14);
+  background: var(--bg-primary, #1a1510);
   border-right: 1px solid var(--border-subtle, #2a2520);
   z-index: 900;
   overflow-y: auto;
@@ -219,6 +252,7 @@
   .cat-rail-link.active { border-left-color: transparent; border-bottom-color: var(--accent, #C4612A); }
 
   .cat-main { margin-left: 0; padding-top: 1.2rem; }
+  .cat-hero-band { margin-top: 0; padding-top: 1.4rem; }
   .cat-hero-title { --pp-base: 2.6rem; }
 }
 
