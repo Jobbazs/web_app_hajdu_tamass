@@ -255,6 +255,7 @@
 
   .cat-main { margin-left: 0; padding-top: 1.2rem; }
   .cat-hero-band { margin-top: 0; padding-top: 1.4rem; }
+  .hero-words { top: 0.5rem; }
   .cat-hero-title { --pp-base: 2.6rem; }
 }
 
@@ -324,7 +325,9 @@
 /* ── Szórt hero-szavak (dekoratív, kliensoldali) ── */
 .cat-hero-band .cat-band-inner { position: relative; z-index: 1; }
 .hero-words {
-  position: absolute; inset: 0;
+  position: absolute;
+  top: calc(var(--pp-nav-h) + 0.5rem);
+  left: 0; right: 0; bottom: 0;
   overflow: hidden; pointer-events: none;
   z-index: 0;
 }
