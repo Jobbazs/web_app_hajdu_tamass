@@ -1,8 +1,9 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useLang } from '../LangContext'
 import { usePortfolio, useCategories } from '../hooks'
 import { useCategorySections } from '../hooks'
 import CategorySections from './CategorySections'
+import HeroWords from './HeroWords'
 import { cldThumb, alignStyle, sizeClass, catLabel, catIntro, catSubtitle } from '../lib/portfolioPages'
 import Navbar from './Navbar'
 import Contact from './Contact'
@@ -47,6 +48,7 @@ export default function CategoryPage({ slug }) {
   const { sections: allSections } = useCategorySections()
 
   const [selected, setSelected] = useState(null)
+  const heroTextRef = useRef(null)
 
   const category = useMemo(
     () => categories.find((c) => c.slug === slug) || null,
@@ -121,7 +123,8 @@ export default function CategoryPage({ slug }) {
 
       <main className="cat-main">
         <div className="cat-hero-band">
-          <div className="cat-band-inner">
+          <HeroWords words={category?.hero_words || []} keepOutRef={heroTextRef} />
+          <div className="cat-band-inner" ref={heroTextRef}>
             <Breadcrumb
               items={[
                 { label: lang === 'hu' ? 'Főoldal' : 'Home', href: '/' },

@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { useLang } from '../LangContext'
 import { usePortfolio, useCategories, useSiteContent } from '../hooks'
 import { cldThumb, catLabel } from '../lib/portfolioPages'
@@ -6,7 +6,9 @@ import Navbar from './Navbar'
 import Contact from './Contact'
 import Footer from './Footer'
 import Breadcrumb from './Breadcrumb'
+import HeroWords from './HeroWords'
 import '../Styles/Category.css'
+import '../Styles/Portfolio.css'
 
 const SITE = 'https://hajdutamas.hu'
 
@@ -15,6 +17,12 @@ export default function PortfolioHub() {
   const { items } = usePortfolio()
   const { categories } = useCategories()
   const { content } = useSiteContent()
+  const heroTextRef = useRef(null)
+
+  const heroWords = useMemo(() => {
+    const all = categories.flatMap((c) => c.hero_words || [])
+    return [...new Set(all)].sort(() => Math.random() - 0.5).slice(0, 12)
+  }, [categories])
 
   useEffect(() => {
     document.title = 'Portfólió — Hajdú Tamás Fotós & Videós | Budapest'
@@ -49,8 +57,9 @@ export default function PortfolioHub() {
     <>
       <Navbar subpage />
       <main className="cat-main hub-main">
-        <div className="cat-hero-band">
-          <div className="cat-band-inner">
+        <div className="cat-hero-band cat-hero-band--tall">
+          <HeroWords words={heroWords} keepOutRef={heroTextRef} />
+          <div className="cat-band-inner" ref={heroTextRef}>
             <Breadcrumb
               items={[
                 { label: lang === 'hu' ? 'Főoldal' : 'Home', href: '/' },
@@ -76,27 +85,20 @@ export default function PortfolioHub() {
 
         <div className="cat-content-band">
           <div className="cat-band-inner">
-            <section className="hub-grid-wrap">
-              <div className="hub-grid">
-                {cards.map((c) => (
-                  <a key={c.slug} href={`/portfolio/${c.slug}`} className="hub-card">
-                    <div className="hub-card-img">
-                      {c.cover ? (
-                        <img src={cldThumb(c.cover, 700)} alt={catLabel(c, lang)} loading="lazy" />
-                      ) : (
-                        <div className="hub-card-ph">—</div>
-                      )}
-                    </div>
-                    <div className="hub-card-meta">
-                      <span className="hub-card-label">{catLabel(c, lang)}</span>
-                      <span className="hub-card-count">
-                        {c.count} {lang === 'hu' ? 'kép' : 'photos'}
-                      </span>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </section>
+            <div className="port-cat-grid">
+              {cards.map((c) => (
+                <a key={c.slug} href={`/portfolio/${c.slug}`} className="port-cat-card">
+                  <div className="port-cat-img-wrap">
+                    {c.cover ? (
+                      <img className="port-cat-img" src={cldThumb(c.cover, 700)} alt={catLabel(c, lang)} loading="lazy" />
+                    ) : (
+                      <div className="port-cat-placeholder">—</div>
+                    )}
+                  </div>
+                  <div className="port-cat-label">{catLabel(c, lang)}</div>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </main>

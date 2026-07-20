@@ -949,7 +949,8 @@ alter table public.portfolio_categories
   add column if not exists hero_title_size    text default 'large',    -- small | normal | large
   add column if not exists hero_subtitle_size text default 'normal',
   add column if not exists intro_align        text default 'left',
-  add column if not exists intro_size         text default 'normal';
+  add column if not exists intro_size         text default 'normal',
+  add column if not exists hero_words         text[] default '{}';   -- szórt hero-szavak
 
 -- ── Seed PR-szövegek (csak üres mezőt tölt) ────────────────────────────────
 update public.portfolio_categories set
@@ -976,6 +977,27 @@ update public.portfolio_categories set
   hero_subtitle_hu = 'Szabad kísérletezés — ahol a koncepció találkozik a képpel.',
   intro_hu = 'Ez a tér a kísérletezésé: koncepciók, kreatív együttműködések és személyes projektek, amelyek nem férnek be egyetlen kategóriába sem. Zenészekkel, alkotókkal és márkákkal közösen építek egyedi vizuális világot — az ötlettől a végső gradinges kockáig. Ha van egy elképzelésed, amit még senki nem valósított meg, itt a helye. A határ legtöbbször csak a bátorság.'
 where slug = 'kreativ' and (intro_hu is null or intro_hu = '');
+
+-- ── Seed szórt hero-szavak (csak ha üres) ──────────────────────────────────
+update public.portfolio_categories set hero_words =
+  '{éjszaka,fény,ritmus,tömeg,underground,pillanat,energia,neon,mozgás,hangulat}'
+where slug = 'nightlife' and (hero_words is null or hero_words = '{}');
+
+update public.portfolio_categories set hero_words =
+  '{portré,fény,karakter,arc,kompozíció,csend,fókusz,forma,tekintet,részlet}'
+where slug = 'studio' and (hero_words is null or hero_words = '{}');
+
+update public.portfolio_categories set hero_words =
+  '{élmény,pillanat,közösség,ünnep,hangulat,emlék,mozgás,öröm,találkozás,este}'
+where slug = 'rendezveny' and (hero_words is null or hero_words = '{}');
+
+update public.portfolio_categories set hero_words =
+  '{mozgás,erő,csúcspont,feszültség,ritmus,szenvedély,fókusz,pillanat,küzdelem,tempó}'
+where slug = 'sport-kultura' and (hero_words is null or hero_words = '{}');
+
+update public.portfolio_categories set hero_words =
+  '{koncepció,kísérlet,vízió,forma,fény,ötlet,merészség,stílus,textúra,kontraszt}'
+where slug = 'kreativ' and (hero_words is null or hero_words = '{}');
 
 
 -- ============================================================================

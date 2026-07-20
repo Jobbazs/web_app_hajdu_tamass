@@ -213,8 +213,10 @@
 }
 
 /* Főoldali portfólió cím link */
-.portfolio-title-link { text-decoration: none; display: inline-block; }
+.portfolio-title-link { text-decoration: none; display: inline-block; cursor: pointer; }
 .portfolio-title-link:hover .section-title { color: var(--accent, #C4612A); }
+.portfolio-title-link .section-label { transition: color 0.2s; }
+.portfolio-title-link:hover .section-label { color: var(--accent-pale, #D4845A); }
 
 /* ============================================================
    RESZPONZÍV
@@ -317,4 +319,37 @@
 }
 @media (max-width: 620px) {
   .cat-sec-2x2 { gap: 10px; }
+}
+
+/* ── Szórt hero-szavak (dekoratív, kliensoldali) ── */
+.cat-hero-band .cat-band-inner { position: relative; z-index: 1; }
+.hero-words {
+  position: absolute; inset: 0;
+  overflow: hidden; pointer-events: none;
+  z-index: 0;
+}
+.hero-word {
+  position: absolute;
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent, #C4612A);
+  opacity: 0.1;
+  white-space: nowrap;
+  transform-origin: center;
+  animation: heroWordSway var(--dur, 8s) ease-in-out var(--delay, 0s) infinite alternate;
+  will-change: transform;
+}
+@keyframes heroWordSway {
+  from { transform: rotate(var(--rot0, 0deg)) scale(1); }
+  to   { transform: rotate(var(--rot1, 0deg)) scale(var(--pulse, 1.05)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-word { animation: none; }
+}
+
+/* Nagyobb hub-hero (2–2.5x) */
+.cat-hero-band--tall { padding-top: calc(var(--pp-nav-h) + 5rem); padding-bottom: 5.5rem; }
+@media (max-width: 900px) {
+  .cat-hero-band--tall { padding-top: 3rem; padding-bottom: 3.5rem; }
 }

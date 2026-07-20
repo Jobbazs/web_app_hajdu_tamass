@@ -28,6 +28,7 @@ const editableFields = (cat) => ({
   hero_subtitle_size: cat.hero_subtitle_size || 'normal',
   intro_align:        cat.intro_align        || 'left',
   intro_size:         cat.intro_size         || 'normal',
+  hero_words:         (cat.hero_words || []).join(', '),
 })
 
 // Előnézet-segédek (a Category.css logikájával egyezőek)
@@ -108,9 +109,16 @@ export default function AdminCategories() {
     if (!activeCat || !form) return
     setSaving(true)
     setError('')
+    const payload = {
+      ...form,
+      hero_words: form.hero_words
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    }
     const { error: err } = await supabase
       .from('portfolio_categories')
-      .update(form)
+      .update(payload)
       .eq('id', activeCat.id)
     setSaving(false)
     if (err) {
@@ -192,6 +200,17 @@ export default function AdminCategories() {
               onChange={(e) => set('cover_url', e.target.value)}
               placeholder="Cloudinary URL – üresen az első kategóriakép lesz a borító"
             />
+          </div>
+
+          <div className="acms-form-group">
+            <label className="acms-label">Szórt hero-szavak (vesszővel elválasztva)</label>
+            <input
+              className="acms-input"
+              value={form.hero_words}
+              onChange={(e) => set('hero_words', e.target.value)}
+              placeholder="pl. fény, ritmus, pillanat, energia"
+            />
+            <span className="acms-hint">A hero hátterében finoman lebegő, dekoratív szavak (nyelvfüggetlen).</span>
           </div>
 
           <div className="acms-preset-grid">

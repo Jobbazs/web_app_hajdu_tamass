@@ -47,6 +47,7 @@ export default function Navbar({ subpage = false }) {
     { id: 'about',     label: t.nav.about },
     { id: 'portfolio', label: t.nav.portfolio },
     { id: 'services',  label: t.nav.services },
+    { id: 'booking',   label: lang === 'hu' ? 'Időpontfoglalás' : 'Booking' },
     { id: 'contact',   label: t.nav.contact },
   ]
 

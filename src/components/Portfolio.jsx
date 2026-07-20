@@ -79,8 +79,8 @@ export default function Portfolio() {
         <div className="container">
           <div className="portfolio-header">
             <div>
-              <div className="section-label">{t.portfolio.label}</div>
               <a href="/portfolio" className="portfolio-title-link">
+                <div className="section-label">{t.portfolio.label}</div>
                 <h2 className="section-title">{t.portfolio.title}</h2>
               </a>
             </div>
