@@ -932,6 +932,107 @@ select cron.schedule(
 
 
 -- ============================================================================
+-- 12. PORTFÓLIÓ KATEGÓRIA-OLDALAK (SEO aloldalak: /portfolio/<slug>)
+-- Minden kategóriának saját aloldala: hero + intro + képgrid. A mezők
+-- CMS-ből írhatók. Idempotens: a seed csak akkor tölt, ha üres a mező,
+-- így nem írja felül a későbbi CMS-szerkesztést.
+-- ============================================================================
+
+alter table public.portfolio_categories
+  add column if not exists hero_subtitle_hu   text default '',
+  add column if not exists hero_subtitle_en   text default '',
+  add column if not exists intro_hu           text default '',
+  add column if not exists intro_en           text default '',
+  add column if not exists cover_url          text,
+  -- Megjelenítési presetek (a CMS constrainálja az értékeket)
+  add column if not exists hero_align         text default 'center',   -- left | center | right
+  add column if not exists hero_title_size    text default 'large',    -- small | normal | large
+  add column if not exists hero_subtitle_size text default 'normal',
+  add column if not exists intro_align        text default 'left',
+  add column if not exists intro_size         text default 'normal';
+
+-- ── Seed PR-szövegek (csak üres mezőt tölt) ────────────────────────────────
+update public.portfolio_categories set
+  hero_subtitle_hu = 'Éjszakai energia, nyers pillanatok — ahogy a fény a sötétben él.',
+  intro_hu = 'A budapesti éjszaka nem áll meg egy pillanatra sem, és én ezt a lüktetést kapom el. Klubok, rave-ek, underground helyszínek — az Arzenáltól a Lärmig ott vagyok, ahol a zene és a tömeg egy testté olvad. A képeim nem pózolt mosolyok: verejték, füst, fény és mozgás, pontosan úgy, ahogy megtörtént. Ha olyasvalakit keresel, aki nem kívülállóként, hanem a buli részeként dokumentálja az estét, jó helyen jársz.'
+where slug = 'nightlife' and (intro_hu is null or intro_hu = '');
+
+update public.portfolio_categories set
+  hero_subtitle_hu = 'Kontrollált fény, tiszta kompozíció — a portré, ami rád hasonlít.',
+  intro_hu = 'A stúdió az a hely, ahol minden rajtad múlik: a fény, a háttér, a hangulat — mind a te karaktered köré épül. Legyen szó személyes portréról, arculati fotóról vagy koncepcionális sorozatról, a célom mindig ugyanaz: olyan képet készíteni, amiben magadra ismersz. Természetes és megrendezett megközelítéssel is dolgozom, professzionális retussal, sietség nélkül. Néhány jól eltalált kép többet mond bármelyik önéletrajznál.'
+where slug = 'studio' and (intro_hu is null or intro_hu = '');
+
+update public.portfolio_categories set
+  hero_subtitle_hu = 'Az est, ahogy tényleg megtörtént — minden fontos pillanattal.',
+  intro_hu = 'Egy rendezvény egyszeri és megismételhetetlen — az én dolgom, hogy semmi lényeges ne vesszen el belőle. Céges eseménytől születésnapon át koncertekig végigkísérem az estét, a háttérben maradva, mégis mindenütt jelen. A hangsúly a valódi pillanatokon van: a nevetésen, a meglepetésen, a mozgáson. A szerkesztett anyagot gyorsan, akár másnapra leadom, hogy azonnal újra átélhessétek a napot.'
+where slug = 'rendezveny' and (intro_hu is null or intro_hu = '');
+
+update public.portfolio_categories set
+  hero_subtitle_hu = 'Mozgás, feszültség, csúcspont — a sport és a kultúra közelről.',
+  intro_hu = 'A sport és a kultúra ott a legizgalmasabb, ahol a felkészülés évei egyetlen pillanatba sűrűsödnek. Mérkőzések, fellépések, kiállítások — a gyors reakciót és a jó szemet igénylő helyzetekben vagyok otthon. Elkapom a döntő mozdulatot és a színfalak mögötti csendet is, mert egy jó képsorozat mindkettőről mesél. Dinamikus, mégis letisztult vizuális nyelv minden eseményhez.'
+where slug = 'sport-kultura' and (intro_hu is null or intro_hu = '');
+
+update public.portfolio_categories set
+  hero_subtitle_hu = 'Szabad kísérletezés — ahol a koncepció találkozik a képpel.',
+  intro_hu = 'Ez a tér a kísérletezésé: koncepciók, kreatív együttműködések és személyes projektek, amelyek nem férnek be egyetlen kategóriába sem. Zenészekkel, alkotókkal és márkákkal közösen építek egyedi vizuális világot — az ötlettől a végső gradinges kockáig. Ha van egy elképzelésed, amit még senki nem valósított meg, itt a helye. A határ legtöbbször csak a bátorság.'
+where slug = 'kreativ' and (intro_hu is null or intro_hu = '');
+
+
+-- ============================================================================
+-- 13. KATEGÓRIA-SZEKCIÓK (Fázis 2) — a /portfolio/<slug> aloldalak
+-- konfigurálható, váltakozó tartalmi blokkjai.
+--   type: 'text_images'  – szöveg + 2x2 kép
+--         'images_text'  – 2x2 kép + szöveg (fordított)
+--         'text_only'    – csak szöveg
+--         'images_only'  – csak képek (max 4/sor)
+-- Képek (hibrid): image_ids kézi lista; ha üres, a kategória képeiből
+-- automatikusan tölt (sorrendben, szekciónként a következő adag).
+-- ============================================================================
+
+create table if not exists public.category_sections (
+  id           uuid primary key default gen_random_uuid(),
+  category_id  uuid not null references public.portfolio_categories(id) on delete cascade,
+  sort_order   integer not null default 0,
+  type         text not null default 'text_images',
+  title_hu     text default '',
+  title_en     text default '',
+  body_hu      text default '',
+  body_en      text default '',
+  image_ids    uuid[] default '{}',        -- kézi képhozzárendelés; üres = auto
+  title_align  text default 'left',        -- left | center | right
+  title_size   text default 'large',       -- small | normal | large
+  body_align   text default 'left',
+  body_size    text default 'normal',
+  visible      boolean not null default true,
+  created_at   timestamptz default now()
+);
+
+create index if not exists idx_category_sections_cat
+  on public.category_sections (category_id, sort_order);
+
+alter table public.category_sections enable row level security;
+drop policy if exists "Public read category_sections"  on public.category_sections;
+drop policy if exists "Admin all category_sections"     on public.category_sections;
+create policy "Public read category_sections"
+  on public.category_sections for select using (true);
+create policy "Admin all category_sections"
+  on public.category_sections for all using (auth.role() = 'authenticated');
+
+-- Realtime a category_sections-re (itt, a tábla létrehozása UTÁN – idempotens)
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'category_sections'
+  ) then
+    execute 'alter publication supabase_realtime add table public.category_sections';
+  end if;
+end $$;
+
+
+-- ============================================================================
 -- VÉGE
 -- Táblák:   messages, portfolio_categories, portfolio_items, services,
 --           site_content, custom_sections, appointment_slots, appointments,

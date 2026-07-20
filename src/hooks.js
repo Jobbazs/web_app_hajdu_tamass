@@ -243,3 +243,24 @@ export function useClientReliability() {
   useRealtimeRefetch(['client_reliability'], fetch)
   return { clients, loading, refetch: fetch }
 }
+// Kategória-szekciók (Fázis 2) – a /portfolio/<slug> aloldalak tartalmi blokkjai.
+// Csak a látható szekciók (a publikus oldalhoz). A CMS külön, teljes listát kér.
+export function useCategorySections() {
+  const [sections, setSections] = useState([])
+  const [loading,  setLoading]  = useState(true)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('category_sections')
+      .select('*')
+      .eq('visible', true)
+      .order('sort_order', { ascending: true })
+    setSections(data || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetch() }, [fetch])
+  useRealtimeRefetch(['category_sections'], fetch)
+  return { sections, loading, refetch: fetch }
+}

@@ -3,7 +3,7 @@ import { OWNER } from '../data'
 import { useLang } from '../LangContext'
 import '../Styles/Navbar.css'
 
-export default function Navbar() {
+export default function Navbar({ subpage = false }) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const { lang, t, toggleLang } = useLang()
@@ -26,10 +26,21 @@ export default function Navbar() {
   }, [menuOpen])
 
   const scrollTo = (id) => {
+    // Aloldalon nincs #section a DOM-ban → a főoldalra navigálunk az adott
+    // horgonyra; főoldalon sima görgetés.
+    if (subpage) {
+      window.location.href = `/#${id}`
+      return
+    }
     setMenuOpen(false)
     setTimeout(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
     }, menuOpen ? 300 : 0)
+  }
+
+  const goHome = () => {
+    if (subpage) { window.location.href = '/'; return }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const links = [
@@ -45,10 +56,10 @@ export default function Navbar() {
         {/* Logo */}
         <div
           className="nav-logo"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={goHome}
           role="button"
           tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onKeyDown={e => e.key === 'Enter' && goHome()}
         >
           {OWNER.nameShort}<span className="logo-accent">.</span>
         </div>
@@ -56,9 +67,16 @@ export default function Navbar() {
         {/* Desktop links + language switcher */}
         <div className="nav-right">
           <ul className="nav-links">
+            {subpage && (
+              <li>
+                <a href="/" onClick={e => { e.preventDefault(); goHome() }}>
+                  {lang === 'hu' ? 'Főoldal' : 'Home'}
+                </a>
+              </li>
+            )}
             {links.map(l => (
               <li key={l.id}>
-                <a href={`#${l.id}`} onClick={e => { e.preventDefault(); scrollTo(l.id) }}>
+                <a href={subpage ? `/#${l.id}` : `#${l.id}`} onClick={e => { e.preventDefault(); scrollTo(l.id) }}>
                   {l.label}
                 </a>
               </li>
@@ -90,8 +108,13 @@ export default function Navbar() {
 
       {/* Mobil menü */}
       <div className={`nav-mobile ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
+        {subpage && (
+          <a href="/" onClick={e => { e.preventDefault(); goHome() }}>
+            {lang === 'hu' ? 'Főoldal' : 'Home'}
+          </a>
+        )}
         {links.map(l => (
-          <a key={l.id} href={`#${l.id}`} onClick={e => { e.preventDefault(); scrollTo(l.id) }}>
+          <a key={l.id} href={subpage ? `/#${l.id}` : `#${l.id}`} onClick={e => { e.preventDefault(); scrollTo(l.id) }}>
             {l.label}
           </a>
         ))}

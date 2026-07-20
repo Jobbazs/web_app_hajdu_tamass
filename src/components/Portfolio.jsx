@@ -80,7 +80,9 @@ export default function Portfolio() {
           <div className="portfolio-header">
             <div>
               <div className="section-label">{t.portfolio.label}</div>
-              <h2 className="section-title">{t.portfolio.title}</h2>
+              <a href="/portfolio" className="portfolio-title-link">
+                <h2 className="section-title">{t.portfolio.title}</h2>
+              </a>
             </div>
           </div>
 
@@ -91,13 +93,11 @@ export default function Portfolio() {
               const isEmpty  = catItems.length === 0
 
               return (
-                <div
+                <a
                   key={cat.slug}
+                  href={isEmpty ? undefined : `/portfolio/${cat.slug}`}
                   className={`port-cat-card ${isEmpty ? 'port-cat-card--empty' : ''}`}
-                  onClick={() => !isEmpty && openCategory(cat.slug, cat.cover)}
-                  role={isEmpty ? undefined : 'button'}
-                  tabIndex={isEmpty ? undefined : 0}
-                  onKeyDown={e => !isEmpty && e.key === 'Enter' && openCategory(cat.slug, cat.cover)}
+                  aria-disabled={isEmpty || undefined}
                 >
                   <div className="port-cat-img-wrap">
                     {cat.cover?.cloudinaryUrl ? (
@@ -119,7 +119,7 @@ export default function Portfolio() {
                     </div>
                   </div>
                   <div className="port-cat-label">{label}</div>
-                </div>
+                </a>
               )
             })}
           </div>

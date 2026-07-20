@@ -14,6 +14,8 @@ import Admin          from './components/Admin'
 import Login          from './components/Login'
 import Booking        from './components/Booking'
 import Confirm        from './components/Confirm'
+import PortfolioHub   from './components/PortfolioHub'
+import CategoryPage   from './components/CategoryPage'
 
 import './Styles/global.css'
 
@@ -86,6 +88,14 @@ function AppInner() {
   }
 
   if (path === '/confirm' || path === '/cancel') return <Confirm />
+
+  // Portfólió aloldalak (SEO): hub + kategória-oldalak
+  if (path === '/portfolio' || path === '/portfolio/') return <PortfolioHub />
+  if (path.startsWith('/portfolio/')) {
+    const slug = decodeURIComponent(path.slice('/portfolio/'.length).replace(/\/+$/, ''))
+    if (slug) return <CategoryPage slug={slug} />
+  }
+
 
   return (
     <>

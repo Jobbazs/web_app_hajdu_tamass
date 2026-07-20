@@ -952,3 +952,105 @@
   .adv-publish-row { flex-direction: column; align-items: stretch; }
   .adv-publish-row .acms-btn-primary { width: 100%; }
 }
+
+/* ============================================================
+   KATEGÓRIA-OLDALAK SZERKESZTŐ (AdminCategories)
+   ============================================================ */
+.acms-loading { padding: 3rem 1rem; text-align: center; color: #8a7a68; font-size: 0.85rem; letter-spacing: 0.1em; }
+
+.acms-cat-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.2rem; }
+.acms-h2 { font-size: 1.15rem; color: #fff; margin: 0 0 0.35rem; letter-spacing: 0.03em; }
+.acms-cat-head code { background: #2a2520; padding: 0.05rem 0.3rem; border-radius: 3px; color: #C4612A; font-size: 0.82em; }
+
+.acms-label { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.4rem; }
+
+/* HU/EN kapcsoló */
+.acms-lang-toggle { display: inline-flex; border: 1px solid #3a332a; border-radius: 5px; overflow: hidden; flex-shrink: 0; }
+.acms-lang-toggle button { background: transparent; border: none; color: #8a7a68; padding: 0.4rem 0.9rem; font-size: 0.72rem; font-weight: bold; letter-spacing: 0.1em; cursor: pointer; }
+.acms-lang-toggle button.active { background: #C4612A; color: #fff; }
+
+/* Kategória-választó tabok */
+.acms-cat-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid #2a2520; padding-bottom: 1rem; }
+.acms-cat-tab { background: #201a14; border: 1px solid #2a2520; color: #C8B89A; padding: 0.45rem 0.9rem; border-radius: 5px; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+.acms-cat-tab:hover { border-color: #8B6A4A; }
+.acms-cat-tab.active { background: #C4612A; border-color: #C4612A; color: #fff; font-weight: bold; }
+
+/* Szerkesztő + előnézet elrendezés */
+.acms-cat-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+.acms-preset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+
+.acms-cat-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
+.acms-cat-view { color: #8B6A4A; text-decoration: none; font-size: 0.78rem; margin-left: auto; }
+.acms-cat-view:hover { color: #C4612A; }
+
+/* Élő előnézet */
+.acms-cat-preview { position: sticky; top: 1rem; }
+.acms-cat-preview-label { font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.5rem; }
+.acms-cat-preview-box { background: #1a1510; border: 1px solid #2a2520; border-radius: 6px; padding: 1.5rem; min-height: 200px; }
+.acms-cat-preview-cover { width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 1.2rem; display: block; }
+
+@media (max-width: 860px) {
+  .acms-cat-editor { grid-template-columns: 1fr; }
+  .acms-cat-preview { position: static; }
+}
+
+/* ============================================================
+   SZEKCIÓ-SZERKESZTŐ (AdminCategorySections)
+   ============================================================ */
+.acms-secs { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #2a2520; }
+.acms-secs-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.acms-secs-title { font-size: 1rem; color: #fff; margin: 0; letter-spacing: 0.03em; }
+.acms-btn-sm { padding: 0.4rem 0.8rem !important; font-size: 0.78rem !important; }
+.acms-secs-empty { color: #8a7a68; font-size: 0.85rem; padding: 1.2rem 0; }
+
+.acms-secs-list { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+.acms-sec-row {
+  display: flex; align-items: center; gap: 0.8rem;
+  background: #201a14; border: 1px solid #2a2520; border-radius: 6px; padding: 0.6rem 0.8rem;
+}
+.acms-sec-row.is-hidden { opacity: 0.5; }
+.acms-sec-move { display: flex; flex-direction: column; gap: 2px; }
+.acms-sec-move button {
+  background: #2a2520; border: none; color: #C8B89A; width: 24px; height: 18px;
+  border-radius: 3px; cursor: pointer; font-size: 0.6rem; line-height: 1;
+}
+.acms-sec-move button:disabled { opacity: 0.3; cursor: default; }
+.acms-sec-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.acms-sec-type { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: #C4612A; }
+.acms-sec-name { color: #fff; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.acms-sec-meta { font-size: 0.68rem; color: #8a7a68; }
+.acms-sec-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.acms-chip {
+  background: transparent; border: 1px solid #3a332a; color: #C8B89A;
+  padding: 0.35rem 0.7rem; border-radius: 5px; font-size: 0.72rem; cursor: pointer; transition: all 0.15s;
+}
+.acms-chip:hover { border-color: #8B6A4A; color: #fff; }
+.acms-chip--danger:hover { border-color: #c0392b; color: #e74c3c; }
+
+.acms-sec-editor {
+  margin-top: 1rem; background: #1a1510; border: 1px solid #3a332a; border-radius: 8px; padding: 1.3rem;
+}
+.acms-sec-editor-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: #fff; }
+
+/* Képválasztó rács */
+.acms-img-picker {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px;
+  max-height: 320px; overflow-y: auto; padding: 4px; background: #15110c; border-radius: 6px;
+}
+.acms-img-cell {
+  position: relative; padding: 0; border: 2px solid transparent; border-radius: 5px;
+  overflow: hidden; cursor: pointer; aspect-ratio: 1/1; background: #201a14;
+}
+.acms-img-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.acms-img-cell.selected { border-color: #C4612A; }
+.acms-img-badge {
+  position: absolute; top: 3px; right: 3px; background: #C4612A; color: #fff;
+  font-size: 0.65rem; font-weight: bold; min-width: 17px; height: 17px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; padding: 0 4px;
+}
+
+@media (max-width: 560px) {
+  .acms-sec-row { flex-wrap: wrap; }
+  .acms-sec-actions { width: 100%; }
+}

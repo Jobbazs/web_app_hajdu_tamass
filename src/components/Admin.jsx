@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import AdminMessages  from './admin/AdminMessages'
 import '../Styles/Admin.css'
 import AdminPortfolio from './admin/AdminPortfolio'
+import AdminCategories from './admin/AdminCategories'
 import AdminServices  from './admin/AdminServices'
 import AdminContent   from './admin/AdminContent'
 import AdminBookings  from './admin/AdminBookings'
@@ -11,6 +12,7 @@ import AdminAdvanced  from './admin/AdminAdvanced'
 const TABS = [
   { key: 'messages',  label: 'Üzenetek' },
   { key: 'portfolio', label: 'Portfólió' },
+  { key: 'categories', label: 'Kategória-oldalak' },
   { key: 'services',  label: 'Szolgáltatások' },
   { key: 'content',   label: 'Tartalom' },
   { key: 'bookings',  label: 'Foglalások' },
@@ -52,6 +54,7 @@ export default function Admin() {
       <div className="acms-content">
         {activeTab === 'messages'  && <AdminMessages />}
         {activeTab === 'portfolio' && <AdminPortfolio />}
+        {activeTab === 'categories' && <AdminCategories />}
         {activeTab === 'services'  && <AdminServices />}
         {activeTab === 'content'   && <AdminContent />}
         {activeTab === 'bookings'  && <AdminBookings />}
