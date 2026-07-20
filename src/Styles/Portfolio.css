@@ -80,34 +80,6 @@
   color: var(--text-muted);
 }
 
-/* Hover overlay – képszám */
-.port-cat-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 40%,
-    rgba(26,21,16,0.75) 100%
-  );
-  display: flex;
-  align-items: flex-end;
-  padding: 0.8rem 1rem;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.port-cat-card:hover .port-cat-overlay {
-  opacity: 1;
-}
-
-.port-cat-count {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--parchment, #C8B89A);
-}
-
 /* Kategória neve – a képre helyezve, doboz nélkül (csak finom scrim az olvashatóságért) */
 .port-cat-label {
   position: absolute;

@@ -110,13 +110,6 @@ export default function Portfolio() {
                     ) : (
                       <div className="port-cat-placeholder">{isEmpty ? '—' : '?'}</div>
                     )}
-                    <div className="port-cat-overlay">
-                      {!isEmpty && (
-                        <span className="port-cat-count">
-                          {catItems.length} {lang === 'hu' ? 'kép' : 'photos'}
-                        </span>
-                      )}
-                    </div>
                   </div>
                   <div className="port-cat-label">{label}</div>
                 </a>
