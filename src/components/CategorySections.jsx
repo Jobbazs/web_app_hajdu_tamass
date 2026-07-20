@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useLang } from '../LangContext'
-import { cldThumb, alignStyle, sizeClass } from '../lib/PortfolioPages'
+import { cldThumb, alignStyle, sizeClass } from '../lib/portfolioPages'
 
 // Hány képet mutat egy szekció (auto módban ennyit fogyaszt a kategória-poolból)
 const IMG_COUNT = { text_images: 4, images_text: 4, images_only: 8, text_only: 0 }
