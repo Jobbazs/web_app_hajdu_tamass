@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { supabase } from '../../supabaseClient'
 import { usePortfolio, useCategories } from '../../hooks'
+import SortableList, { SortableItem } from './SortableList'
 
 const EMPTY_ITEM = {
   title: '', category_id: '', cloudinary_url: '',
@@ -11,6 +12,17 @@ const EMPTY_CAT = { slug: '', label_hu: '', label_en: '', sort_order: 0 }
 export default function AdminPortfolio() {
   const { items,      loading,      refetch }                      = usePortfolio()
   const { categories, loading: catLoading, refetch: refetchCats } = useCategories()
+
+  const [pendingCatOrder, setPendingCatOrder] = useState(null)
+  const displayCats = pendingCatOrder
+    ? pendingCatOrder.map((id) => categories.find((c) => c.id === id)).filter(Boolean)
+    : categories
+  const reorderCats = async (ids) => {
+    setPendingCatOrder(ids)
+    await Promise.all(ids.map((id, i) => supabase.from('portfolio_categories').update({ sort_order: i }).eq('id', id)))
+    await refetchCats()
+    setPendingCatOrder(null)
+  }
 
   const [showForm,   setShowForm]   = useState(false)
   const [editing,    setEditing]    = useState(null)
@@ -148,32 +160,36 @@ export default function AdminPortfolio() {
       {showCats && (
         <div className="acms-cat-panel">
           <div className="acms-cat-panel-title">Kategóriák kezelése</div>
-          <div className="acms-cat-list">
-            {categories.map(cat => (
-              <div key={cat.id} className="acms-cat-item">
-                {editingCat === cat.id ? (
-                  <form onSubmit={handleCatSave} className="acms-cat-form">
-                    <input name="slug"       className="acms-input acms-input--sm" value={catForm.slug}       onChange={handleCatChange} placeholder="slug" />
-                    <input name="label_hu"   className="acms-input acms-input--sm" value={catForm.label_hu}   onChange={handleCatChange} placeholder="Magyar" />
-                    <input name="label_en"   className="acms-input acms-input--sm" value={catForm.label_en}   onChange={handleCatChange} placeholder="English" />
-                    <input name="sort_order" type="number" className="acms-input acms-input--sm acms-input--num" value={catForm.sort_order} onChange={handleCatChange} placeholder="0" />
-                    {catError && <div className="acms-error acms-error--inline">{catError}</div>}
-                    <button type="submit" className="acms-btn-sm" disabled={catSaving}>Ment</button>
-                    <button type="button" className="acms-btn-sm" onClick={() => setEditingCat(null)}>Mégse</button>
-                  </form>
-                ) : (
-                  <>
-                    <span className="acms-cat-slug">{cat.slug}</span>
-                    <span className="acms-cat-label">{cat.label_hu}</span>
-                    <span className="acms-cat-label acms-cat-label--en">{cat.label_en}</span>
-                    <span className="acms-cat-order">#{cat.sort_order}</span>
-                    <button className="acms-btn-sm" onClick={() => openEditCat(cat)}>Szerkeszt</button>
-                    <button className="acms-btn-sm acms-btn-danger" onClick={() => handleCatDelete(cat.id, cat.slug)}>Töröl</button>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
+          <SortableList items={displayCats.map((c) => c.id)} onReorder={reorderCats}>
+            <div className="acms-cat-list">
+              {displayCats.map(cat => (
+                <SortableItem key={cat.id} id={cat.id}>
+                  <div className="acms-cat-item">
+                    {editingCat === cat.id ? (
+                      <form onSubmit={handleCatSave} className="acms-cat-form">
+                        <input name="slug"       className="acms-input acms-input--sm" value={catForm.slug}       onChange={handleCatChange} placeholder="slug" />
+                        <input name="label_hu"   className="acms-input acms-input--sm" value={catForm.label_hu}   onChange={handleCatChange} placeholder="Magyar" />
+                        <input name="label_en"   className="acms-input acms-input--sm" value={catForm.label_en}   onChange={handleCatChange} placeholder="English" />
+                        <input name="sort_order" type="number" className="acms-input acms-input--sm acms-input--num" value={catForm.sort_order} onChange={handleCatChange} placeholder="0" />
+                        {catError && <div className="acms-error acms-error--inline">{catError}</div>}
+                        <button type="submit" className="acms-btn-sm" disabled={catSaving}>Ment</button>
+                        <button type="button" className="acms-btn-sm" onClick={() => setEditingCat(null)}>Mégse</button>
+                      </form>
+                    ) : (
+                      <>
+                        <span className="acms-cat-slug">{cat.slug}</span>
+                        <span className="acms-cat-label">{cat.label_hu}</span>
+                        <span className="acms-cat-label acms-cat-label--en">{cat.label_en}</span>
+                        <span className="acms-cat-order">#{cat.sort_order}</span>
+                        <button className="acms-btn-sm" onClick={() => openEditCat(cat)}>Szerkeszt</button>
+                        <button className="acms-btn-sm acms-btn-danger" onClick={() => handleCatDelete(cat.id, cat.slug)}>Töröl</button>
+                      </>
+                    )}
+                  </div>
+                </SortableItem>
+              ))}
+            </div>
+          </SortableList>
           {editingCat === null && (
             <form onSubmit={handleCatSave} className="acms-cat-form acms-cat-form--new">
               <div className="acms-cat-form-label">+ Új kategória</div>

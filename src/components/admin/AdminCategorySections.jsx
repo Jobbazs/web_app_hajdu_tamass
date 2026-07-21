@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../supabaseClient'
+import SortableList, { SortableItem } from './SortableList'
 
 const TYPE_OPTIONS = [
   { value: 'text_images', label: 'Szöveg + 2×2 kép' },
@@ -109,14 +110,14 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
     load()
   }
 
-  const move = async (idx, dir) => {
-    const j = idx + dir
-    if (j < 0 || j >= sections.length) return
-    const a = sections[idx], b = sections[j]
-    await Promise.all([
-      supabase.from('category_sections').update({ sort_order: b.sort_order }).eq('id', a.id),
-      supabase.from('category_sections').update({ sort_order: a.sort_order }).eq('id', b.id),
-    ])
+  const persistOrder = async (orderedIds) => {
+    // optimista UI + minden sor sort_order-ének újraszámozása
+    const byId = new Map(sections.map((s) => [s.id, s]))
+    setSections(orderedIds.map((id, i) => ({ ...byId.get(id), sort_order: i })))
+    await Promise.all(
+      orderedIds.map((id, i) =>
+        supabase.from('category_sections').update({ sort_order: i }).eq('id', id))
+    )
     load()
   }
 
@@ -152,32 +153,32 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
       ) : sections.length === 0 ? (
         <div className="acms-secs-empty">Még nincs szekció ebben a kategóriában.</div>
       ) : (
-        <div className="acms-secs-list">
-          {sections.map((s, idx) => (
-            <div key={s.id} className={`acms-sec-row ${!s.visible ? 'is-hidden' : ''}`}>
-              <div className="acms-sec-move">
-                <button onClick={() => move(idx, -1)} disabled={idx === 0} aria-label="Fel">▲</button>
-                <button onClick={() => move(idx, 1)} disabled={idx === sections.length - 1} aria-label="Le">▼</button>
-              </div>
-              <div className="acms-sec-info">
-                <span className="acms-sec-type">{TYPE_LABEL[s.type] || s.type}</span>
-                <span className="acms-sec-name">{s.title_hu || '(cím nélkül)'}</span>
-                <span className="acms-sec-meta">
-                  {s.type === 'text_only'
-                    ? 'szöveg'
-                    : (s.image_ids?.length ? `${s.image_ids.length} kézi kép` : 'auto képek')}
-                </span>
-              </div>
-              <div className="acms-sec-actions">
-                <button className="acms-chip" onClick={() => toggleVisible(s)}>
-                  {s.visible ? 'Látható' : 'Rejtett'}
-                </button>
-                <button className="acms-chip" onClick={() => openEdit(s)}>Szerkeszt</button>
-                <button className="acms-chip acms-chip--danger" onClick={() => del(s.id)}>Töröl</button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <SortableList items={sections.map((s) => s.id)} onReorder={persistOrder}>
+          <div className="acms-secs-list">
+            {sections.map((s) => (
+              <SortableItem key={s.id} id={s.id}>
+                <div className={`acms-sec-row ${!s.visible ? 'is-hidden' : ''}`}>
+                  <div className="acms-sec-info">
+                    <span className="acms-sec-type">{TYPE_LABEL[s.type] || s.type}</span>
+                    <span className="acms-sec-name">{s.title_hu || '(cím nélkül)'}</span>
+                    <span className="acms-sec-meta">
+                      {s.type === 'text_only'
+                        ? 'szöveg'
+                        : (s.image_ids?.length ? `${s.image_ids.length} kézi kép` : 'auto képek')}
+                    </span>
+                  </div>
+                  <div className="acms-sec-actions">
+                    <button className="acms-chip" onClick={() => toggleVisible(s)}>
+                      {s.visible ? 'Látható' : 'Rejtett'}
+                    </button>
+                    <button className="acms-chip" onClick={() => openEdit(s)}>Szerkeszt</button>
+                    <button className="acms-chip acms-chip--danger" onClick={() => del(s.id)}>Töröl</button>
+                  </div>
+                </div>
+              </SortableItem>
+            ))}
+          </div>
+        </SortableList>
       )}
 
       {/* Szerkesztő panel */}

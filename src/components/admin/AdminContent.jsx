@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useSiteContent, useAllCustomSections } from '../../hooks'
+import SortableList, { SortableItem } from './SortableList'
 import '../../Styles/AdminContent.css'
 
 // ── Rögzített szöveg csoportok ───────────────────────────────
@@ -29,6 +30,12 @@ const FIXED_GROUPS = [
       { key: 'about_bio3_en', label: 'Bio paragraph 3 – EN',     type: 'textarea', hasAlign: true, hasSize: true },
     ],
     hasTags: true,   // különleges flag: a TagEditor komponenst rendereli
+  },
+  {
+    id: 'portfolio_hub', label: 'Portfólió hub oldal',
+    fields: [
+      { key: 'portfolio_hub_words', label: 'Szórt hero-szavak (vesszővel elválasztva) – üresen a kategóriák szavai', type: 'textarea', hasAlign: false, hasSize: false },
+    ],
   },
 ]
 
@@ -904,28 +911,30 @@ export default function AdminContent() {
             <span className="acms-order-badge">Fix – nem mozgatható</span>
           </div>
 
-          {/* Többi szekció – drag-and-drop */}
-          {(sectionOrder || DEFAULT_SECTIONS).map((s, idx) => (
-            <div
-              key={s.key}
-              className={`acms-order-item ${dragIdx === idx ? 'acms-order-item--dragging' : ''} ${!s.visible ? 'acms-hidden' : ''}`}
-              draggable
-              onDragStart={() => handleDragStart(idx)}
-              onDragOver={e => handleDragOver(e, idx)}
-              onDragEnd={handleDragEnd}
-            >
-              <span className="acms-order-handle" title="Húzd ide">⠿</span>
-              <span className="acms-order-label">{SECTION_LABELS[s.key] || s.key}</span>
-              <div style={{display:'flex', gap:'0.5rem', marginLeft:'auto'}}>
-                <button
-                  className="acms-btn-sm"
-                  onClick={() => toggleSectionVisible(idx)}
-                >
-                  {s.visible ? 'Elrejt' : 'Megjelenit'}
-                </button>
-              </div>
-            </div>
-          ))}
+          {/* Többi szekció – drag-and-drop (@dnd-kit, érintésbarát) */}
+          <SortableList
+            items={(sectionOrder || DEFAULT_SECTIONS).map(s => s.key)}
+            onReorder={(orderedKeys) => {
+              const order = sectionOrder || DEFAULT_SECTIONS
+              const byKey = new Map(order.map(s => [s.key, s]))
+              const newOrder = orderedKeys.map(k => byKey.get(k)).filter(Boolean)
+              setSectionOrder(newOrder)
+              saveSectionsOrder(newOrder)
+            }}
+          >
+            {(sectionOrder || DEFAULT_SECTIONS).map((s, idx) => (
+              <SortableItem key={s.key} id={s.key}>
+                <div className={`acms-order-item ${!s.visible ? 'acms-hidden' : ''}`}>
+                  <span className="acms-order-label">{SECTION_LABELS[s.key] || s.key}</span>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
+                    <button className="acms-btn-sm" onClick={() => toggleSectionVisible(idx)}>
+                      {s.visible ? 'Elrejt' : 'Megjelenit'}
+                    </button>
+                  </div>
+                </div>
+              </SortableItem>
+            ))}
+          </SortableList>
         </div>
       )}
 

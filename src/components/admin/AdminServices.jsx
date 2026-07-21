@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useServices } from '../../hooks'
+import SortableList, { SortableItem } from './SortableList'
 import '../../Styles/AdminServices.css'
 
 const EMPTY_FORM = {
@@ -18,6 +19,19 @@ const FIELD_TYPES = [
 
 export default function AdminServices() {
   const { services, loading, refetch } = useServices()
+  const [pendingOrder, setPendingOrder] = useState(null)
+
+  // Optimista sorrend: húzás után azonnal ezt mutatjuk, míg a refetch beér
+  const displayServices = pendingOrder
+    ? pendingOrder.map((id) => services.find((s) => s.id === id)).filter(Boolean)
+    : services
+
+  const reorderServices = async (ids) => {
+    setPendingOrder(ids)
+    await Promise.all(ids.map((id, i) => supabase.from('services').update({ sort_order: i }).eq('id', id)))
+    await refetch()
+    setPendingOrder(null)
+  }
   const [showForm, setShowForm] = useState(false)
   const [editing,  setEditing]  = useState(null)
   const [form,     setForm]     = useState(EMPTY_FORM)
@@ -125,30 +139,34 @@ export default function AdminServices() {
       ) : services.length === 0 ? (
         <div className="admin-empty">Még nincs szolgáltatás.</div>
       ) : (
-        <div className="acms-services-list">
-          {services.map(s => (
-            <div key={s.id} className="acms-srv-item">
-              <div className="acms-srv-num">{s.number}</div>
-              <div className="acms-srv-info">
-                <div className="acms-srv-name">{s.name_hu}</div>
-                <div className="acms-srv-desc">{s.desc_hu}</div>
-                {s.extra_fields?.length > 0 && (
-                  <div className="acms-srv-extras">
-                    {s.extra_fields.map(f => (
-                      <span key={f.key} className="acms-tag">
-                        {f.label_hu}{f.value ? `: ${f.value}` : ''}
-                      </span>
-                    ))}
+        <SortableList items={displayServices.map((s) => s.id)} onReorder={reorderServices}>
+          <div className="acms-services-list">
+            {displayServices.map(s => (
+              <SortableItem key={s.id} id={s.id}>
+                <div className="acms-srv-item">
+                  <div className="acms-srv-num">{s.number}</div>
+                  <div className="acms-srv-info">
+                    <div className="acms-srv-name">{s.name_hu}</div>
+                    <div className="acms-srv-desc">{s.desc_hu}</div>
+                    {s.extra_fields?.length > 0 && (
+                      <div className="acms-srv-extras">
+                        {s.extra_fields.map(f => (
+                          <span key={f.key} className="acms-tag">
+                            {f.label_hu}{f.value ? `: ${f.value}` : ''}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="acms-list-actions">
-                <button className="acms-btn-sm" onClick={() => openEdit(s)}>Szerkeszt</button>
-                <button className="acms-btn-sm acms-btn-danger" onClick={() => handleDelete(s.id, s.name_hu)}>Töröl</button>
-              </div>
-            </div>
-          ))}
-        </div>
+                  <div className="acms-list-actions">
+                    <button className="acms-btn-sm" onClick={() => openEdit(s)}>Szerkeszt</button>
+                    <button className="acms-btn-sm acms-btn-danger" onClick={() => handleDelete(s.id, s.name_hu)}>Töröl</button>
+                  </div>
+                </div>
+              </SortableItem>
+            ))}
+          </div>
+        </SortableList>
       )}
 
       {/* Form modal */}
