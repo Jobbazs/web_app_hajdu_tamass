@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useSiteContent, useAllCustomSections } from '../../hooks'
 import SortableList, { SortableItem } from './SortableList'
+import CloudinaryUpload from './CloudinaryUpload'
 import '../../Styles/AdminContent.css'
 
 // ── Rögzített szöveg csoportok ───────────────────────────────
@@ -759,10 +760,11 @@ export default function AdminContent() {
             <div className="acms-content-group-label">Portré kép (Rólam szekció)</div>
             <div className="acms-form-group">
               <label>Cloudinary kép URL</label>
+              <CloudinaryUpload compact label="Portré feltöltése" onUploaded={(url) => handleChange('about_portrait_url', url)} />
               <input type="text" className="acms-input"
                 value={getValue('about_portrait_url')}
                 onChange={e => handleChange('about_portrait_url', e.target.value)}
-                placeholder="https://res.cloudinary.com/..." />
+                placeholder="…vagy illeszd be az URL-t" style={{ marginTop: '0.5rem' }} />
               <span className="acms-hint">Ez jelenik meg a Rólam szekció bal oldalán</span>
             </div>
             {getValue('about_portrait_url') && (
@@ -1121,11 +1123,13 @@ export default function AdminContent() {
 
                 <div className="acms-form-group">
                   <label>Cloudinary URL</label>
+                  <CloudinaryUpload compact label="Kép feltöltése" onUploaded={(url) => { setNewImgUrl(url); setImgError('') }} />
                   <input
                     className="acms-input"
                     value={newImgUrl}
                     onChange={e => { setNewImgUrl(e.target.value); setImgError('') }}
-                    placeholder="https://res.cloudinary.com/dpeavk0xh/image/upload/..."
+                    placeholder="…vagy illeszd be az URL-t"
+                    style={{ marginTop: '0.5rem' }}
                   />
                 </div>
 

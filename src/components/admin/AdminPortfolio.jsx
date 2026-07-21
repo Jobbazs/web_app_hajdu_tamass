@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { supabase } from '../../supabaseClient'
 import { usePortfolio, useCategories } from '../../hooks'
 import SortableList, { SortableItem } from './SortableList'
+import CloudinaryUpload from './CloudinaryUpload'
 
 const EMPTY_ITEM = {
   title: '', category_id: '', cloudinary_url: '',
@@ -292,7 +293,8 @@ export default function AdminPortfolio() {
               </div>
               <div className="acms-form-group">
                 <label>Cloudinary kép URL *</label>
-                <input name="cloudinary_url" className="acms-input" value={form.cloudinary_url} onChange={handleChange} placeholder="https://res.cloudinary.com/..." />
+                <CloudinaryUpload onUploaded={(url) => setForm(f => ({ ...f, cloudinary_url: url }))} />
+                <input name="cloudinary_url" className="acms-input" value={form.cloudinary_url} onChange={handleChange} placeholder="…vagy illeszd be az URL-t" style={{ marginTop: '0.5rem' }} />
               </div>
               <div className="acms-form-group">
                 <label>Videó URL (opcionális)</label>

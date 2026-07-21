@@ -3,6 +3,7 @@ import { supabase } from '../../supabaseClient'
 import { useCategories } from '../../hooks'
 import { usePortfolio } from '../../hooks'
 import AdminCategorySections from './AdminCategorySections'
+import CloudinaryUpload from './CloudinaryUpload'
 
 // 3 igazítási preset (a spec szerint: bal 0-75%, közép 0-100%, jobb 25-100%)
 const ALIGN_OPTIONS = [
@@ -194,11 +195,13 @@ export default function AdminCategories() {
 
           <div className="acms-form-group">
             <label className="acms-label">Borítókép URL (hub-kártya + megosztás)</label>
+            <CloudinaryUpload compact label="Borítókép feltöltése" onUploaded={(url) => set('cover_url', url)} />
             <input
               className="acms-input"
               value={form.cover_url}
               onChange={(e) => set('cover_url', e.target.value)}
-              placeholder="Cloudinary URL – üresen az első kategóriakép lesz a borító"
+              placeholder="…vagy illeszd be az URL-t (üresen az első kategóriakép)"
+              style={{ marginTop: '0.5rem' }}
             />
           </div>
 
