@@ -90,6 +90,7 @@
 
 /* Section fejléc */
 .acms-section { max-width: 960px; }
+.acms-section--wide { max-width: none; }   /* pl. portfólió rács – teljes szélesség */
 
 .acms-section-header {
   display: flex;

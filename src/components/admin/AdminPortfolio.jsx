@@ -183,7 +183,7 @@ export default function AdminPortfolio() {
   }
 
   return (
-    <div className="acms-section">
+    <div className="acms-section acms-section--wide">
       {/* Fejléc */}
       <div className="acms-section-header">
         <div>
