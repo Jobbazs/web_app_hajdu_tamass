@@ -51,6 +51,43 @@ export default function AdminPortfolio() {
     ? normalized
     : normalized.filter(i => i.category_id === filterCat)
 
+  // Kategórián belüli kép-sorrend (drag-and-drop). Csak akkor aktív, ha egy
+  // konkrét kategória van kiválasztva a szűrőben.
+  const [pendingImgOrder, setPendingImgOrder] = useState(null)
+  const canReorderImages = filterCat !== 'all'
+  const displayItems = pendingImgOrder
+    ? pendingImgOrder.map(id => filtered.find(i => i.id === id)).filter(Boolean)
+    : filtered
+  const reorderImages = async (ids) => {
+    setPendingImgOrder(ids)
+    await Promise.all(ids.map((id, i) => supabase.from('portfolio_items').update({ sort_order: i }).eq('id', id)))
+    await refetch()
+    setPendingImgOrder(null)
+  }
+
+  const renderCard = (item) => (
+    <div key={item.id} className={`acms-port-card ${!item.visible ? 'acms-port-card--hidden' : ''}`}>
+      <div className="acms-port-card-img">
+        {item.cloudinary_url ? (
+          <img src={item.cloudinary_url} alt={item.title} loading="lazy" />
+        ) : (
+          <div className="acms-port-card-ph">?</div>
+        )}
+        {!item.visible && <div className="acms-port-card-hidden-badge">Rejtett</div>}
+      </div>
+      <div className="acms-port-card-actions">
+        <div className="acms-port-card-title" title={item.title}>{item.title}</div>
+        <div className="acms-port-card-btns">
+          <button className="acms-btn-sm" onClick={() => toggleVisible(item.id, item.visible)}>
+            {item.visible ? 'Elrejt' : 'Megjelenit'}
+          </button>
+          <button className="acms-btn-sm" onClick={() => openEdit(item)}>Szerkeszt</button>
+          <button className="acms-btn-sm acms-btn-danger" onClick={() => handleDelete(item.id, item.title)}>Töröl</button>
+        </div>
+      </div>
+    </div>
+  )
+
   // ── Portfolio item műveletek ─────────────────────────────────
   const openNew = () => {
     setEditing(null)
@@ -89,7 +126,11 @@ export default function AdminPortfolio() {
       cloudinary_url: form.cloudinary_url.trim(),
       video_url:      form.video_url.trim() || null,
       visible:        form.visible,
-      sort_order:     parseInt(form.sort_order) || 0,
+    }
+    // Új kép: a kiválasztott kategória VÉGÉRE kerül (utána húzással rendezhető).
+    // Szerkesztésnél a meglévő sort_order marad (nincs a payloadban).
+    if (!editing) {
+      payload.sort_order = normalized.filter(i => i.category_id === form.category_id).length
     }
     const { error } = editing
       ? await supabase.from('portfolio_items').update(payload).eq('id', editing)
@@ -213,7 +254,7 @@ export default function AdminPortfolio() {
             <select
               className="acms-input acms-port-cat-filter"
               value={filterCat}
-              onChange={e => setFilterCat(e.target.value)}
+              onChange={e => { setFilterCat(e.target.value); setPendingImgOrder(null) }}
             >
               <option value="all">Mind ({items.length})</option>
               {categories.map(c => {
@@ -228,40 +269,32 @@ export default function AdminPortfolio() {
             <div className="admin-empty">Betöltés...</div>
           ) : filtered.length === 0 ? (
             <div className="admin-empty">Nincs elem ebben a kategóriában.</div>
-          ) : (
-            /* Kártyás grid – 8 oszlop desktopon */
-            <div className="acms-port-grid">
-              {filtered.map(item => (
-                <div key={item.id} className={`acms-port-card ${!item.visible ? 'acms-port-card--hidden' : ''}`}>
-                  {/* Kép – 4:3 arány, crop */}
-                  <div className="acms-port-card-img">
-                    {item.cloudinary_url ? (
-                      <img
-                        src={item.cloudinary_url}
-                        alt={item.title}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="acms-port-card-ph">?</div>
-                    )}
-                    {!item.visible && (
-                      <div className="acms-port-card-hidden-badge">Rejtett</div>
-                    )}
-                  </div>
-                  {/* Gombok */}
-                  <div className="acms-port-card-actions">
-                    <div className="acms-port-card-title" title={item.title}>{item.title}</div>
-                    <div className="acms-port-card-btns">
-                      <button className="acms-btn-sm" onClick={() => toggleVisible(item.id, item.visible)}>
-                        {item.visible ? 'Elrejt' : 'Megjelenit'}
-                      </button>
-                      <button className="acms-btn-sm" onClick={() => openEdit(item)}>Szerkeszt</button>
-                      <button className="acms-btn-sm acms-btn-danger" onClick={() => handleDelete(item.id, item.title)}>Töröl</button>
-                    </div>
-                  </div>
+          ) : canReorderImages ? (
+            /* Egy kategória kiválasztva → húzható rács */
+            <>
+              <div className="acms-hint" style={{ marginBottom: '0.7rem' }}>
+                Húzd a képeket a ⠿ fogantyúval a kívánt sorrendbe (ebben a kategóriában).
+              </div>
+              <SortableList items={displayItems.map(i => i.id)} onReorder={reorderImages} strategy="grid">
+                <div className="acms-port-grid">
+                  {displayItems.map(item => (
+                    <SortableItem key={item.id} id={item.id} variant="grid">
+                      {renderCard(item)}
+                    </SortableItem>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableList>
+            </>
+          ) : (
+            /* "Összes" nézet → nincs húzás (a sorrend kategóriánként értelmezett) */
+            <>
+              <div className="acms-hint" style={{ marginBottom: '0.7rem' }}>
+                A képek sorrendjének húzásához válassz egy kategóriát a fenti szűrőben.
+              </div>
+              <div className="acms-port-grid">
+                {displayItems.map(item => renderCard(item))}
+              </div>
+            </>
           )}
         </>
       )}
@@ -279,17 +312,11 @@ export default function AdminPortfolio() {
                 <label>Cím *</label>
                 <input name="title" className="acms-input" value={form.title} onChange={handleChange} placeholder="pl. Arsenal — 2024.03" />
               </div>
-              <div className="acms-form-row">
-                <div className="acms-form-group">
-                  <label>Kategória</label>
-                  <select name="category_id" className="acms-input" value={form.category_id} onChange={handleChange}>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.label_hu}</option>)}
-                  </select>
-                </div>
-                <div className="acms-form-group">
-                  <label>Sorrend</label>
-                  <input name="sort_order" type="number" className="acms-input" value={form.sort_order} onChange={handleChange} min="0" />
-                </div>
+              <div className="acms-form-group">
+                <label>Kategória</label>
+                <select name="category_id" className="acms-input" value={form.category_id} onChange={handleChange}>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.label_hu}</option>)}
+                </select>
               </div>
               <div className="acms-form-group">
                 <label>Cloudinary kép URL *</label>

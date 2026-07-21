@@ -1152,3 +1152,13 @@
   background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3);
   border-radius: 5px; padding: 0.4rem 0.6rem;
 }
+
+/* Rács-elem drag (portfólió képek) */
+.dnd-grid-item { position: relative; }
+.dnd-handle--overlay {
+  position: absolute; top: 6px; left: 6px; z-index: 6;
+  width: 28px; height: 28px; align-self: auto;
+  background: rgba(0,0,0,0.55); color: #fff; border-radius: 6px;
+  backdrop-filter: blur(2px);
+}
+.dnd-handle--overlay:hover { background: #C4612A; color: #fff; }
