@@ -742,32 +742,32 @@
 
 /* 8 oszlop desktopon, arányos csökkentés */
 .acms-port-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
   gap: 8px;
 }
 
 .acms-port-card {
-  width: calc(12.5% - 7px);   /* 8 / sor */
+  position: relative;
+  width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  overflow: hidden;
   transition: border-color 0.2s;
-  display: flex;
-  flex-direction: column;
 }
 
-.acms-port-card:hover { border-color: var(--border-mid); }
+.acms-port-card:hover { border-color: var(--accent); }
 
-.acms-port-card--hidden { opacity: 0.45; }
+.acms-port-card--hidden { opacity: 0.5; }
 
-/* Kép – 4:3 arány, crop */
+/* A kép a kártya – nagy, négyzetes */
 .acms-port-card-img {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: var(--bg-secondary);
-  flex-shrink: 0;
 }
 
 .acms-port-card-img img {
@@ -789,28 +789,34 @@
 
 .acms-port-card-hidden-badge {
   position: absolute;
-  top: 4px; left: 4px;
+  top: 4px; right: 4px;
   font-family: 'Space Mono', monospace;
   font-size: 0.5rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   background: rgba(0,0,0,0.7);
-  color: var(--text-muted);
+  color: #fff;
   padding: 0.15rem 0.4rem;
+  border-radius: 3px;
 }
 
-/* Gombok a kép alatt – teljes kártya magasság 4:4 (négyzet) */
+/* Akciók: overlay a kép alján – hoverre látszik, így a kártya = a kép */
 .acms-port-card-actions {
-  padding: 0.4rem;
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 1.1rem 0.4rem 0.4rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 65%, transparent 100%);
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  flex: 1;
+  opacity: 0;
+  transition: opacity 0.15s;
 }
+.acms-port-card:hover .acms-port-card-actions { opacity: 1; }
 
 .acms-port-card-title {
-  font-size: 0.6rem;
-  color: var(--text-muted);
+  font-size: 0.62rem;
+  color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -824,27 +830,28 @@
 }
 
 .acms-port-card-btns .acms-btn-sm {
-  font-size: 0.5rem;
-  padding: 0.2rem 0.3rem;
-  min-height: 24px;
+  font-size: 0.55rem;
+  padding: 0.25rem 0.3rem;
+  min-height: 22px;
   text-align: center;
 }
 
-/* Reszponzív – arányos oszlopcsökkentés */
-@media (max-width: 1400px) {
-  .acms-port-card { width: calc(16.666% - 7px); }   /* 6/sor */
-}
-@media (max-width: 1100px) {
-  .acms-port-card { width: calc(20% - 7px); }       /* 5/sor */
-}
-@media (max-width: 900px) {
-  .acms-port-card { width: calc(25% - 6px); }       /* 4/sor */
-}
-@media (max-width: 700px) {
-  .acms-port-card { width: calc(33.333% - 6px); }   /* 3/sor */
-}
-@media (max-width: 500px) {
-  .acms-port-card { width: calc(50% - 4px); }       /* 2/sor */
+/* Reszponzív oszlopszám (a rács mindig kitölti a teljes szélességet) */
+@media (max-width: 1400px) { .acms-port-grid { grid-template-columns: repeat(7, 1fr); } }
+@media (max-width: 1150px) { .acms-port-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (max-width: 950px)  { .acms-port-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 700px)  { .acms-port-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 520px)  { .acms-port-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* Érintőeszköz (nincs hover): az akciók legyenek MINDIG láthatók a kép alatt */
+@media (hover: none) {
+  .acms-port-card-actions {
+    position: static;
+    opacity: 1;
+    background: var(--bg-card);
+    padding: 0.4rem;
+  }
+  .acms-port-card-title { color: var(--text-muted); }
 }
 
 /* ── Szekció sorrend ── */
