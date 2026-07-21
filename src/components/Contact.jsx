@@ -30,8 +30,10 @@ export default function Contact() {
   const [fileErr,    setFileErr]   = useState('')
   const [uploading,  setUploading] = useState(false)
   const fileInputRef = useRef(null)
+  const renderedAt = useRef(Date.now())   // idő-csapda: mikor töltődött be az űrlap
+  const [hp, setHp] = useState('')         // honeypot – embernek láthatatlan
 
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const c = t.contact
 
   const handleChange = (e) => {
@@ -125,16 +127,38 @@ export default function Contact() {
       attachment_url:  attachmentUrls.length > 0 ? attachmentUrls.join(', ') : null,
     }
 
-    const { error: dbError } = await supabase.from('messages').insert(payload)
-    if (dbError) {
-      console.error('DB error:', dbError)
-      setErrMsg(c.errSend)
+    // 2. Beküldés az Edge Function-ön keresztül (honeypot + idő-csapda + IP-limit + beszúrás)
+    const { data: result, error: fnError } = await supabase.functions.invoke('submit-contact', {
+      body: {
+        name:           payload.name,
+        email:          payload.email,
+        service:        payload.service,
+        message:        payload.message,
+        attachment_url: payload.attachment_url,
+        hp,
+        rendered_at:    renderedAt.current,
+      },
+    })
+
+    if (fnError || !result?.ok) {
+      const rateLimited = result?.error === 'rate_limited' || fnError?.context?.status === 429
+      setErrMsg(
+        rateLimited
+          ? (lang === 'hu'
+              ? 'Túl sok próbálkozás erről a hálózatról. Kérlek, várj pár percet, és próbáld újra.'
+              : 'Too many attempts from this network. Please wait a few minutes and try again.')
+          : c.errSend
+      )
       setStatus('error')
       return
     }
 
+    // delivered:false = honeypot/idő-csapda kiszűrte (a felhasználónak sikert mutatunk,
+    // de nem szúrtunk be és nem küldünk értesítő emailt)
+    const delivered = result?.delivered !== false
+
     // 3. EmailJS
-    if (EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
+    if (delivered && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
       try {
         await emailjs.send(
           EMAILJS_SERVICE_ID,
@@ -175,6 +199,18 @@ export default function Contact() {
         )}
 
         <form onSubmit={handleSubmit} noValidate>
+
+          {/* Honeypot – emberek nem látják; ha kitöltött, a beküldést eldobjuk */}
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={hp}
+            onChange={(e) => setHp(e.target.value)}
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
+          />
 
           <div className="form-row">
             <div className="form-group">

@@ -1054,3 +1054,71 @@
   .acms-sec-row { flex-wrap: wrap; }
   .acms-sec-actions { width: 100%; }
 }
+
+/* ============================================================
+   DASHBOARD (AdminDashboard)
+   ============================================================ */
+.dash { padding-bottom: 2rem; }
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 1rem 0 1.5rem;
+}
+.dash-stat {
+  background: #201a14; border: 1px solid #2a2520; border-radius: 8px;
+  padding: 1.1rem 1.2rem;
+}
+.dash-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 2.1rem; color: #fff; line-height: 1; }
+.dash-stat-label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: #C8B89A; margin-top: 0.4rem; }
+.dash-stat-sub { font-size: 0.66rem; color: #8a7a68; margin-top: 0.2rem; }
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.dash-card {
+  background: #1a1510; border: 1px solid #2a2520; border-radius: 8px; padding: 1.2rem 1.3rem;
+}
+.dash-card--wide { grid-column: 1 / -1; }
+.dash-card-title {
+  font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #C4612A; margin-bottom: 1rem; font-weight: bold;
+}
+.dash-empty { color: #8a7a68; font-size: 0.82rem; padding: 0.5rem 0; }
+
+.dash-bar-row { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.55rem; }
+.dash-bar-label {
+  flex: 0 0 40%; max-width: 40%; font-size: 0.74rem; color: #C8B89A;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dash-bar-track { flex: 1; height: 10px; background: #2a2520; border-radius: 5px; overflow: hidden; }
+.dash-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; min-width: 2px; }
+.dash-bar-val { flex: 0 0 auto; font-family: 'Space Mono', monospace; font-size: 0.72rem; color: #fff; min-width: 34px; text-align: right; }
+
+@media (max-width: 720px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .dash-bar-label { flex-basis: 46%; max-width: 46%; }
+}
+
+/* ============================================================
+   DRAG & DROP (SortableList / SortableItem)
+   ============================================================ */
+.dnd-row { display: flex; align-items: stretch; gap: 0.5rem; }
+.dnd-row--dragging { box-shadow: 0 6px 20px rgba(0,0,0,0.4); border-radius: 8px; }
+.dnd-row-body { flex: 1; min-width: 0; }
+
+.dnd-handle {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; padding: 0;
+  background: transparent; border: none;
+  color: #6b5f50; font-size: 1.1rem; line-height: 1;
+  cursor: grab; touch-action: none;   /* fontos: mobilon a húzás elkapja */
+  border-radius: 6px; transition: color 0.15s, background 0.15s;
+}
+.dnd-handle:hover { color: #C4612A; background: rgba(196,97,42,0.08); }
+.dnd-handle:active { cursor: grabbing; }

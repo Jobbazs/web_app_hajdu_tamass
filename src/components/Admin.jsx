@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
+import AdminDashboard from './admin/AdminDashboard'
 import AdminMessages  from './admin/AdminMessages'
 import '../Styles/Admin.css'
 import AdminPortfolio from './admin/AdminPortfolio'
@@ -10,6 +11,7 @@ import AdminBookings  from './admin/AdminBookings'
 import AdminAdvanced  from './admin/AdminAdvanced'
 
 const TABS = [
+  { key: 'dashboard', label: 'Áttekintés' },
   { key: 'messages',  label: 'Üzenetek' },
   { key: 'portfolio', label: 'Portfólió' },
   { key: 'categories', label: 'Kategória-oldalak' },
@@ -20,7 +22,7 @@ const TABS = [
 ]
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState('messages')
+  const [activeTab, setActiveTab] = useState('dashboard')
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -52,6 +54,7 @@ export default function Admin() {
 
       {/* Tab tartalom */}
       <div className="acms-content">
+        {activeTab === 'dashboard' && <AdminDashboard />}
         {activeTab === 'messages'  && <AdminMessages />}
         {activeTab === 'portfolio' && <AdminPortfolio />}
         {activeTab === 'categories' && <AdminCategories />}
