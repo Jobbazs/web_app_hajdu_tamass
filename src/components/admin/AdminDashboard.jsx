@@ -21,11 +21,33 @@ const RELIABILITY = [
 
 const todayStr = () => new Date().toISOString().slice(0, 10)
 
-function StatCard({ label, value, sub }) {
+// Tooltip: hoverre (desktop) és tapre (mobil) is megjelenik
+function InfoTip({ text }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <span
+      className="dash-info"
+      role="button"
+      tabIndex={0}
+      onClick={(e) => { e.stopPropagation(); setOpen((o) => !o) }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onKeyDown={(e) => e.key === 'Enter' && setOpen((o) => !o)}
+    >
+      i
+      {open && <span className="dash-tip">{text}</span>}
+    </span>
+  )
+}
+
+function StatCard({ label, value, sub, info }) {
   return (
     <div className="dash-stat">
       <div className="dash-stat-val">{value}</div>
-      <div className="dash-stat-label">{label}</div>
+      <div className="dash-stat-label">
+        {label}
+        {info && <InfoTip text={info} />}
+      </div>
       {sub && <div className="dash-stat-sub">{sub}</div>}
     </div>
   )
@@ -52,6 +74,7 @@ export default function AdminDashboard() {
   const { categories } = useCategories()
 
   const [waitlistWaiting, setWaitlistWaiting] = useState(null)
+  const [chartYear, setChartYear] = useState(new Date().getFullYear())
   useEffect(() => {
     supabase
       .from('appointment_waitlist')
@@ -61,6 +84,16 @@ export default function AdminDashboard() {
   }, [])
 
   const today = todayStr()
+
+  // Elérhető évek (a legkorábbi foglalástól az idei évig)
+  const years = useMemo(() => {
+    const curYear = new Date().getFullYear()
+    const ys = appointments.map((a) => Number((a.created_at || '').slice(0, 4))).filter(Boolean)
+    const minY = ys.length ? Math.min(...ys) : curYear
+    const out = []
+    for (let y = curYear; y >= minY; y--) out.push(y)
+    return out
+  }, [appointments])
 
   const stats = useMemo(() => {
     // Státusz szerinti bontás
@@ -83,14 +116,13 @@ export default function AdminDashboard() {
     const ns = byStatus.no_show || 0
     const nsRate = (done + ns) > 0 ? Math.round((ns / (done + ns)) * 100) : 0
 
-    // Havi bontás (utolsó 6 hónap, created_at szerint)
-    const now = new Date()
+    // Havi bontás – a választott év mind a 12 hónapja (created_at szerint)
     const months = []
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    for (let m = 0; m < 12; m++) {
+      const d = new Date(chartYear, m, 1)
       months.push({
-        key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-        label: d.toLocaleDateString('hu-HU', { year: '2-digit', month: 'short' }),
+        key: `${chartYear}-${String(m + 1).padStart(2, '0')}`,
+        label: d.toLocaleDateString('hu-HU', { month: 'short' }),   // csak hónap, év nélkül
         count: 0,
       })
     }
@@ -122,7 +154,7 @@ export default function AdminDashboard() {
       total: appointments.length, byStatus, upcomingActive, fillPct, booked, cap,
       nsRate, months, catCounts, relCounts, upcomingSlots,
     }
-  }, [appointments, slots, clients, items, categories, today])
+  }, [appointments, slots, clients, items, categories, today, chartYear])
 
   const loading = aLoading || sLoading
   if (loading) return <div className="acms-loading">Betöltés…</div>
@@ -139,7 +171,12 @@ export default function AdminDashboard() {
       {/* Stat kártyák */}
       <div className="dash-stats">
         <StatCard label="Összes foglalás" value={stats.total} />
-        <StatCard label="Közelgő aktív" value={stats.upcomingActive} sub="megerősített/jóváhagyott" />
+        <StatCard
+          label="Közelgő aktív"
+          value={stats.upcomingActive}
+          sub="megerősített/jóváhagyott"
+          info="Közelgő időpont: megerősített vagy jóváhagyott foglalások, amelyek időpontja még nem múlt el (a jövőben van)."
+        />
         <StatCard label="Slot kitöltöttség" value={`${stats.fillPct}%`} sub={`${stats.booked}/${stats.cap} hely`} />
         <StatCard label="No-show arány" value={`${stats.nsRate}%`} sub="teljesült foglalásokból" />
         <StatCard label="Várólistán" value={waitlistWaiting ?? '…'} sub="válaszra vár" />
@@ -147,12 +184,31 @@ export default function AdminDashboard() {
       </div>
 
       <div className="dash-grid">
-        {/* Foglalások időben */}
-        <div className="dash-card">
-          <div className="dash-card-title">Foglalások (utolsó 6 hónap)</div>
-          {stats.months.map((m) => (
-            <BarRow key={m.key} label={m.label} value={m.count} max={maxMonth} />
-          ))}
+        {/* Foglalások havonta – választható év, 2 oszlop (6+6 hónap) */}
+        <div className="dash-card dash-card--wide">
+          <div className="dash-card-head">
+            <div className="dash-card-title">Foglalások havonta</div>
+            <select
+              className="dash-year-select"
+              value={chartYear}
+              onChange={(e) => setChartYear(Number(e.target.value))}
+              aria-label="Év"
+            >
+              {years.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+          <div className="dash-months">
+            <div className="dash-months-col">
+              {stats.months.slice(0, 6).map((m) => (
+                <BarRow key={m.key} label={m.label} value={m.count} max={maxMonth} />
+              ))}
+            </div>
+            <div className="dash-months-col">
+              {stats.months.slice(6, 12).map((m) => (
+                <BarRow key={m.key} label={m.label} value={m.count} max={maxMonth} />
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Státusz szerint */}

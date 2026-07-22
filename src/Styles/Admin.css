@@ -1170,3 +1170,39 @@
   backdrop-filter: blur(2px);
 }
 .dnd-handle--overlay:hover { background: #C4612A; color: #fff; }
+
+/* ── Dashboard: havi kártya fejléc + év-választó + 2 oszlop ── */
+.dash-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 1rem; }
+.dash-card-head .dash-card-title { margin-bottom: 0; }
+.dash-year-select {
+  background: #201a14; border: 1px solid #3a332a; color: #C8B89A;
+  border-radius: 5px; padding: 0.25rem 0.55rem; font-size: 0.78rem; cursor: pointer;
+}
+.dash-months { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.6rem; }
+.dash-months-col { min-width: 0; }
+
+/* ── Dashboard: info tooltip ── */
+.dash-info {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; margin-left: 0.4rem;
+  border-radius: 50%; border: 1px solid #6b5f50;
+  color: #8a7a68; font-size: 0.6rem; font-family: Georgia, 'Times New Roman', serif; font-style: italic;
+  cursor: pointer; position: relative; vertical-align: middle; line-height: 1;
+  text-transform: none; letter-spacing: 0;
+}
+.dash-info:hover { border-color: #C4612A; color: #C4612A; }
+.dash-tip {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  width: max-content; max-width: 200px;
+  background: #2a2520; color: #C8B89A; border: 1px solid #4a4038;
+  padding: 0.55rem 0.7rem; border-radius: 6px;
+  font-size: 0.68rem; line-height: 1.45; font-weight: normal;
+  text-transform: none; letter-spacing: normal; font-style: normal;
+  white-space: normal; text-align: left;
+  z-index: 100; box-shadow: 0 6px 20px rgba(0,0,0,0.55);
+}
+
+@media (max-width: 480px) {
+  .dash-months { gap: 0 0.8rem; }
+  .dash-tip { max-width: 160px; }
+}
