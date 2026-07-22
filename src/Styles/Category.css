@@ -243,26 +243,42 @@
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;               /* Firefox: rejtett görgetősáv */
   }
-  .cat-rail-inner { flex-direction: row; padding: 0; gap: 0; }
+  .cat-rail::-webkit-scrollbar { display: none; }   /* Webkit: rejtett */
+  .cat-rail-inner { flex-direction: row; padding: 0 0.5rem; gap: 0; }
   .cat-rail-link {
     border-left: none;
     border-bottom: 2px solid transparent;
     white-space: nowrap;
-    padding: 0.85rem 1rem;
+    padding: 0.8rem 0.85rem;
+    font-size: 0.62rem;
   }
-  .cat-rail-link.active { border-left-color: transparent; border-bottom-color: var(--accent, #C4612A); }
+  .cat-rail-link.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--accent, #C4612A);
+    background: transparent;             /* nincs doboz-háttér mobilon */
+  }
+
+  /* Szórt szavak elrejtése mobilon (szűk helyen csak zavarnak) */
+  .hero-words { display: none; }
 
   .cat-main { margin-left: 0; padding-top: 1.2rem; }
-  .cat-hero-band { margin-top: 0; padding-top: 1.4rem; }
-  .hero-words { top: 0.5rem; }
+  .cat-hero-band { margin-top: 0; padding-top: 1.3rem; padding-bottom: 1.8rem; }
+  .pp-breadcrumb ol { margin-bottom: 1rem; }
+  .cat-hero { margin-bottom: 1rem; }
   .cat-hero-title { --pp-base: 2.6rem; }
+  .cat-content-band { padding: 1.8rem 0 2.2rem; }
 }
 
 @media (max-width: 620px) {
   .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .hub-grid { grid-template-columns: 1fr; }
   .cat-hero-title { --pp-base: 2.1rem; }
+  .cat-hero-eyebrow { letter-spacing: 0.22em; margin-bottom: 0.6rem; }
+  .cat-hero-sub { --pp-base: 1.02rem; }
+  .cat-intro { margin-bottom: 0; }
+  .cat-intro p { line-height: 1.65; margin-bottom: 0.75rem; }
 
   /* Igazítás mobilon mindig teljes szélesség (a preset-maxwidth felülírva) */
   .cat-hero > div,

@@ -148,7 +148,7 @@ export default function CategoryPage({ slug }) {
             {intro && (
               <section className="cat-intro">
                 <div className={sizeClass(category?.intro_size)} style={alignStyle(category?.intro_align)}>
-                  {intro.split('\n').filter(Boolean).map((p, i) => (
+                  {intro.split('\n').map((s) => s.trim()).filter(Boolean).map((p, i) => (
                     <p key={i}>{p}</p>
                   ))}
                 </div>

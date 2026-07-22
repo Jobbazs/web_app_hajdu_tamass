@@ -62,7 +62,7 @@ export default function CategorySections({ sections, catItems, onImageClick }) {
             )}
             {body && (
               <div className={sizeClass(s.body_size)} style={alignStyle(s.body_align)}>
-                {body.split('\n').filter(Boolean).map((p, i) => (
+                {body.split('\n').map((s) => s.trim()).filter(Boolean).map((p, i) => (
                   <p key={i} className="cat-sec-p">{p}</p>
                 ))}
               </div>
