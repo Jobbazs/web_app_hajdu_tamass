@@ -361,12 +361,18 @@
   opacity: 0.1;
   white-space: nowrap;
   transform-origin: center;
-  animation: heroWordSway var(--dur, 8s) ease-in-out var(--delay, 0s) infinite alternate;
+  animation:
+    heroWordRotate var(--durR, 1.2s) ease-in-out var(--delayR, 0s) infinite alternate,
+    heroWordScale  var(--durS, 1.6s) ease-in-out var(--delayS, 0s) infinite alternate;
   will-change: transform;
 }
-@keyframes heroWordSway {
-  from { transform: rotate(var(--rot0, 0deg)) scale(1); }
-  to   { transform: rotate(var(--rot1, 0deg)) scale(var(--pulse, 1.05)); }
+@keyframes heroWordRotate {
+  from { rotate: var(--rot0, 0deg); }
+  to   { rotate: var(--rot1, 0deg); }
+}
+@keyframes heroWordScale {
+  from { scale: var(--s0, 0.9); }
+  to   { scale: var(--s1, 1.2); }
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-word { animation: none; }

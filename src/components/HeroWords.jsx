@@ -38,11 +38,14 @@ function computePositions(W, H, keep, words) {
       ...spot,
       word,
       fs,
-      rot0: (base - rand(1.5, 3.5)).toFixed(2),
-      rot1: (base + rand(1.5, 3.5)).toFixed(2),
-      pulse: rand(1.0, 1.08).toFixed(3),
-      dur: rand(6, 12).toFixed(1),
-      delay: (-rand(0, 8)).toFixed(1),
+      rot0: (base - rand(3, 6)).toFixed(2),   // szélesebb dőlés a láthatóságért
+      rot1: (base + rand(3, 6)).toFixed(2),
+      s0: rand(0.72, 0.9).toFixed(3),          // NAGY méret-pulzálás
+      s1: rand(1.2, 1.45).toFixed(3),
+      durR: rand(0.9, 1.5).toFixed(2),         // dőlés tempó ≤ 1.5s
+      durS: rand(1.3, 2.0).toFixed(2),         // méret tempó ≤ 2s
+      delayR: (-rand(0, 1.5)).toFixed(2),
+      delayS: (-rand(0, 2)).toFixed(2),
     })
   }
   return placed
@@ -94,9 +97,12 @@ export default function HeroWords({ words, keepOutRef }) {
             fontSize: `${p.fs}px`,
             '--rot0': `${p.rot0}deg`,
             '--rot1': `${p.rot1}deg`,
-            '--pulse': p.pulse,
-            '--dur': `${p.dur}s`,
-            '--delay': `${p.delay}s`,
+            '--s0': p.s0,
+            '--s1': p.s1,
+            '--durR': `${p.durR}s`,
+            '--durS': `${p.durS}s`,
+            '--delayR': `${p.delayR}s`,
+            '--delayS': `${p.delayS}s`,
           }}
         >
           {p.word}
