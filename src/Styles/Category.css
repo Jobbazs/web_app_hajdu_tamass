@@ -230,45 +230,48 @@
 @media (max-width: 900px) {
   :root { --rail-w: 0px; }
 
-  /* A sáv mobilon FEKVŐ: sticky vízszintes csík a navbar alatt */
+  /* Sáv mobilon: a fix navbar ALATT, TÖBB SOROS (nincs oldal-scroll),
+     sötét háttérrel, ami folytonos a navbarral → nincs "szünet" közöttük. */
   .cat-rail {
-    position: sticky;
-    top: var(--pp-nav-h);
-    left: 0; right: 0; bottom: auto;
-    width: 100%;
-    height: auto;
-    padding-top: 0;
-    border-right: none;
-    border-bottom: 1px solid var(--border-subtle, #2a2520);
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;               /* Firefox: rejtett görgetősáv */
+    position: static;
+    top: auto; left: 0; right: 0; bottom: auto;
+    width: 100%; height: auto;
+    background: var(--bg-primary, #1a1510);
+    border-right: none; border-bottom: none;
+    overflow: visible;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4rem);  /* a fix navbar elkerülése */
   }
-  .cat-rail::-webkit-scrollbar { display: none; }   /* Webkit: rejtett */
-  .cat-rail-inner { flex-direction: row; padding: 0 0.5rem; gap: 0; }
+  .cat-rail-inner {
+    flex-direction: row;
+    flex-wrap: wrap;                 /* több sorba tördel, ha nem fér ki – nincs húzogatás */
+    padding: 0 0.6rem 0.4rem;
+    gap: 0;
+  }
   .cat-rail-link {
     border-left: none;
     border-bottom: 2px solid transparent;
     white-space: nowrap;
-    padding: 0.8rem 0.85rem;
+    padding: 0.55rem 0.8rem;
     font-size: 0.62rem;
   }
   .cat-rail-link.active {
     border-left-color: transparent;
     border-bottom-color: var(--accent, #C4612A);
-    background: transparent;             /* nincs doboz-háttér mobilon */
+    background: transparent;
   }
 
-  /* Szórt szavak elrejtése mobilon (szűk helyen csak zavarnak) */
+  /* Szórt szavak elrejtése mobilon */
   .hero-words { display: none; }
 
-  .cat-main { margin-left: 0; padding-top: 1.2rem; }
-  .cat-hero-band { margin-top: 0; padding-top: 1.3rem; padding-bottom: 1.8rem; }
-  .pp-breadcrumb ol { margin-bottom: 1rem; }
-  .cat-hero { margin-bottom: 1rem; }
+  /* A rail adja a navbar-elkerülést → cat-main ne dupláza. A cím lejjebb kerül. */
+  .cat-main { margin-left: 0; padding-top: 0; }
+  .cat-hero-band { margin-top: 0; padding-top: 2rem; padding-bottom: 1.6rem; }
+  .pp-breadcrumb ol { margin-bottom: 0.9rem; }
+  .cat-hero { margin-bottom: 0.75rem; }
   .cat-hero-title { --pp-base: 2.6rem; }
-  .cat-content-band { padding: 1.8rem 0 2.2rem; }
+  .cat-intro { margin: 0; }
+  .cat-intro p:empty { display: none; }        /* biztos, ami biztos: üres bekezdés eltűnik */
+  .cat-content-band { padding: 1.6rem 0 2.2rem; }
 }
 
 @media (max-width: 620px) {
