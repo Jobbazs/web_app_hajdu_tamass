@@ -257,6 +257,12 @@
 .acms-subtab:hover { color: var(--text-primary); }
 .acms-subtab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
+/* Mobil: az al-fülek több sorba tördelnek (nincs vízszintes túllógás) */
+@media (max-width: 767px) {
+  .acms-subtabs { flex-wrap: wrap; row-gap: 2px; overflow-x: visible; }
+  .acms-subtab { padding: 0.5rem 0.7rem; font-size: 0.56rem; letter-spacing: 0.08em; }
+}
+
 /* ── Input variants ── */
 .acms-input--sm {
   padding: 0.5rem 0.7rem !important;

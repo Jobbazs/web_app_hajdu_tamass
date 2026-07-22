@@ -1,7 +1,7 @@
 /* ============================================================
    ADMIN – shell, header, tabs, shared form elements
    ============================================================ */
-.admin-bg { min-height: 100vh; padding-top: 0; }
+.admin-bg { min-height: 100vh; padding-top: 0; overflow-x: clip; }
 
 .admin-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
@@ -485,7 +485,9 @@
 @media (max-width: 767px) {
   .acms-modal-backdrop { align-items: flex-start; padding-top: max(1rem, env(safe-area-inset-top)); }
   .acms-content { padding: 1rem; }
-  .acms-tab { padding: 0.8rem 1rem; font-size: 0.6rem; }
+  /* Fő fülek: több sorba tördelnek, nincs vízszintes húzogatás */
+  .acms-tabs { flex-wrap: wrap; overflow-x: visible; padding: 0 1rem; row-gap: 2px; }
+  .acms-tab { padding: 0.5rem 0.7rem; font-size: 0.56rem; letter-spacing: 0.1em; }
   .acms-form-row { grid-template-columns: 1fr; }
   .acms-list-item { flex-wrap: wrap; }
   .acms-list-actions {
