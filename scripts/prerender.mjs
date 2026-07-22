@@ -263,7 +263,6 @@ function categoryPageHtml(cat, catItems, catSections) {
 
   return `${rail}
 <main>
-${crumbs}
 <header><h1>${esc(cat.label_hu)}</h1>${cat.hero_subtitle_hu ? `<p>${esc(cat.hero_subtitle_hu)}</p>` : ''}</header>
 ${introParas ? `<section>${introParas}</section>` : ''}
 ${content}
@@ -286,7 +285,6 @@ function hubPageHtml(cats, items, content) {
 </a>`
   }).join('\n')
   return `<main>
-${crumbs}
 <header><h1>Portfólió</h1><p>Válassz kategóriát, és merülj el a munkáimban.</p></header>
 <section>
 ${cards}

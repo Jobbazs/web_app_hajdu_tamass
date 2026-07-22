@@ -266,6 +266,8 @@
   /* A rail adja a navbar-elkerülést → cat-main ne dupláza. A cím lejjebb kerül. */
   .cat-main { margin-left: 0; padding-top: 0; }
   .cat-hero-band { margin-top: 0; padding-top: 2rem; padding-bottom: 1.6rem; }
+  /* A HUB-nak nincs sávja → a hero-sáv maga kerüli el a fix navbart */
+  .hub-main .cat-hero-band { padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem); }
   .pp-breadcrumb ol { margin-bottom: 0.9rem; }
   .cat-hero { margin-bottom: 0.75rem; }
   .cat-hero-title { --pp-base: 2.6rem; }
