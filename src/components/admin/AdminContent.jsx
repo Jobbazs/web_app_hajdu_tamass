@@ -3,6 +3,7 @@ import { supabase } from '../../supabaseClient'
 import { useSiteContent, useAllCustomSections } from '../../hooks'
 import SortableList, { SortableItem } from './SortableList'
 import CloudinaryUpload from './CloudinaryUpload'
+import { cldThumb } from '../../lib/portfolioPages'
 import '../../Styles/AdminContent.css'
 
 // ── Rögzített szöveg csoportok ───────────────────────────────
@@ -769,7 +770,7 @@ export default function AdminContent() {
             </div>
             {getValue('about_portrait_url') && (
               <div className="acms-preview" style={{width:100,height:130}}>
-                <img src={getValue('about_portrait_url')} alt="előnézet" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                <img src={cldThumb(getValue('about_portrait_url'), 300)} alt="előnézet" style={{width:'100%',height:'100%',objectFit:'cover'}} />
               </div>
             )}
           </div>
@@ -843,7 +844,7 @@ export default function AdminContent() {
                   placeholder="Cloudinary kép URL (üresen = első kép)" />
                 {getValue(`portfolio_cover_${cat.slug}`) && (
                   <div className="acms-cover-thumb">
-                    <img src={getValue(`portfolio_cover_${cat.slug}`)} alt={cat.label} />
+                    <img src={cldThumb(getValue(`portfolio_cover_${cat.slug}`), 300)} alt={cat.label} loading="lazy" />
                   </div>
                 )}
               </div>

@@ -2,6 +2,7 @@ import { useLang } from '../LangContext'
 import { useSiteContent } from '../hooks'
 import { OWNER } from '../data'
 import '../Styles/About.css'
+import { cldThumb } from '../lib/portfolioPages'
 
 const alignStyle = (align) => {
   switch (align) {
@@ -51,7 +52,7 @@ export default function About() {
       <div className="container about-grid">
         <div className="about-img-frame">
           {portraitUrl ? (
-            <img src={portraitUrl} alt={a.imgAlt} />
+            <img src={cldThumb(portraitUrl, 800)} alt={a.imgAlt} loading="lazy" decoding="async" />
           ) : (
             <div className="about-img-placeholder">[ {a.imgAlt.toUpperCase()} ]</div>
           )}

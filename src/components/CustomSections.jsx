@@ -1,6 +1,7 @@
 import { useLang } from '../LangContext'
 import { useCustomSections } from '../hooks'
 import '../Styles/CustomSections.css'
+import { cldThumb } from '../lib/portfolioPages'
 
 const FONT_SIZE_MAP = {
   small:  'clamp(0.85rem, 1.8vw, 1rem)',
@@ -119,7 +120,7 @@ export default function CustomSections() {
               {aboveImgs.length > 0 && (
                 <div className={`cs-img-row cs-img-row--above cs-img-row--${aboveImgs.length}`}>
                   {aboveImgs.map(img => (
-                    <img key={img.id} src={img.url} alt="" className="cs-img-item" loading="lazy" />
+                    <img key={img.id} src={cldThumb(img.url, 800)} alt="" className="cs-img-item" loading="lazy" />
                   ))}
                 </div>
               )}
@@ -133,7 +134,7 @@ export default function CustomSections() {
                   {hasLeft && (
                     <div className="cs-side-imgs cs-side-desktop">
                       {leftImgs.map(img => (
-                        <img key={img.id} src={img.url} alt="" className="cs-img-item cs-img-item--side" loading="lazy" />
+                        <img key={img.id} src={cldThumb(img.url, 800)} alt="" className="cs-img-item cs-img-item--side" loading="lazy" />
                       ))}
                     </div>
                   )}
@@ -141,7 +142,7 @@ export default function CustomSections() {
                   {hasRight && (
                     <div className="cs-side-imgs cs-side-desktop">
                       {rightImgs.map(img => (
-                        <img key={img.id} src={img.url} alt="" className="cs-img-item cs-img-item--side" loading="lazy" />
+                        <img key={img.id} src={cldThumb(img.url, 800)} alt="" className="cs-img-item cs-img-item--side" loading="lazy" />
                       ))}
                     </div>
                   )}
@@ -152,7 +153,7 @@ export default function CustomSections() {
               {!hasLeft && !hasRight && belowImgs.length > 0 && (
                 <div className={`cs-img-row cs-img-row--below cs-img-row--${belowImgs.length}`}>
                   {belowImgs.map(img => (
-                    <img key={img.id} src={img.url} alt="" className="cs-img-item" loading="lazy" />
+                    <img key={img.id} src={cldThumb(img.url, 800)} alt="" className="cs-img-item" loading="lazy" />
                   ))}
                 </div>
               )}
@@ -161,7 +162,7 @@ export default function CustomSections() {
               {hasBottom && (
                 <div className={`cs-bottom-row cs-bottom-row--${bottomImgs.length}`}>
                   {bottomImgs.map(img => (
-                    <img key={img.id} src={img.url} alt="" className="cs-img-item" loading="lazy" />
+                    <img key={img.id} src={cldThumb(img.url, 800)} alt="" className="cs-img-item" loading="lazy" />
                   ))}
                 </div>
               )}

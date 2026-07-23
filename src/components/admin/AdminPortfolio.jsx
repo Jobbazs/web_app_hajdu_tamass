@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { supabase } from '../../supabaseClient'
 import { usePortfolio, useCategories } from '../../hooks'
+import { cldThumb } from '../../lib/portfolioPages'
 import SortableList, { SortableItem } from './SortableList'
 import CloudinaryUpload from './CloudinaryUpload'
 
@@ -69,7 +70,7 @@ export default function AdminPortfolio() {
     <div key={item.id} className={`acms-port-card ${!item.visible ? 'acms-port-card--hidden' : ''}`}>
       <div className="acms-port-card-img">
         {item.cloudinary_url ? (
-          <img src={item.cloudinary_url} alt={item.title} loading="lazy" />
+          <img src={cldThumb(item.cloudinary_url, 400)} alt={item.title} loading="lazy" decoding="async" />
         ) : (
           <div className="acms-port-card-ph">?</div>
         )}
@@ -335,7 +336,7 @@ export default function AdminPortfolio() {
               </div>
               {form.cloudinary_url && (
                 <div className="acms-preview">
-                  <img src={form.cloudinary_url} alt="előnézet" />
+                  <img src={cldThumb(form.cloudinary_url, 600)} alt="előnézet" />
                 </div>
               )}
               {error && <div className="acms-error">{error}</div>}

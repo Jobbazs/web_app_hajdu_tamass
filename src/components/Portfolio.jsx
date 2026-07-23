@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useLang } from '../LangContext'
 import { usePortfolio, useCategories, useSiteContent } from '../hooks'
+import { cldThumb } from '../lib/portfolioPages'
 import '../Styles/Portfolio.css'
 import MediaModal from './MediaModal'
 
@@ -105,7 +106,7 @@ export default function Portfolio() {
                   <div className="port-cat-img-wrap">
                     {cat.cover?.cloudinaryUrl ? (
                       <img
-                        src={cat.cover.cloudinaryUrl}
+                        src={cldThumb(cat.cover.cloudinaryUrl, 700)}
                         alt={label}
                         className="port-cat-img"
                         loading="lazy"

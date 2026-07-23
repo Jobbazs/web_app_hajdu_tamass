@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useLang } from '../LangContext'
 import '../Styles/MediaModal.css'
+import { cldThumb } from '../lib/portfolioPages'
 
 export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const videoRef = useRef(null)
@@ -35,7 +36,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const isVideo    = item.category === 'video'
   const currentIdx = items.findIndex(i => i.id === item.id)
   const total      = items.length
-  const fullUrl    = item.cloudinaryUrl
+  const fullUrl    = cldThumb(item.cloudinaryUrl, 2000)
     ? item.cloudinaryUrl.replace(/w_\d+/, 'w_1600').replace(/q_\d+/, 'q_90')
     : item.cloudinaryUrl
 
@@ -109,7 +110,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
               >
                 {it.cloudinaryUrl ? (
                   <img
-                    src={it.cloudinaryUrl.replace(/w_\d+/, 'w_120').replace(/q_\d+/, 'q_60')}
+                    src={cldThumb(it.cloudinaryUrl, 120)}
                     alt={it.title} draggable={false}
                   />
                 ) : (
