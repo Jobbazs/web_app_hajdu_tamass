@@ -241,8 +241,7 @@
     background: var(--bg-primary, #1a1510);
     border-right: none; border-bottom: none;
     overflow: visible;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 4rem);  /* a fix navbar elkerülése */
-  }
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.9rem);  /* a fix navbar (~71px) elkerülése */  }
   .cat-rail-inner {
     flex-direction: row;
     flex-wrap: wrap;                 /* több sorba tördel, ha nem fér ki – nincs húzogatás */

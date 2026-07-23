@@ -1,12 +1,21 @@
 /* ============================================================
    NAVBAR – desktop
    ============================================================ */
+:root {
+  /* Mennyivel nyúljon a navbar a viewport fölé (iOS URL-sáv letakarása).
+     A képernyőn kívül van, tehát nincs látható hatása. */
+  --nav-overscan: 200px;
+}
 .navbar {
   position: fixed;
-  top: 0;
+  /* A navbar a viewport fölé is felnyúlik (--nav-overscan), hogy iOS-ben
+     a változó méretű URL-sáv alatt NE látszódjon át az oldal tartalma.
+     A negatív 'top' + ugyanakkora extra 'padding-top' miatt a látható
+     tartalom és az alsó él pontosan ott marad, ahol eddig. */
+  top: calc(-1 * var(--nav-overscan));
   width: 100%;
   z-index: 1000;
-  padding: 1.1rem 2rem;
+  padding: calc(var(--nav-overscan) + 1.1rem) 2rem 1.1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -15,26 +24,10 @@
   transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s, -webkit-backdrop-filter 0.4s;
 }
 
-/* A navbar FÖLÖTTI sáv teljes elsötétítése.
-   iOS Safariban a görgetéskor változó méretű URL-sáv alatt átlátszik az
-   oldal tartalma; ez a réteg "végtelen" magasan felfelé letakarja. Normál
-   helyzetben a viewporton kívül van, tehát nem látszik – csak ott, ahol
-   eddig a tartalom villant át (URL-sáv animáció, rugalmas túlgörgetés). */
-.navbar::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 100%;
-  height: 100vh;
-  background: var(--bg-primary, #1a1510);
-  pointer-events: none;
-}
-
 /* iOS safe area – navbar kiterjed a notch/Dynamic Island területére */
 @supports (padding-top: env(safe-area-inset-top)) {
   .navbar {
-    padding-top: max(1.1rem, env(safe-area-inset-top));
+    padding-top: calc(var(--nav-overscan) + max(1.1rem, env(safe-area-inset-top)));
     padding-left: max(2rem, env(safe-area-inset-left));
     padding-right: max(2rem, env(safe-area-inset-right));
     /* Csak scrolled állapotban legyen háttér – az @supports ne kényszerítse be */
@@ -219,13 +212,13 @@
    ============================================================ */
 @media (orientation: landscape) and (max-height: 500px) {
   .navbar {
-    padding-top: 0.6rem;
+    padding-top: calc(var(--nav-overscan) + 0.6rem);
     padding-bottom: 0.6rem;
   }
   /* iOS: fekvőben a felső safe-area 0 (a notch oldalt van) – a bal/jobb
      oldali safe-area padding a fenti alapszabályból marad érvényben */
   .navbar {
-    padding-top: max(0.6rem, env(safe-area-inset-top, 0px));
+    padding-top: calc(var(--nav-overscan) + max(0.6rem, env(safe-area-inset-top, 0px)));
   }
 
   .nav-logo { font-size: 1.1rem; }
