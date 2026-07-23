@@ -203,13 +203,13 @@
    ============================================================ */
 @media (orientation: landscape) and (max-height: 500px) {
   .navbar {
-    padding-top: 0.35rem;
-    padding-bottom: 0.35rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
   }
   /* iOS: fekvőben a felső safe-area 0 (a notch oldalt van) – a bal/jobb
      oldali safe-area padding a fenti alapszabályból marad érvényben */
   .navbar {
-    padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
+    padding-top: max(0.6rem, env(safe-area-inset-top, 0px));
   }
 
   .nav-logo { font-size: 1.1rem; }
