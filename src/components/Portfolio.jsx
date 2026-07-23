@@ -68,7 +68,10 @@ export default function Portfolio() {
     setSelected(modalItems[(idx - 1 + modalItems.length) % modalItems.length])
   }, [selected, modalItems])
 
-  const displayCats = FIXED_CATEGORIES.map(cat => ({
+  // A kategóriák a DB-ből jönnek (sort_order szerint), így a CMS-ben felvett
+  // ÚJ kategória a főoldalon is megjelenik. A FIXED_CATEGORIES csak tartalék
+  // az első betöltés pillanatára, hogy ne villanjon üres rács.
+  const displayCats = (categories.length ? categories : FIXED_CATEGORIES).map(cat => ({
     ...cat,
     cover: getCoverItem(cat.slug),
   }))
@@ -88,7 +91,7 @@ export default function Portfolio() {
 
           <div className="port-cat-grid">
             {displayCats.map(cat => {
-              const label    = lang === 'hu' ? cat.label_hu : cat.label_en
+              const label    = (lang === 'hu' ? cat.label_hu : cat.label_en) || cat.label_hu || cat.slug
               const catItems = getItemsForCat(cat.slug)
               const isEmpty  = catItems.length === 0
 

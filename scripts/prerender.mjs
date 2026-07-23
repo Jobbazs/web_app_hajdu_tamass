@@ -371,7 +371,12 @@ async function main() {
     let html = injectRoot(template, hubPageHtml(cats, items, content))
     html = setHead(html, {
       title: 'Portfólió — Hajdú Tamás Fotós & Videós | Budapest',
-      description: 'Válogatás Hajdú Tamás munkáiból kategóriánként: nightlife, stúdió, rendezvény, sport & kultúra, kreatív.',
+      description: (() => {
+        const list = cats.map((c) => c.label_hu).filter(Boolean).join(', ')
+        const full = `Válogatás Hajdú Tamás munkáiból kategóriánként: ${list}.`
+        // 160 karakter felett a keresők levágják – ilyenkor általános szöveg
+        return full.length <= 160 ? full : 'Válogatás Hajdú Tamás fotós és videós munkáiból, kategóriánként rendezve.'
+      })(),
       url: `${SITE}/portfolio`,
     })
     html = injectLd(html, { '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Portfólió', url: `${SITE}/portfolio` })
