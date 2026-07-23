@@ -383,3 +383,17 @@
 @media (max-width: 900px) {
   .cat-hero-band--tall { padding-top: 3rem; padding-bottom: 3.5rem; }
 }
+
+/* ============================================================
+   MOBIL FEKVŐ NÉZET – igazítás a feleakkora navbarhoz
+   (különben a navbar alatt üres rés maradna)
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root { --pp-nav-h: 44px; }          /* 84px → kb. fele */
+}
+
+/* A mobil (≤900px) elkerülések fekvőben szintén feleződnek */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 900px) {
+  .cat-rail { padding-top: calc(env(safe-area-inset-top, 0px) + 2.4rem); }
+  .hub-main .cat-hero-band { padding-top: calc(env(safe-area-inset-top, 0px) + 2.8rem); }
+}
