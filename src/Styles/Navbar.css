@@ -12,7 +12,23 @@
   justify-content: space-between;
   background: transparent;
   border-bottom: 1px solid transparent;
-  transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s;
+  transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s, -webkit-backdrop-filter 0.4s;
+}
+
+/* A navbar FÖLÖTTI sáv teljes elsötétítése.
+   iOS Safariban a görgetéskor változó méretű URL-sáv alatt átlátszik az
+   oldal tartalma; ez a réteg "végtelen" magasan felfelé letakarja. Normál
+   helyzetben a viewporton kívül van, tehát nem látszik – csak ott, ahol
+   eddig a tartalom villant át (URL-sáv animáció, rugalmas túlgörgetés). */
+.navbar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 100vh;
+  background: var(--bg-primary, #1a1510);
+  pointer-events: none;
 }
 
 /* iOS safe area – navbar kiterjed a notch/Dynamic Island területére */

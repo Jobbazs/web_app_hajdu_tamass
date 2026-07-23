@@ -40,7 +40,7 @@ export default function CategorySections({ sections, catItems, onImageClick }) {
     >
       <img
         src={cldThumb(it.cloudinaryUrl || it.cloudinary_url, 800)}
-        alt={it.title ? `${it.title}` : title || 'Kép — Hajdú Tamás fotós'}
+        alt={it.title ? `${it.title}` : title || 'Kép — Hajdu Tamás fotós'}
         loading="lazy"
       />
       {(it.videoUrl || it.video_url) && <span className="cat-tile-play">▶</span>}

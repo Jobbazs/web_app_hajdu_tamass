@@ -7,7 +7,7 @@ export const TRANSLATIONS = {
   hu: {
     // Meta (document.title / meta description nyelvváltáskor)
     meta: {
-      title:       'Hajdú Tamás — Fotós & Videós | Budapest',
+      title:       'Hajdu Tamás — Fotós & Videós | Budapest',
       description: 'Budapesti fotós és videós. Rendezvények, underground bulik, portrék, videóklippek. Arzenál és hasonló helyszínek.',
     },
     // Navbar
@@ -119,7 +119,7 @@ export const TRANSLATIONS = {
   en: {
     // Meta (document.title / meta description on language switch)
     meta: {
-      title:       'Hajdú Tamás — Photographer & Videographer | Budapest',
+      title:       'Hajdu Tamás — Photographer & Videographer | Budapest',
       description: 'Budapest-based photographer and videographer. Events, underground parties, portraits, music videos.',
     },
     nav: {

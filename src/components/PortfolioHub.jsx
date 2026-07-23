@@ -25,7 +25,7 @@ export default function PortfolioHub() {
   }, [categories])
 
   useEffect(() => {
-    document.title = 'Portfólió — Hajdú Tamás Fotós & Videós | Budapest'
+    document.title = 'Portfólió — Hajdu Tamás Fotós & Videós | Budapest'
     const link = document.head.querySelector('link[rel="canonical"]')
     if (link) link.setAttribute('href', `${SITE}/portfolio`)
   }, [])

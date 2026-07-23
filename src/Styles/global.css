@@ -32,6 +32,13 @@ body {
   touch-action: pan-x pan-y;
 }
 
+/* A 'hidden' görgetőkonténert hoz létre, ami elrontja a position: sticky-t
+   (iOS-en biztosan). A 'clip' ugyanúgy levágja a vízszintes túllógást, de
+   NEM hoz létre görgetőkonténert – ahol támogatott, azt használjuk. */
+@supports (overflow-x: clip) {
+  body { overflow-x: clip; }
+}
+
 img {
   display: block;
   max-width: 100%;

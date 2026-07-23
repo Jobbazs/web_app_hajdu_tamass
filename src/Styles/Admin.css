@@ -371,6 +371,7 @@
   position: fixed; inset: 0; z-index: 4000;
   background: rgba(0,0,0,0.85);
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);   /* Safari <18 */
   display: flex; align-items: center; justify-content: center;
   padding: 1rem;
 }
@@ -495,9 +496,12 @@
     justify-content: flex-start;
   }
   .acms-modal {
-    max-height: calc(100dvh - 2rem);
-    /* safe area figyelembevételével */
-    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 2rem);
+    max-height: calc(100vh - 2rem);
+  }
+  @supports (height: 100dvh) {
+    .acms-modal {
+      max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 2rem);
+    }
   }
 
   /* Gombok mindig láthatók – sticky az alján */
@@ -868,6 +872,7 @@
   margin-bottom: 4px;
   cursor: grab;
   transition: background 0.2s, border-color 0.2s;
+  -webkit-user-select: none;   /* Safari <17 */
   user-select: none;
 }
 
@@ -1170,6 +1175,7 @@
   width: 28px; height: 28px; align-self: auto;
   background: rgba(0,0,0,0.55); color: #fff; border-radius: 6px;
   backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);   /* Safari <18 */
 }
 .dnd-handle--overlay:hover { background: #C4612A; color: #fff; }
 

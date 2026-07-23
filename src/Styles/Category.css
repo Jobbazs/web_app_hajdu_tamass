@@ -231,10 +231,12 @@
   :root { --rail-w: 0px; }
 
   /* Sáv mobilon: a fix navbar ALATT, TÖBB SOROS (nincs oldal-scroll),
-     sötét háttérrel, ami folytonos a navbarral → nincs "szünet" közöttük. */
+     sötét háttérrel, ami folytonos a navbarral → nincs "szünet" közöttük.
+     Sticky: görgetéskor a navbarhoz tapadva látszik (álló és fekvő nézetben). */
   .cat-rail {
-    position: static;
-    top: auto; left: 0; right: 0; bottom: auto;
+    position: sticky;
+    top: 0; left: 0; right: 0; bottom: auto;
+    z-index: 900;
     width: 100%; height: auto;
     background: var(--bg-primary, #1a1510);
     border-right: none; border-bottom: none;
@@ -374,6 +376,19 @@
   from { scale: var(--s0, 0.9); }
   to   { scale: var(--s1, 1.2); }
 }
+
+/* Tartalék: ahol a külön 'rotate'/'scale' property nem támogatott
+   (Chrome <104, Safari <14.1), ott egyetlen transform-animáció fut –
+   a dőlés és a méret együtt mozog, de legalább él a hatás. */
+@supports not (rotate: 1deg) {
+  .hero-word {
+    animation: heroWordFallback var(--durS, 1.6s) ease-in-out var(--delayS, 0s) infinite alternate;
+  }
+  @keyframes heroWordFallback {
+    from { transform: rotate(var(--rot0, 0deg)) scale(var(--s0, 0.9)); }
+    to   { transform: rotate(var(--rot1, 0deg)) scale(var(--s1, 1.2)); }
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .hero-word { animation: none; }
 }
@@ -389,10 +404,11 @@
    (különben a navbar alatt üres rés maradna)
    ============================================================ */
 @media (orientation: landscape) and (max-height: 500px) {
-  :root { --pp-nav-h: 52px; }       
+  :root { --pp-nav-h: 52px; }          /* 84px → fekvő nézet */
 }
 
-/* A mobil (≤900px) elkerülések fekvőben szintén feleződnek */
+/* A mobil (≤900px) elkerülések fekvőben szintén feleződnek
+   (a sticky viselkedést a ≤900px blokk adja) */
 @media (orientation: landscape) and (max-height: 500px) and (max-width: 900px) {
   .cat-rail { padding-top: calc(env(safe-area-inset-top, 0px) + 2.9rem); }
   .hub-main .cat-hero-band { padding-top: calc(env(safe-area-inset-top, 0px) + 3.3rem); }

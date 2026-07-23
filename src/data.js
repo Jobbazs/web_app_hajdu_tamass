@@ -3,7 +3,7 @@
 // ============================================================
 
 export const OWNER = {
-  name: "Hajdú Tamáss",
+  name: "Hajdu Tamáss",
   nameShort: "NOX",
   title: "Fotós & Videós",
   location: "Budapest, Magyarország",

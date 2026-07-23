@@ -2,7 +2,7 @@
    LOGIN
    ============================================================ */
 .login-page {
-  min-height: 100svh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,4 +26,8 @@
   letter-spacing: 0.2em;
   color: var(--text-muted);
   margin-bottom: 2.5rem;
+}
+
+@supports (height: 100svh) {
+  .login-page { min-height: 100svh; }
 }

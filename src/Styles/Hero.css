@@ -2,8 +2,9 @@
    HERO
    ============================================================ */
 #hero {
-  /* 100svh = safe viewport height (iOS safe area barát) */
-  height: 100svh;
+  /* Alap: 100vh (mindenhol működik). Az svh finomítás @supports-ban,
+     mert a minifier az egymás utáni azonos property-t eldobná. */
+  height: 100vh;
   min-height: 600px;
   position: relative;
   display: flex;
@@ -99,7 +100,7 @@
 
 @media (max-width: 1023px) {
   #hero {
-    height: 99svh;
+    height: 99vh;
     min-height: 540px;
     align-items: center;
     padding: 0 2rem 4rem;
@@ -135,5 +136,17 @@
   .hero-title {
     font-size: clamp(2.4rem, 14vw, 3.8rem);
     line-height: 0.92;
+  }
+}
+
+/* ============================================================
+   svh finomítás – csak ahol támogatott (Safari 15.4+ / Chrome 108+).
+   Az svh a mobil URL-sáv miatt stabilabb, mint a vh; a fenti 100vh
+   marad tartaléknak a régebbi böngészőkön.
+   ============================================================ */
+@supports (height: 100svh) {
+  #hero { height: 100svh; }
+  @media (max-width: 1023px) {
+    #hero { height: 99svh; }
   }
 }

@@ -14,7 +14,7 @@
   background: rgba(0, 0, 0, 0);
   backdrop-filter: blur(0px);
   -webkit-backdrop-filter: blur(0px);
-  transition: background 0.45s ease, backdrop-filter 0.45s ease;
+  transition: background 0.45s ease, backdrop-filter 0.45s ease, -webkit-backdrop-filter 0.45s ease;
   /* iOS safe area */
   padding-top: max(1.5rem, env(safe-area-inset-top));
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
