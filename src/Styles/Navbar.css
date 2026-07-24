@@ -1,64 +1,101 @@
 /* ============================================================
-   NAVBAR – desktop
+   NAVBAR
+   ------------------------------------------------------------
+   Felépítés:
+     1. Változók
+     2. .navbar – a rögzített sáv és a felfelé nyúló háttér
+     3. .navbar.scrolled – görgetésre sötétedő háttér
+     4. .nav-logo
+     5. .nav-links – desktop menüpontok
+     6. .nav-right + .lang-switcher
+     7. Hamburger + mobil menü   (VÁLTOZATLAN)
+     8. Mobil fekvő nézet
+
+   FONTOS: az index.html viewport metájában szerepelnie kell a
+   `viewport-fit=cover` értéknek. Enélkül az oldal nem terjed ki a
+   kijelző szélső sávjaira, így a navbar háttere nem tudja letakarni
+   a fölötte lévő területet, és minden env(safe-area-inset-*) 0 lesz.
    ============================================================ */
+
 :root {
-  /* Mennyivel nyúljon a navbar a viewport fölé (iOS URL-sáv letakarása).
-     A képernyőn kívül van, tehát nincs látható hatása. */
-  --nav-overscan: 200px;
+  /* Mennyivel nyúljon a navbar háttere a viewport TETEJE FÖLÉ.
+     Ez takarja le iOS-en azt a sávot, ahol a görgetéskor összehúzódó
+     URL-sáv alatt egyébként átlátszana az oldal tartalma – így a sötét
+     háttér körbeöleli az URL-címet. A képernyőn kívüli rész nem látszik,
+     tehát nincs mellékhatása. */
+  --nav-overscan: 240px;
+
+  /* A látható sáv függőleges bélése (a logó/hamburger körül) */
+  --nav-pad-y: 1.1rem;
+  --nav-pad-x: 2rem;
 }
+
+/* ============================================================
+   2. A RÖGZÍTETT SÁV
+   A negatív `top` és a vele azonos mértékű extra `padding-top`
+   együtt azt eredményezi, hogy a doboz FELFELÉ nagyobb lesz
+   (a háttere takar), de a látható tartalom és az alsó él pontosan
+   ott marad, ahol enélkül lenne.
+   ============================================================ */
 .navbar {
   position: fixed;
-  /* A navbar a viewport fölé is felnyúlik (--nav-overscan), hogy iOS-ben
-     a változó méretű URL-sáv alatt NE látszódjon át az oldal tartalma.
-     A negatív 'top' + ugyanakkora extra 'padding-top' miatt a látható
-     tartalom és az alsó él pontosan ott marad, ahol eddig. */
   top: calc(-1 * var(--nav-overscan));
-  width: 100%;
+  left: 0;
+  right: 0;
   z-index: 1000;
-  padding: calc(var(--nav-overscan) + 1.1rem) 2rem 1.1rem;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  padding-top: calc(var(--nav-overscan) + var(--nav-pad-y));
+  padding-bottom: var(--nav-pad-y);
+  padding-left: var(--nav-pad-x);
+  padding-right: var(--nav-pad-x);
+
   background: transparent;
   border-bottom: 1px solid transparent;
-  transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s, -webkit-backdrop-filter 0.4s;
+  transition: background 0.4s ease, border-color 0.4s ease;
 }
 
-/* iOS safe area – navbar kiterjed a notch/Dynamic Island területére */
+/* iOS: a notch / Dynamic Island alá ne csússzon a tartalom, és a
+   bal/jobb oldali biztonságos sávot is tartsuk tiszteletben. */
 @supports (padding-top: env(safe-area-inset-top)) {
   .navbar {
-    padding-top: calc(var(--nav-overscan) + max(1.1rem, env(safe-area-inset-top)));
-    padding-left: max(2rem, env(safe-area-inset-left));
-    padding-right: max(2rem, env(safe-area-inset-right));
-    /* Csak scrolled állapotban legyen háttér – az @supports ne kényszerítse be */
-  }
-  /* A hero section paddingját is igazítjuk hogy ne csússzon a navbar alá */
-  #hero {
-    padding-top: env(safe-area-inset-top);
+    padding-top: calc(var(--nav-overscan) + max(var(--nav-pad-y), env(safe-area-inset-top)));
+    padding-left: max(var(--nav-pad-x), env(safe-area-inset-left));
+    padding-right: max(var(--nav-pad-x), env(safe-area-inset-right));
   }
 }
 
+/* ============================================================
+   3. GÖRGETÉSRE SÖTÉTEDŐ HÁTTÉR
+   Teljesen átlátszatlan szín (nem rgba), hogy semmi ne derengjen át.
+   ============================================================ */
 .navbar.scrolled {
-  background: var(--bg-nav);
-  border-bottom-color: var(--nav-border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg-primary, #1a1510);
+  border-bottom-color: var(--nav-border, #2a2520);
 }
 
+/* ============================================================
+   4. LOGÓ
+   ============================================================ */
 .nav-logo {
+  position: relative;
+  z-index: 1001;
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
   font-weight: 900;
   font-size: 1.75rem;
   letter-spacing: 0.15em;
   color: var(--text-primary);
   cursor: pointer;
-  z-index: 1001;
-  position: relative;
 }
 
 .nav-logo .logo-accent { color: var(--accent); }
 
-/* Desktop nav links */
+/* ============================================================
+   5. DESKTOP MENÜPONTOK
+   ============================================================ */
 .nav-links {
   display: flex;
   gap: 2.5rem;
@@ -66,23 +103,24 @@
 }
 
 .nav-links a {
+  display: inline-block;
+  position: relative;
+  padding: 0.5rem 0;                       /* érintési célterület */
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
   font-size: 0.68rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-muted);
-  position: relative;
   transition: color 0.25s;
-  /* Touch target méret */
-  padding: 0.5rem 0;
-  display: inline-block;
 }
 
 .nav-links a::after {
   content: '';
   position: absolute;
-  bottom: 0; left: 0;
-  width: 0; height: 1px;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
   background: var(--accent);
   transition: width 0.3s;
 }
@@ -90,7 +128,52 @@
 .nav-links a:hover { color: var(--text-primary); }
 .nav-links a:hover::after { width: 100%; }
 
-/* Hamburger gomb */
+/* ============================================================
+   6. JOBB OLDALI CSOPORT + NYELVVÁLTÓ
+   ============================================================ */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Tableten/mobilon nincs desktop menü – csak a hamburger */
+@media (max-width: 1023px) {
+  .nav-right { display: none !important; }
+}
+
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 32px;
+  padding: 0.35rem 0.7rem;
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  background: none;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.lang-switcher:hover { border-color: var(--accent); }
+
+.lang-sep    { opacity: 0.3; }
+.lang-active { color: var(--accent); font-weight: 700; }
+
+.lang-switcher--mobile {
+  font-size: 1rem;
+  letter-spacing: 0.3em;
+  border: 1px solid var(--border-mid);
+  padding: 0.6rem 1.2rem;
+  margin-top: 0.5rem;
+}
+
+/* ============================================================
+   7. HAMBURGER + MOBIL MENÜ   — VÁLTOZATLAN
+   ============================================================ */
 .nav-hamburger {
   display: none;
   flex-direction: column;
@@ -148,77 +231,18 @@
 
 .nav-mobile a:hover { color: var(--accent); }
 
-/* ============================================================
-   LANGUAGE SWITCHER
-   ============================================================ */
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
-/* Hide desktop nav on tablet/mobile – must be after .nav-right { display:flex }
-   and not inside @supports so it always wins */
-@media (max-width: 1023px) {
-  .nav-right {
-    display: none !important;
-  }
-}
-
-.lang-switcher {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.2em;
-  background: none;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
-  padding: 0.35rem 0.7rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  transition: border-color 0.2s;
-  min-height: 32px;
-}
-
-.lang-switcher:hover {
-  border-color: var(--accent);
-}
-
-.lang-sep {
-  opacity: 0.3;
-}
-
-.lang-active {
-  color: var(--accent);
-  font-weight: 700;
-}
-
-.lang-switcher--mobile {
-  font-size: 1rem;
-  letter-spacing: 0.3em;
-  border: 1px solid var(--border-mid);
-  padding: 0.6rem 1.2rem;
-  margin-top: 0.5rem;
-}
-
-/* Hamburger mellé mobilon – language switcher a mobil menüben jelenik meg */
+/* Megjegyzés: a hamburger megjelenítése (.nav-hamburger { display: flex })
+   és a desktop menü elrejtése a global.css töréspont-blokkjában történik
+   (@media max-width: 1023px) – itt szándékosan nincs duplikálva. */
 
 /* ============================================================
-   MOBIL FEKVŐ NÉZET – feleakkora navbar
-   Telefon oldalra fordítva alig van függőleges hely, ezért a navbar
-   ~70px helyett ~37px. Álló nézetet NEM érinti (csak alacsony,
-   fekvő viewportra: max-height 500px).
+   8. MOBIL FEKVŐ NÉZET – feleakkora sáv
+   Oldalra fordított telefonon kevés a függőleges hely, ezért a
+   látható sáv ~70px helyett ~45px. Álló nézetet nem érinti.
    ============================================================ */
 @media (orientation: landscape) and (max-height: 500px) {
   .navbar {
-    padding-top: calc(var(--nav-overscan) + 0.6rem);
-    padding-bottom: 0.6rem;
-  }
-  /* iOS: fekvőben a felső safe-area 0 (a notch oldalt van) – a bal/jobb
-     oldali safe-area padding a fenti alapszabályból marad érvényben */
-  .navbar {
-    padding-top: calc(var(--nav-overscan) + max(0.6rem, env(safe-area-inset-top, 0px)));
+    --nav-pad-y: 0.6rem;
   }
 
   .nav-logo { font-size: 1.1rem; }

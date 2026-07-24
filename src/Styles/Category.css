@@ -232,16 +232,16 @@
 
   /* Sáv mobilon: a fix navbar ALATT, TÖBB SOROS (nincs oldal-scroll),
      sötét háttérrel, ami folytonos a navbarral → nincs "szünet" közöttük.
-     Sticky: görgetéskor a navbarhoz tapadva látszik (álló és fekvő nézetben). */
+     NEM tapad a navbarhoz – görgetéskor a tartalommal együtt elgördül. */
   .cat-rail {
-    position: sticky;
-    top: 0; left: 0; right: 0; bottom: auto;
-    z-index: 900;
+    position: static;
+    top: auto; left: 0; right: 0; bottom: auto;
     width: 100%; height: auto;
     background: var(--bg-primary, #1a1510);
     border-right: none; border-bottom: none;
     overflow: visible;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 4.9rem);  /* a fix navbar (~71px) elkerülése */  }
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.9rem);  /* a fix navbar (~71px) elkerülése */
+  }
   .cat-rail-inner {
     flex-direction: row;
     flex-wrap: wrap;                 /* több sorba tördel, ha nem fér ki – nincs húzogatás */
