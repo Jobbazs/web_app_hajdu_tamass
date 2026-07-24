@@ -412,3 +412,21 @@
   .cat-rail { padding-top: calc(env(safe-area-inset-top, 0px) + 2.9rem); }
   .hub-main .cat-hero-band { padding-top: calc(env(safe-area-inset-top, 0px) + 3.3rem); }
 }
+
+/* ============================================================
+   ALSÓ KATEGÓRIA-SÁV (a Kapcsolat szekció fölött)
+   Csak reszponzív nézetben – desktopon a bal oldali fix sáv végig
+   látszik, ott felesleges. A fájl VÉGÉN áll, hogy a fenti mobil és
+   fekvő blokkok .cat-rail szabályait felül tudja írni.
+   ============================================================ */
+.cat-rail--bottom { display: none; }
+
+@media (max-width: 900px) {
+  .cat-rail--bottom {
+    display: block;
+    position: static;
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+    border-top: 1px solid var(--border-subtle, #2a2520);
+  }
+}

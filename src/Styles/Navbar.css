@@ -4,28 +4,26 @@
    Felépítés:
      1. Változók
      2. .navbar – a rögzített sáv és a felfelé nyúló háttér
-     3. .navbar.scrolled – görgetésre sötétedő háttér
+     3. Desktop: sötétedő sáv · Mobil: kör alakú glória
      4. .nav-logo
      5. .nav-links – desktop menüpontok
      6. .nav-right + .lang-switcher
      7. Hamburger + mobil menü   (VÁLTOZATLAN)
      8. Mobil fekvő nézet
 
-   FONTOS: az index.html viewport metájában szerepelnie kell a
-   `viewport-fit=cover` értéknek. Enélkül az oldal nem terjed ki a
-   kijelző szélső sávjaira, így a navbar háttere nem tudja letakarni
-   a fölötte lévő területet, és minden env(safe-area-inset-*) 0 lesz.
+   A navbarnak NINCS háttere: a logó és a hamburger saját glóriát kap.
+   Így nincs olyan sáv, amit iOS-en a görgetéskor összehúzódó URL-cím
+   környékén le kellene takarni.
    ============================================================ */
 
 :root {
-  /* Mennyivel nyúljon a navbar háttere a viewport TETEJE FÖLÉ.
-     Ez takarja le iOS-en azt a sávot, ahol a görgetéskor összehúzódó
-     URL-sáv alatt egyébként átlátszana az oldal tartalma – így a sötét
-     háttér körbeöleli az URL-címet. A képernyőn kívüli rész nem látszik,
-     tehát nincs mellékhatása. */
-  --nav-overscan: 240px;
+  /* A navbarnak NINCS háttere. Helyette a logó és a hamburger kap egy-egy
+     lágy, kör alakú sötét glóriát, ami bármilyen kép fölött olvashatóvá
+     teszi őket. Így nincs sáv, amit iOS-en le kellene takarni. */
+  --nav-halo-size: 165%;                       /* az elem méretéhez képest */
+  --nav-halo-color: 26, 21, 16;                /* --ash-deep RGB komponensei */
 
-  /* A látható sáv függőleges bélése (a logó/hamburger körül) */
+  /* A logó/hamburger körüli függőleges bélés (ez adja a sáv magasságát) */
   --nav-pad-y: 1.1rem;
   --nav-pad-x: 2rem;
 }
@@ -39,7 +37,7 @@
    ============================================================ */
 .navbar {
   position: fixed;
-  top: calc(-1 * var(--nav-overscan));
+  top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
@@ -48,7 +46,7 @@
   align-items: center;
   justify-content: space-between;
 
-  padding-top: calc(var(--nav-overscan) + var(--nav-pad-y));
+  padding-top: var(--nav-pad-y);
   padding-bottom: var(--nav-pad-y);
   padding-left: var(--nav-pad-x);
   padding-right: var(--nav-pad-x);
@@ -58,24 +56,63 @@
   transition: background 0.4s ease, border-color 0.4s ease;
 }
 
+/* Desktop (≥1024px): marad a klasszikus, görgetésre sötétedő sáv – itt a
+   teljes menüsor is a navbarban van, annak kell a háttér. */
+@media (min-width: 1024px) {
+  .navbar.scrolled {
+    background: var(--bg-primary, #1a1510);
+    border-bottom-color: var(--nav-border, #2a2520);
+  }
+}
+
 /* iOS: a notch / Dynamic Island alá ne csússzon a tartalom, és a
    bal/jobb oldali biztonságos sávot is tartsuk tiszteletben. */
 @supports (padding-top: env(safe-area-inset-top)) {
   .navbar {
-    padding-top: calc(var(--nav-overscan) + max(var(--nav-pad-y), env(safe-area-inset-top)));
+    padding-top: max(var(--nav-pad-y), env(safe-area-inset-top));
     padding-left: max(var(--nav-pad-x), env(safe-area-inset-left));
     padding-right: max(var(--nav-pad-x), env(safe-area-inset-right));
   }
 }
 
 /* ============================================================
-   3. GÖRGETÉSRE SÖTÉTEDŐ HÁTTÉR
-   Teljesen átlátszatlan szín (nem rgba), hogy semmi ne derengjen át.
+   3. KÖR ALAKÚ GLÓRIA A LOGÓ ÉS A HAMBURGER MÖGÖTT
+   Lágyan kifutó sugaras átmenet – nincs kemény pereme, ezért bármilyen
+   kép fölött természetesen néz ki. Ez váltja ki a navbar hátterét.
    ============================================================ */
-.navbar.scrolled {
-  background: var(--bg-primary, #1a1510);
-  border-bottom-color: var(--nav-border, #2a2520);
+@media (max-width: 1023px) {
+
+/* A sáv itt teljesen láthatatlan, ezért NEM nyelheti el a kattintásokat a
+   felső sávban – csak a benne lévő valódi vezérlők kapnak eseményt. */
+.navbar { pointer-events: none; }
+.nav-logo,
+.nav-hamburger { pointer-events: auto; }
+
+.nav-logo::before,
+.nav-hamburger::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--nav-halo-size);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(var(--nav-halo-color), 0.92) 0%,
+    rgba(var(--nav-halo-color), 0.86) 38%,
+    rgba(var(--nav-halo-color), 0.55) 64%,
+    rgba(var(--nav-halo-color), 0)   100%
+  );
+  z-index: -1;
+  pointer-events: none;
 }
+
+/* Nyitott mobil menüben nem kell – ott úgyis sötét a panel */
+.nav-hamburger.open::before { opacity: 0; }
+
+}   /* /max-width: 1023px */
 
 /* ============================================================
    4. LOGÓ
