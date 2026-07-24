@@ -88,28 +88,7 @@
 .nav-logo,
 .nav-hamburger { pointer-events: auto; }
 
-.nav-logo::before,
-.nav-hamburger::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: var(--nav-halo-size);
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  background: radial-gradient(
-    
-    rgba(var(--nav-halo-color), 0.92) 0%,
-    rgba(var(--nav-halo-color), 0.86) 38%,
-    rgba(var(--nav-halo-color), 0.55) 64%,
-    rgba(var(--nav-halo-color), 0)   100%
-  );
-   border-radius: 50%;
-  filter:drop-shadow(0px 0px 2vw #3E4452) drop-shadow(0px 0px 3vw #3E4452);
-  z-index: -1;
-  pointer-events: none;
-}
+
 
 /* Nyitott mobil menüben nem kell – ott úgyis sötét a panel */
 .nav-hamburger.open::before { opacity: 0; }
