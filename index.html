@@ -2,10 +2,7 @@
 <html lang="hu">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, interactive-widget=resizes-content, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, interactive-widget=resizes-content, viewport-fit=cover" />
     <!-- A böngésző saját sávjának (URL-sáv / státuszsáv) színe: így nem az
          oldal tartalma látszik át alatta, hanem a téma sötét háttere. -->
     <meta name="theme-color" content="#1A1510" />
@@ -24,10 +21,7 @@
     <!-- Open Graph (Facebook, Discord, WhatsApp előnézet) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Hajdu Tamás Fotós & Videós" />
-    <meta
-      property="og:title"
-      content="Hajdu Tamás – Fotós & Videós | Budapest"
-    />
+    <meta property="og:title" content="Hajdu Tamás – Fotós & Videós | Budapest" />
     <meta
       property="og:description"
       content="Rendezvények, underground bulik, portrék és videóklippek Budapestről."
@@ -53,7 +47,6 @@
       name="twitter:image"
       content="https://res.cloudinary.com/dpeavk0xh/image/upload/w_1200,h_630,c_fill,f_auto,q_auto/WebAppHajduTamas/portfolio/og-image.jpg"
     />
-    <meta name="msvalidate.01" content="441E254D37A92506928B593B97EE0612" />
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://hajdutamas.hu" />
@@ -69,16 +62,11 @@
       rel="preload"
       as="style"
       href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,300&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=block"
-      onload="
-        this.onload = null;
-        this.rel = 'stylesheet';
-      "
+      onload="this.onload=null;this.rel='stylesheet'"
     />
     <noscript>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,300&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=block"
-      />
+      <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,300&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=block" />
     </noscript>
 
     <!-- Fallback font definíció – amíg a Google Font betölt, rendszer-font mutatja
@@ -86,68 +74,63 @@
     <style>
       /* Kritikus CSS – font-face fallback hogy ne villogjon az elrendezés */
       @font-face {
-        font-family: "Bebas Neue";
+        font-family: 'Bebas Neue';
         font-style: normal;
         font-weight: 400;
         font-display: block;
-        src: local("Impact"), local("Arial Narrow");
+        src: local('Impact'), local('Arial Narrow');
         size-adjust: 92%;
       }
     </style>
 
     <!-- Strukturált adat (JSON-LD) – helyi szolgáltatás Google számára -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "ProfessionalService",
-        "name": "Hajdu Tamás Fotós & Videós",
-        "alternateName": "NOX",
-        "image": "https://res.cloudinary.com/dpeavk0xh/image/upload/w_1200,h_630,c_fill,f_auto,q_auto/WebAppHajduTamas/portfolio/og-image.jpg",
-        "url": "https://hajdutamas.hu",
-        "email": "tamasshajdu@gmail.com",
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "Hajdu Tamás Fotós & Videós",
+      "alternateName": "NOX",
+      "image": "https://res.cloudinary.com/dpeavk0xh/image/upload/w_1200,h_630,c_fill,f_auto,q_auto/WebAppHajduTamas/portfolio/og-image.jpg",
+      "url": "https://hajdutamas.hu",
+      "email": "tamasshajdu@gmail.com",
+      "sameAs": [
+        "https://www.instagram.com/hajdutamass/",
+        "https://www.facebook.com/HajduNOXTamas"
+      ],
+      "founder": {
+        "@type": "Person",
+        "name": "Hajdu Tamás",
+        "jobTitle": "Fotós & Videós",
         "sameAs": [
           "https://www.instagram.com/hajdutamass/",
           "https://www.facebook.com/HajduNOXTamas"
-        ],
-        "founder": {
-          "@type": "Person",
-          "name": "Hajdu Tamás",
-          "jobTitle": "Fotós & Videós",
-          "sameAs": [
-            "https://www.instagram.com/hajdutamass/",
-            "https://www.facebook.com/HajduNOXTamas"
-          ]
-        },
-        "description": "Budapesti fotós és videós. Rendezvények, underground bulik, portrék, videóklippek.",
-        "areaServed": {
-          "@type": "City",
-          "name": "Budapest"
-        },
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "Budapest",
-          "addressCountry": "HU"
-        },
-        "priceRange": "$$",
-        "serviceType": [
-          "Rendezvényfotózás",
-          "Portréfotózás",
-          "Videóklip forgatás",
-          "Urbex fotózás"
         ]
-      }
+      },
+      "description": "Budapesti fotós és videós. Rendezvények, underground bulik, portrék, videóklippek.",
+      "areaServed": {
+        "@type": "City",
+        "name": "Budapest"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Budapest",
+        "addressCountry": "HU"
+      },
+      "priceRange": "$$",
+      "serviceType": ["Rendezvényfotózás", "Portréfotózás", "Videóklip forgatás", "Urbex fotózás"]
+    }
     </script>
 
     <!-- A márkanév (NOX) összekapcsolása a domainnel -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Hajdu Tamás — Fotós & Videós",
-        "alternateName": "NOX",
-        "url": "https://hajdutamas.hu",
-        "inLanguage": "hu-HU"
-      }
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Hajdu Tamás — Fotós & Videós",
+      "alternateName": "NOX",
+      "url": "https://hajdutamas.hu",
+      "inLanguage": "hu-HU"
+    }
     </script>
   </head>
   <body>
