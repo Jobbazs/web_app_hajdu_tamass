@@ -1,3 +1,9 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/confirm", "destination": "/index.html" },
+    { "source": "/cancel", "destination": "/index.html" },
+    { "source": "/portfolio/(.*)", "destination": "/index.html" }
+  ]
 }

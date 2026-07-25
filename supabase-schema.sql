@@ -34,8 +34,10 @@ drop policy if exists "Admin select messages"  on public.messages;
 drop policy if exists "Admin update messages"  on public.messages;
 drop policy if exists "Admin delete messages"  on public.messages;
 
-create policy "Public insert messages"
-  on public.messages for insert with check (true);
+-- MEGJEGYZÉS: a publikus (anon) beszúrás SZÁNDÉKOSAN nincs engedélyezve.
+-- Az üzenetek mostantól a 'submit-contact' Edge Function-ön keresztül
+-- kerülnek be (service_role), a spam-ellenőrzés (honeypot + idő-csapda +
+-- IP rate limit) UTÁN. Így a bot nem tud közvetlenül a táblába írni.
 create policy "Admin select messages"
   on public.messages for select using (auth.role() = 'authenticated');
 create policy "Admin update messages"
@@ -1051,6 +1053,126 @@ begin
   ) then
     execute 'alter publication supabase_realtime add table public.category_sections';
   end if;
+end $$;
+
+
+-- ============================================================================
+-- 14. SPAM-VÉDELEM — IP rate limit napló
+-- A 'submit-contact' Edge Function ír/olvas ide (service_role). Nincs
+-- publikus hozzáférés. A function a régi sorokat magától takarítja, de
+-- pg_cron-nal is lehet (lásd lent).
+-- ============================================================================
+
+create table if not exists public.rate_limits (
+  id         bigint generated always as identity primary key,
+  ip         text not null,
+  action     text not null default 'contact',
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_rate_limits_ip_action_time
+  on public.rate_limits (ip, action, created_at desc);
+
+alter table public.rate_limits enable row level security;
+-- Nincs policy => anon/authenticated nem fér hozzá; a service_role megkerüli az RLS-t.
+
+-- (Opcionális) pg_cron takarítás – EGYSZER lefuttatva:
+-- select cron.schedule('cleanup-rate-limits','15 * * * *',
+--   $$ delete from public.rate_limits where created_at < now() - interval '1 hour'; $$);
+
+
+-- ============================================================================
+-- 14/b. SZÖVEG AZ ÚJABB KATEGÓRIÁKHOZ (mood, konditerem, urban)
+-- Csak akkor ír, ha a mező jelenleg ÜRES – így a CMS-ben kézzel megadott
+-- szöveget nem írja felül. A slugok akkor is biztonságosak, ha valamelyik
+-- kategória nem létezik (az update egyszerűen 0 sort érint).
+-- ============================================================================
+
+update public.portfolio_categories set
+  hero_subtitle_hu = coalesce(nullif(hero_subtitle_hu, ''), 'Hangulat és karakter — a fény, ami eldönti, mit érzel a képen.'),
+  hero_subtitle_en = coalesce(nullif(hero_subtitle_en, ''), 'Mood and character — the light that decides how the frame feels.'),
+  intro_hu = coalesce(nullif(intro_hu, ''),
+    'Van, amikor nem az esemény a lényeg, hanem a hangulat, ami körülveszi. Ezek a képek erről szólnak: '
+    'színek, árnyékok, textúrák és egy-egy arckifejezés, ami magában is elmond egy történetet. '
+    'Szabadon dolgozom, sok kísérletezéssel — hol nyers természetes fénnyel, hol tudatosan megépített '
+    'megvilágítással, mindig a téma karakteréhez igazodva. Ha olyan képsorozatot szeretnél, ami nem '
+    'csak dokumentál, hanem érzetet is ad, itt jó helyen vagy.'),
+  hero_words = case when hero_words is null or cardinality(hero_words) = 0
+    then array['hangulat','fény','árnyék','szín','textúra','csend','karakter','pillanat']
+    else hero_words end
+where slug = 'mood';
+
+update public.portfolio_categories set
+  hero_subtitle_hu = coalesce(nullif(hero_subtitle_hu, ''), 'Erő, fókusz, izzadság — a munka, ami a formát adja.'),
+  hero_subtitle_en = coalesce(nullif(hero_subtitle_en, ''), 'Strength, focus, sweat — the work behind the shape.'),
+  intro_hu = coalesce(nullif(intro_hu, ''),
+    'A konditerem nem a látszatról szól, hanem a munkáról: a nehéz sorozatok végéről, a koncentrációról '
+    'és arról a pillanatról, amikor még egy ismétlés jön. Edzés közben fotózom, nem utána — így a képeken '
+    'valódi erőkifejtés látszik, nem beállított póz. Sportolóknak, edzőknek és termeknek egyaránt '
+    'dolgozom, legyen szó személyes portfólióról, arculati anyagról vagy közösségi tartalomról. '
+    'A cél mindig ugyanaz: átjöjjön a kép mellől is, hogy mennyi van benne.'),
+  hero_words = case when hero_words is null or cardinality(hero_words) = 0
+    then array['erő','fókusz','ismétlés','súly','kitartás','izom','ritmus','fegyelem']
+    else hero_words end
+where slug = 'konditerem';
+
+update public.portfolio_categories set
+  hero_subtitle_hu = coalesce(nullif(hero_subtitle_hu, ''), 'Beton, neon, mozgás — a város a maga tempójában.'),
+  hero_subtitle_en = coalesce(nullif(hero_subtitle_en, ''), 'Concrete, neon, motion — the city at its own pace.'),
+  intro_hu = coalesce(nullif(intro_hu, ''),
+    'Budapest utcái sosem ugyanazok kétszer: más a fény, más a tömeg, más a hangulat. Ezekben a képekben '
+    'a várost keresem — a beton és a neon kontrasztját, az elhagyott ipari tereket, a járókelők '
+    'véletlen koreográfiáját. Utcai és urbex helyszíneken fotózok, gyakran hajnalban vagy sötétedés '
+    'után, amikor a város másképp mutatja magát. Portrékhoz is szívesen használom ezt a díszletet: '
+    'a nyers környezet erős karaktert ad az embernek benne.'),
+  hero_words = case when hero_words is null or cardinality(hero_words) = 0
+    then array['beton','neon','utca','város','urbex','aszfalt','tömeg','hajnal']
+    else hero_words end
+where slug = 'urban';
+
+
+-- ============================================================================
+-- 15. MÓDOSÍTÁS-IDŐPONT (updated_at) — a sitemap <lastmod> jelzéshez
+-- A keresőmotorok (Bing Webmaster Guidelines 3. és 19. pont, Google Search
+-- Central) pontos frissesség-jelzést kérnek. A prerender ezekből az
+-- oszlopokból számolja ki oldalanként a legutóbbi módosítást.
+-- FONTOS: csak akkor van értelme, ha VALÓS – a mindig "most" értékű lastmod
+-- rosszabb, mint a hiányzó, mert a keresők figyelmen kívül hagyják.
+-- ============================================================================
+
+-- Egyetlen közös trigger-függvény minden táblához
+create or replace function public.touch_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at := now();
+  return new;
+end $$;
+
+do $$
+declare
+  t text;
+begin
+  for t in
+    select unnest(array[
+      'portfolio_categories',
+      'portfolio_items',
+      'category_sections',
+      'site_content',
+      'services',
+      'custom_sections'
+    ])
+  loop
+    -- oszlop felvétele (a meglévő sorok a default miatt kapnak értéket)
+    execute format(
+      'alter table public.%I add column if not exists updated_at timestamptz not null default now()', t);
+
+    -- trigger újraépítése (idempotens)
+    execute format('drop trigger if exists trg_touch_updated_at on public.%I', t);
+    execute format(
+      'create trigger trg_touch_updated_at before update on public.%I
+         for each row execute function public.touch_updated_at()', t);
+  end loop;
 end $$;
 
 

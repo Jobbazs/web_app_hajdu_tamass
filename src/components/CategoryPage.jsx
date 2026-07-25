@@ -97,6 +97,32 @@ export default function CategoryPage({ slug }) {
 
   const loading = itemsLoading || catsLoading
 
+  // Lágy 404: ha a slug nem létező kategóriára mutat, a szerver (a Vercel
+  // rewrite miatt) 200-at ad, tehát HTTP-szinten nem tudjuk 404-nek jelezni.
+  // Ezért NOINDEX-szel jelezzük a keresőknek, hogy ez az URL ne kerüljön be
+  // az indexbe (Bing Guidelines 10. pont, Google: soft 404 kezelés).
+  const notFound = !loading && !category
+  useEffect(() => {
+    const SEL = 'meta[name="robots"]'
+    const prev = document.head.querySelector(SEL)?.getAttribute('content') ?? null
+
+    if (notFound) {
+      let el = document.head.querySelector(SEL)
+      if (!el) {
+        el = document.createElement('meta')
+        el.setAttribute('name', 'robots')
+        document.head.appendChild(el)
+      }
+      el.setAttribute('content', 'noindex, follow')
+    }
+
+    // Visszaállítás, ha elnavigálunk egy létező kategóriára
+    return () => {
+      const el = document.head.querySelector(SEL)
+      if (el && notFound) el.setAttribute('content', prev ?? 'index, follow')
+    }
+  }, [notFound])
+
   // Nem létező kategória (a betöltés után)
   if (!loading && !category) {
     return (

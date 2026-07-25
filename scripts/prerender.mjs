@@ -298,14 +298,54 @@ ${cards}
 <section id="contact"><h2>${esc(FB.contact_title)}</h2></section>`
 }
 
-function sitemapXml(cats) {
+// A legkésőbbi updated_at érték egy rekordhalmazból, ISO dátumként (YYYY-MM-DD).
+// null, ha egyetlen rekordnak sincs időpontja – ilyenkor a <lastmod> kimarad,
+// mert a pontatlan lastmod rosszabb, mint a hiányzó.
+function lastMod(...recordSets) {
+  let newest = 0
+  for (const set of recordSets) {
+    for (const r of set || []) {
+      const t = Date.parse(r?.updated_at || '')
+      if (!Number.isNaN(t) && t > newest) newest = t
+    }
+  }
+  return newest ? new Date(newest).toISOString().slice(0, 10) : null
+}
+
+function sitemapXml(cats, items, sections, content, services, customSections) {
   const urls = [
-    { loc: `${SITE}/`, pri: '1.0' },
-    { loc: `${SITE}/portfolio`, pri: '0.9' },
-    ...cats.map((c) => ({ loc: `${SITE}/portfolio/${c.slug}`, pri: '0.8' })),
+    // Főoldal: bármelyik szekció változása érinti
+    {
+      loc: `${SITE}/`,
+      pri: '1.0',
+      mod: lastMod(content, services, customSections, cats, items),
+    },
+    // Hub: a kategóriák és a borítóképeik
+    {
+      loc: `${SITE}/portfolio`,
+      pri: '0.9',
+      mod: lastMod(cats, items),
+    },
+    // Kategória-aloldalak: a saját kategória, képei és szekciói
+    ...cats.map((c) => ({
+      loc: `${SITE}/portfolio/${c.slug}`,
+      pri: '0.8',
+      mod: lastMod(
+        [c],
+        (items || []).filter((i) => i.category_id === c.id),
+        (sections || []).filter((x) => x.category_id === c.id),
+      ),
+    })),
   ]
   const body = urls
-    .map((u) => `  <url>\n    <loc>${u.loc}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>${u.pri}</priority>\n  </url>`)
+    .map((u) => [
+      '  <url>',
+      `    <loc>${u.loc}</loc>`,
+      ...(u.mod ? [`    <lastmod>${u.mod}</lastmod>`] : []),
+      '    <changefreq>weekly</changefreq>',
+      `    <priority>${u.pri}</priority>`,
+      '  </url>',
+    ].join('\n'))
     .join('\n')
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`
 }
@@ -324,11 +364,11 @@ async function main() {
   }
 
   const [contentRows, services, cats, items, customSections, categorySections] = await Promise.all([
-    fetchTable('site_content', 'select=key,value'),
-    fetchTable('services', 'select=number,name_hu,desc_hu&order=sort_order.asc'),
-    fetchTable('portfolio_categories', 'select=id,slug,label_hu,hero_subtitle_hu,intro_hu,cover_url&order=sort_order.asc'),
-    fetchTable('portfolio_items', 'select=id,category_id,cloudinary_url,title&visible=eq.true&order=sort_order.asc'),
-    fetchTable('custom_sections', 'select=title_hu,body_hu,visible&visible=eq.true&order=sort_order.asc'),
+    fetchTable('site_content', 'select=key,value,updated_at'),
+    fetchTable('services', 'select=number,name_hu,desc_hu,updated_at&order=sort_order.asc'),
+    fetchTable('portfolio_categories', 'select=id,slug,label_hu,hero_subtitle_hu,intro_hu,cover_url,updated_at&order=sort_order.asc'),
+    fetchTable('portfolio_items', 'select=id,category_id,cloudinary_url,title,updated_at&visible=eq.true&order=sort_order.asc'),
+    fetchTable('custom_sections', 'select=title_hu,body_hu,visible,updated_at&visible=eq.true&order=sort_order.asc'),
     fetchTable('category_sections', 'select=*&visible=eq.true&order=sort_order.asc'),
   ])
 
@@ -424,7 +464,13 @@ async function main() {
   }
 
   // 4) Sitemap
-  await writeFile(join(DIST_DIR, 'sitemap.xml'), sitemapXml(cats), 'utf8')
+  // Figyelem: contentRows (nyers sorok) kell, nem a lapított 'content' objektum,
+  // mert csak a soroknak van updated_at mezőjük.
+  await writeFile(
+    join(DIST_DIR, 'sitemap.xml'),
+    sitemapXml(cats, items, categorySections, contentRows, services, customSections),
+    'utf8',
+  )
 
   console.log(`[prerender] Kész – ${pageCount} oldal prerenderelve + sitemap frissítve.`)
 }
