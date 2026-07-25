@@ -55,10 +55,18 @@ function scrub(value) {
 }
 
 export function initErrorMonitoring() {
+  // Diagnosztikai jelző: a konzolban egy sorral ellenőrizhető, hogy fut-e.
+  //   window.__errorMonitoring   → true, ha aktív
+  window.__errorMonitoring = false
+
   if (!DSN) {
-    if (!IS_PROD) {
-      console.info('[hibafigyelés] VITE_GLITCHTIP_DSN nincs beállítva – kikapcsolva.')
-    }
+    // FIGYELEM: a VITE_* változók a BUILD pillanatában sülnek a kódba.
+    // Ha a Vercelen utólag vetted fel a változót, újra kell deployolni.
+    console.warn(
+      '[hibafigyelés] A VITE_GLITCHTIP_DSN nincs beállítva ebben a buildben – ' +
+      'a hibajelentés KI van kapcsolva. Ha a Vercelen már felvetted, indíts új deployt: ' +
+      'a Vite a build idején írja be az értéket.'
+    )
     return
   }
 
@@ -112,6 +120,8 @@ export function initErrorMonitoring() {
       return event
     },
   })
+
+  window.__errorMonitoring = true
 }
 
 export { Sentry }
