@@ -76,10 +76,10 @@ export default function CategoryPage({ slug }) {
   )
 
   useSeo({
-    title: label ? `${label} — Hajdú Tamás Fotós & Videós | Budapest` : 'Portfólió — Hajdú Tamás',
+    title: label ? `${label} — Hajdu Tamás Fotós & Videós | Budapest` : 'Portfólió — Hajdu Tamás',
     description:
       subtitle ||
-      (intro ? intro.slice(0, 155) : `${label} fotók — Hajdú Tamás, budapesti fotós és videós.`),
+      (intro ? intro.slice(0, 155) : `${label} fotók — Hajdu Tamás, budapesti fotós és videós.`),
     url: `${SITE}/portfolio/${slug}`,
   })
 
@@ -181,7 +181,7 @@ export default function CategoryPage({ slug }) {
                       >
                         <img
                           src={cldThumb(it.cloudinaryUrl, 800)}
-                          alt={it.title ? `${it.title} — ${label}` : `${label} — Hajdú Tamás fotós`}
+                          alt={it.title ? `${it.title} — ${label}` : `${label} — Hajdu Tamás fotós`}
                           loading="lazy"
                         />
                         {it.videoUrl && <span className="cat-tile-play">▶</span>}
