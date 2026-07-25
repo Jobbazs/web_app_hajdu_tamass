@@ -49,6 +49,33 @@ function useRoute() {
   return path
 }
 
+// A főoldal szekcióit React rendereli, adatbetöltés UTÁN – ezért a böngésző
+// a betöltés pillanatában még nem találja a #hash horgonyt, és a lap tetején
+// marad. Ez a hook megvárja, míg az elem megjelenik, és odagördít.
+// Érinti: a navbar aloldali linkjei (/#contact stb.) és a 404 oldal linkjei.
+function useHashScroll() {
+  useEffect(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1))
+    if (!id) return
+
+    let tries = 0
+    let timer
+
+    const attempt = () => {
+      const el = document.getElementById(id)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
+      // ~3 másodpercig várunk az adatbetöltésre, aztán feladjuk
+      if (++tries < 30) timer = setTimeout(attempt, 100)
+    }
+
+    timer = setTimeout(attempt, 0)
+    return () => clearTimeout(timer)
+  }, [])
+}
+
 function useSectionsOrder() {
   const [order, setOrder] = useState(DEFAULT_ORDER)
 
@@ -71,6 +98,7 @@ function useSectionsOrder() {
 function AppInner() {
   const path        = useRoute()
   const sectOrder   = useSectionsOrder()
+  useHashScroll()
   const [session,     setSession]   = useState(null)
   const [authLoading, setLoading]   = useState(true)
 
