@@ -761,7 +761,7 @@ export default function AdminContent() {
             <div className="acms-content-group-label">Portré kép (Rólam szekció)</div>
             <div className="acms-form-group">
               <label>Cloudinary kép URL</label>
-              <CloudinaryUpload compact label="Portré feltöltése" onUploaded={(url) => handleChange('about_portrait_url', url)} />
+              <CloudinaryUpload compact label="Portré feltöltése" folder="WebAppHajduTamas/content" onUploaded={(url) => handleChange('about_portrait_url', url)} />
               <input type="text" className="acms-input"
                 value={getValue('about_portrait_url')}
                 onChange={e => handleChange('about_portrait_url', e.target.value)}
@@ -1124,7 +1124,7 @@ export default function AdminContent() {
 
                 <div className="acms-form-group">
                   <label>Cloudinary URL</label>
-                  <CloudinaryUpload compact label="Kép feltöltése" onUploaded={(url) => { setNewImgUrl(url); setImgError('') }} />
+                  <CloudinaryUpload compact label="Kép feltöltése" folder="WebAppHajduTamas/content" onUploaded={(url) => { setNewImgUrl(url); setImgError('') }} />
                   <input
                     className="acms-input"
                     value={newImgUrl}

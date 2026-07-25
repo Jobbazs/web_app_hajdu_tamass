@@ -1,29 +1,55 @@
 import { useState, useRef } from 'react'
+import { supabase } from '../../supabaseClient'
 
-const CLOUD_NAME = 'dpeavk0xh'
-const UPLOAD_PRESET = 'hajdutamas.hu_cms'
-const ENDPOINT = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`
-
-// Közvetlen (unsigned) feltöltés Cloudinary-ra. A Supabase tárhelyet nem
-// érinti – csak a visszakapott secure_url kerül a DB-be (onUploaded).
-export default function CloudinaryUpload({ onUploaded, label = 'Kép feltöltése', compact = false }) {
+// ALÁÍRT feltöltés Cloudinary-ra.
+// A böngésző nem ismer semmilyen titkot: előbb aláírást kér a 'sign-upload'
+// Edge Functiontől (ami csak bejelentkezett adminnak ad), és azzal tölt fel.
+// Így idegen NEM tud a fiókba feltölteni – az "unsigned" preset megszűnt.
+// A Supabase tárhelyet nem érinti: csak a kapott secure_url kerül a DB-be.
+//
+// folder: melyik célmappába kerüljön. A szerver fehérlistázza, tehát csak a
+// megengedett értékek érvényesek, minden más a default mappába esik.
+export default function CloudinaryUpload({
+  onUploaded,
+  label = 'Kép feltöltése',
+  compact = false,
+  folder = 'WebAppHajduTamas/portfolio',
+}) {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef(null)
 
-  const upload = (file) => {
+  const upload = async (file) => {
     if (!file) return
     if (!file.type.startsWith('image/')) { setError('Csak képfájl tölthető fel.'); return }
     setError(''); setUploading(true); setProgress(0)
 
+    // 1) Aláírás kérése a szervertől (csak bejelentkezett adminnak ad)
+    let sig
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('sign-upload', {
+        body: { folder },
+      })
+      if (fnErr || !data?.ok) throw new Error(data?.error || fnErr?.message || 'ismeretlen hiba')
+      sig = data
+    } catch (err) {
+      setUploading(false)
+      setError(`Az aláírás kérése nem sikerült (${err.message}). Jelentkezz be újra.`)
+      return
+    }
+
+    // 2) Feltöltés az aláírással – titok nem kerül a böngészőbe
     const fd = new FormData()
     fd.append('file', file)
-    fd.append('upload_preset', UPLOAD_PRESET)
+    fd.append('api_key', sig.apiKey)
+    fd.append('timestamp', sig.timestamp)
+    fd.append('signature', sig.signature)
+    fd.append('folder', sig.folder)
 
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', ENDPOINT)
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`)
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100))
     }
@@ -35,10 +61,14 @@ export default function CloudinaryUpload({ onUploaded, label = 'Kép feltöltés
           if (res.secure_url) onUploaded(res.secure_url)
           else setError('Nem érkezett URL a Cloudinary-tól.')
         } catch { setError('Hibás válasz a Cloudinary-tól.') }
-      } else if (xhr.status === 400) {
-        setError('Feltöltési hiba – ellenőrizd, hogy a preset "unsigned".')
       } else {
-        setError('Feltöltési hiba (' + xhr.status + ').')
+        // A Cloudinary a hiba okát a válasz törzsében küldi – megmutatjuk
+        let msg = `Feltöltési hiba (${xhr.status}).`
+        try {
+          const e = JSON.parse(xhr.responseText)
+          if (e?.error?.message) msg = `Cloudinary: ${e.error.message}`
+        } catch { /* marad az általános szöveg */ }
+        setError(msg)
       }
     }
     xhr.onerror = () => { setUploading(false); setProgress(0); setError('Hálózati hiba a feltöltéskor.') }

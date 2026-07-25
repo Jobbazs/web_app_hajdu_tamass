@@ -195,7 +195,7 @@ export default function AdminCategories() {
 
           <div className="acms-form-group">
             <label className="acms-label">Borítókép URL (hub-kártya + megosztás)</label>
-            <CloudinaryUpload compact label="Borítókép feltöltése" onUploaded={(url) => set('cover_url', url)} />
+            <CloudinaryUpload compact label="Borítókép feltöltése" folder="WebAppHajduTamas/covers" onUploaded={(url) => set('cover_url', url)} />
             <input
               className="acms-input"
               value={form.cover_url}
