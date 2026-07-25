@@ -30,6 +30,7 @@ export default function AdminAdvanced() {
   const [status, setStatus] = useState('idle')  // idle | publishing | done | error
   const [lastAt, setLastAt] = useState(null)
   const [errMsg, setErrMsg] = useState('')
+  const [indexNow, setIndexNow] = useState(null)   // { ok, count?, error? }
 
   useEffect(() => {
     supabase
@@ -43,6 +44,7 @@ export default function AdminAdvanced() {
   const publish = async () => {
     setStatus('publishing')
     setErrMsg('')
+    setIndexNow(null)
 
     const { data, error } = await supabase.functions.invoke('trigger-deploy')
 
@@ -58,6 +60,7 @@ export default function AdminAdvanced() {
       .upsert({ key: LAST_KEY, value: now }, { onConflict: 'key' })
     setLastAt(now)
 
+    setIndexNow(data?.indexNow ?? null)
     setStatus('done')
     setTimeout(() => setStatus('idle'), 10000)
   }
@@ -127,7 +130,20 @@ export default function AdminAdvanced() {
 
           <div className="adv-publish-status">
             {status === 'done' && (
-              <span className="acms-success">✓ Elindítva – az újraépítés 1–2 perc múlva végez</span>
+              <>
+                <span className="acms-success">✓ Elindítva – az újraépítés 1–2 perc múlva végez</span>
+                {indexNow?.ok && (
+                  <span className="acms-hint">
+                    Bing értesítve (IndexNow): {indexNow.count} oldal
+                  </span>
+                )}
+                {indexNow && !indexNow.ok && (
+                  <span className="acms-hint">
+                    A publikálás sikeres, de a Bing-értesítés nem ment át
+                    {indexNow.error ? `: ${indexNow.error}` : ''}
+                  </span>
+                )}
+              </>
             )}
             {status === 'error' && (
               <span className="acms-error">✕ {errMsg}</span>
