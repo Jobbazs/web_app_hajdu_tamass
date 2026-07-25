@@ -78,7 +78,7 @@ export default function AdminAdvanced() {
 
       {/* ── Publikálás ── */}
       <div className="acms-content-group">
-        <div className="acms-content-group-label">Publikálás a Google felé</div>
+        <div className="acms-content-group-label">Publikálás a keresőmotorok felé</div>
 
         <div className="adv-doc">
           <p>
@@ -86,19 +86,25 @@ export default function AdminAdvanced() {
             az adminban mentesz, az náluk azonnal megjelenik – ehhez nem kell semmit tenni.
           </p>
           <p>
-            <strong>A Google keresője viszont másképp működik.</strong> Ő egy „pillanatképet"
-            lát az oldalról, ami nem frissül magától. Ezt a pillanatképet frissíti az alábbi gomb.
+            <strong>A keresőmotorok viszont másképp működnek.</strong> Ők egy „pillanatképet"
+            látnak az oldalról, ami nem frissül magától. Ez a gomb két dolgot tesz: újraépíti
+            ezt a pillanatképet, és <strong>értesítést küld a keresőmotoroknak</strong>, hogy
+            változott a tartalom – így hamarabb veszik észre.
           </p>
 
           <div className="adv-doc-split">
             <div className="adv-doc-col">
-              <div className="adv-doc-col-title adv-doc-col-title--yes">Nyomd meg, ha átírtad:</div>
+              <div className="adv-doc-col-title adv-doc-col-title--yes">Nyomd meg, ha módosítottad:</div>
               <ul>
                 <li>Hero szöveget (főcím, alcím)</li>
                 <li>Rólam bekezdéseket vagy tageket</li>
                 <li>Szolgáltatások nevét / leírását</li>
                 <li>Egyedi szekció szövegét</li>
                 <li>Szekciók sorrendjét vagy láthatóságát</li>
+                <li>Kategória-oldal szövegét (alcím, bevezető, szórt szavak)</li>
+                <li>Kategória-szekciókat (szöveg, kép, sorrend)</li>
+                <li>Kategóriákat (új felvétel, átnevezés, sorrend, borítókép)</li>
+                <li>Portfólió képeket (új kép, törlés, elrejtés, sorrend)</li>
               </ul>
             </div>
             <div className="adv-doc-col">
@@ -108,6 +114,7 @@ export default function AdminAdvanced() {
                 <li>Foglalást kezeltél</li>
                 <li>Időpontot hoztál létre</li>
                 <li>Megbízhatósági listát szerkesztettél</li>
+                <li>Statisztikákat néztél az Áttekintésen</li>
               </ul>
             </div>
           </div>
@@ -116,6 +123,11 @@ export default function AdminAdvanced() {
             A gomb megnyomása után az oldal újraépül, ez <strong>1–2 percet vesz igénybe</strong>.
             Ezalatt a weboldal végig elérhető marad. Fölöslegesen megnyomva nem okoz kárt,
             csak egy üres újraépítést indít.
+          </p>
+          <p className="adv-doc-note">
+            Az értesítést a keresőmotorok egy része <strong>azonnal</strong> megkapja, mások
+            (köztük a Google) a saját ütemük szerint jönnek vissza – ott az új tartalom
+            megjelenése napokat is igénybe vehet. Ez normális, nem hiba.
           </p>
         </div>
 
