@@ -111,13 +111,19 @@ async function sendOffer(row: any, slot: any, token: string) {
 //    működése SEMMILYEN körülmények között nem függhet tőle,
 //  - 5 másodperc után elvágjuk, hogy ne akassza meg a futást.
 async function pingHeartbeat() {
-  if (!HEARTBEAT_URL) return
+  if (!HEARTBEAT_URL) {
+    // Ezt szándékosan logoljuk: enélkül a csendes kimaradás és a sikeres
+    // ping a naplóban megkülönböztethetetlen lenne.
+    console.warn('heartbeat: a HEARTBEAT_URL nincs beállítva – életjel kimarad')
+    return
+  }
   try {
     const res = await fetch(HEARTBEAT_URL, {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
     })
-    if (!res.ok) console.error(`heartbeat ping válasz: ${res.status}`)
+    if (res.ok) console.log('heartbeat: életjel elküldve')
+    else console.error(`heartbeat ping válasz: ${res.status}`)
   } catch (err) {
     console.error('heartbeat ping nem sikerült:', String(err))
   }
