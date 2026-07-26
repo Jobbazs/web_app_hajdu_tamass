@@ -118,8 +118,10 @@ async function pingHeartbeat() {
     return
   }
   try {
+    // POST kell: a GlitchTip heartbeat-végpontja GET-re 405-öt ad
+    // (Method Not Allowed).
     const res = await fetch(HEARTBEAT_URL, {
-      method: 'GET',
+      method: 'POST',
       signal: AbortSignal.timeout(5000),
     })
     if (res.ok) console.log('heartbeat: életjel elküldve')
