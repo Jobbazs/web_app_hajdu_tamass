@@ -72,9 +72,11 @@ export default function Navbar({ subpage = false }) {
   }, [menuOpen])
 
   const scrollTo = (id) => {
-    // Aloldalon nincs #section a DOM-ban → a főoldalra navigálunk az adott
-    // horgonyra; főoldalon sima görgetés.
-    if (subpage) {
+    // Ha a keresett szekció a JELENLEGI oldalon is létezik (a Kapcsolat pl. az
+    // aloldalakon is renderelődik), akkor odagördítünk – nem visszük vissza a
+    // főoldalra. Ha az adott szekció itt nincs (about/portfolio/stb. egy
+    // aloldalon), akkor a főoldal megfelelő horgonyára navigálunk.
+    if (subpage && !document.getElementById(id)) {
       window.location.href = `/#${id}`
       return
     }

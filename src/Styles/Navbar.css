@@ -191,10 +191,12 @@
 }
 
 /* Tableten/mobilon nincs desktop menü – csak a hamburger.
-   A social ikonok is elrejtőznek a sávból; a mobil menüben jelennek meg. */
+   A social ikonok és a hosszú név is elrejtőznek a sávból (a név egy
+   háttérkép fölött nehezen olvasható) – a socialok a mobil menüben. */
 @media (max-width: 1023px) {
   .nav-right   { display: none !important; }
   .nav-socials { display: none !important; }
+  .nav-logo    { display: none !important; }
 }
 
 .lang-switcher {
@@ -326,8 +328,6 @@
     --nav-pad-y: 0.6rem;
   }
 
-  .nav-logo { font-size: 1.1rem; }
-
   .nav-hamburger { width: 1.6rem; height: 1.6rem; gap: 4px; }
   .nav-hamburger.open span:nth-child(1) { transform: translateY(5px)  rotate(45deg); }
   .nav-hamburger.open span:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
@@ -339,10 +339,3 @@
   .nav-mobile-socials svg { width: 22px; height: 22px; }
 }
 
-/* ============================================================
-   9. KESKENY TELEFON – a hosszabb név ("Hajdu Tamás") is elférjen
-   a hamburger mellett.
-   ============================================================ */
-@media (max-width: 420px) {
-  .nav-logo { font-size: 1.4rem; letter-spacing: 0.08em; }
-}
