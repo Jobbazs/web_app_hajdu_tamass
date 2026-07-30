@@ -25,18 +25,3 @@ footer {
   letter-spacing: 0.15em;
   color: var(--text-muted);
 }
-
-.footer-socials { display: flex; gap: 1.5rem; }
-
-.footer-socials a {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.15em;
-  color: var(--text-muted);
-  transition: color 0.2s;
-  /* Touch target */
-  padding: 0.5rem 0;
-  display: inline-block;
-}
-
-.footer-socials a:hover { color: var(--accent); }

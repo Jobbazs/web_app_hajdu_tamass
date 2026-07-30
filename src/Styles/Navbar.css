@@ -107,9 +107,44 @@
   letter-spacing: 0.15em;
   color: var(--text-primary);
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .nav-logo .logo-accent { color: var(--accent); }
+
+/* Bal oldali csoport: teljes név + social ikonok, közöttük gap */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  min-width: 0;
+}
+
+/* Social ikonok a navbar sávban (desktop) */
+.nav-socials {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.nav-socials a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: color 0.25s, transform 0.25s;
+}
+
+.nav-socials a:hover {
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.nav-socials svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
 
 /* ============================================================
    5. DESKTOP MENÜPONTOK
@@ -155,9 +190,11 @@
   gap: 2rem;
 }
 
-/* Tableten/mobilon nincs desktop menü – csak a hamburger */
+/* Tableten/mobilon nincs desktop menü – csak a hamburger.
+   A social ikonok is elrejtőznek a sávból; a mobil menüben jelennek meg. */
 @media (max-width: 1023px) {
-  .nav-right { display: none !important; }
+  .nav-right   { display: none !important; }
+  .nav-socials { display: none !important; }
 }
 
 .lang-switcher {
@@ -249,6 +286,32 @@
 
 .nav-mobile a:hover { color: var(--accent); }
 
+/* Social ikonok a nyitott mobil menü alján */
+.nav-mobile-socials {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.nav-mobile-socials a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.nav-mobile-socials a:hover {
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.nav-mobile-socials svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
 /* Megjegyzés: a hamburger megjelenítése (.nav-hamburger { display: flex })
    és a desktop menü elrejtése a global.css töréspont-blokkjában történik
    (@media max-width: 1023px) – itt szándékosan nincs duplikálva. */
@@ -272,4 +335,14 @@
   /* Nyitott mobil menü: elférjen az alacsony képernyőn */
   .nav-mobile { gap: 0.9rem; padding: 2.5rem 1rem; overflow-y: auto; }
   .nav-mobile a { font-size: 1.5rem; }
+  .nav-mobile-socials { margin-top: 0.4rem; }
+  .nav-mobile-socials svg { width: 22px; height: 22px; }
+}
+
+/* ============================================================
+   9. KESKENY TELEFON – a hosszabb név ("Hajdu Tamás") is elférjen
+   a hamburger mellett.
+   ============================================================ */
+@media (max-width: 420px) {
+  .nav-logo { font-size: 1.4rem; letter-spacing: 0.08em; }
 }
