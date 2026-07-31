@@ -16,6 +16,7 @@ import Booking        from './components/Booking'
 import Confirm        from './components/Confirm'
 import PortfolioHub   from './components/PortfolioHub'
 import CategoryPage   from './components/CategoryPage'
+import Termekismerteto from './components/Termekismerteto'
 
 import './Styles/global.css'
 
@@ -28,6 +29,11 @@ const SECTION_COMPONENTS = {
   custom:    <CustomSections />,
   contact:   <Contact />,
 }
+
+// Nem publikus termékismertető aloldal útvonala.
+// Nincs sehol linkelve, nincs a sitemapben, a komponens noindex-eli.
+// Átnevezéshez elég ezt az egy sort módosítani.
+const INFO_PATH = '/termekismerteto-9fa3'
 
 // Alapértelmezett sorrend ha nincs DB beállítás
 const DEFAULT_ORDER = [
@@ -116,6 +122,9 @@ function AppInner() {
   }
 
   if (path === '/confirm' || path === '/cancel') return <Confirm />
+
+  // Nem publikus termékismertető (noindex, nincs a menüben/sitemapben)
+  if (path === INFO_PATH || path === INFO_PATH + '/') return <Termekismerteto />
 
   // Portfólió aloldalak (SEO): hub + kategória-oldalak
   if (path === '/portfolio' || path === '/portfolio/') return <PortfolioHub />
