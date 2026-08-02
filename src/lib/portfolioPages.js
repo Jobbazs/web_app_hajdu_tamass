@@ -5,7 +5,23 @@
 export function cldThumb(url, w = 800) {
   if (!url || !url.includes('/upload/')) return url
   if (/\/upload\/[^/]*(?:w_|q_|f_)/.test(url)) return url
-  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${w}/`)
+  return url.replace('/upload/', `/upload/f_auto,q_auto:eco,c_limit,w_${w}/`)
+}
+
+// Nagy (modal) nézet: garantált méret- és minőség-cap nyers ÉS már transzformált URL-re is.
+export function cldLarge(url, w = 1600) {
+  if (!url || !url.includes('/upload/')) return url
+  const seg = url.match(/\/upload\/([^/]+)\//)
+  const isTransform = seg && /(?:^|,)(?:w_|h_|c_|q_|f_|e_|dpr_|ar_)/.test(seg[1])
+  if (isTransform) {
+    let s = seg[1]
+    s = /(?:^|,)w_\d+/.test(s)   ? s.replace(/w_\d+/, `w_${w}`)   : `${s},w_${w}`
+    s = /(?:^|,)q_[^,]+/.test(s) ? s.replace(/q_[^,]+/, 'q_auto') : `${s},q_auto`
+    s = /(?:^|,)f_[^,]+/.test(s) ? s                              : `f_auto,${s}`
+    s = /(?:^|,)c_[^,]+/.test(s) ? s                              : `${s},c_limit`
+    return url.replace(/\/upload\/[^/]+\//, `/upload/${s}/`)
+  }
+  return url.replace('/upload/', `/upload/f_auto,q_auto,c_limit,w_${w}/`)
 }
 
 // Igazítási presetek (bal 0-75%, közép 0-100%, jobb 25-100%)

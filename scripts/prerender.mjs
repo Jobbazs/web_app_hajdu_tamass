@@ -161,7 +161,7 @@ function customHtml(sections) {
 function cldThumb(url, w = 800) {
   if (!url || !url.includes('/upload/')) return url
   if (/\/upload\/[^/]*(?:w_|q_|f_)/.test(url)) return url
-  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${w}/`)
+  return url.replace('/upload/', `/upload/f_auto,q_auto:eco,c_limit,w_${w}/`)
 }
 
 // Egy head-tag lecserélése (multiline-biztos). Ha nincs találat, változatlan.
@@ -456,12 +456,19 @@ async function main() {
         '@type': 'ImageGallery',
         name: `${cat.label_hu} — Hajdu Tamás`,
         url: `${SITE}/portfolio/${cat.slug}`,
-        image: catItems.slice(0, 30).map((i) => cldThumb(i.cloudinary_url, 1200)),
+        image: catItems.slice(0, 30).map((i) => cldSeo(i.cloudinary_url, 1200)),
       })
     }
     await writePage(`portfolio/${cat.slug}`, html)
     pageCount++
   }
+
+  // ÚJ függvény
+function cldSeo(url, w = 1200) {
+  if (!url || !url.includes('/upload/')) return url
+  if (/\/upload\/[^/]*(?:w_|q_|f_)/.test(url)) return url
+  return url.replace('/upload/', `/upload/f_auto,q_auto,c_limit,w_${w}/`)
+}
 
   // 4) Sitemap
   // Figyelem: contentRows (nyers sorok) kell, nem a lapított 'content' objektum,

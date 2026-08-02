@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useLang } from '../LangContext'
 import '../Styles/MediaModal.css'
-import { cldThumb } from '../lib/portfolioPages'
+import { cldThumb, cldLarge } from '../lib/portfolioPages'
+
 
 export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const videoRef = useRef(null)
@@ -36,9 +37,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const isVideo    = item.category === 'video'
   const currentIdx = items.findIndex(i => i.id === item.id)
   const total      = items.length
-  const fullUrl    = cldThumb(item.cloudinaryUrl, 2000)
-    ? item.cloudinaryUrl.replace(/w_\d+/, 'w_1600').replace(/q_\d+/, 'q_90')
-    : item.cloudinaryUrl
+  const fullUrl    = cldLarge(item.cloudinaryUrl, 1600)
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -75,7 +74,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
               className="modal-video"
               src={item.videoUrl}
               controls autoPlay playsInline
-              poster={item.cloudinaryUrl}
+              poster={cldThumb(item.cloudinaryUrl, 1200)}
             />
           ) : isVideo && !item.videoUrl ? (
             <div className="modal-no-video">
