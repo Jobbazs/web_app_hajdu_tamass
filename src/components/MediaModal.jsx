@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useLang } from '../LangContext'
 import '../Styles/MediaModal.css'
 import { cldThumb, cldLarge } from '../lib/portfolioPages'
@@ -6,6 +6,8 @@ import { cldThumb, cldLarge } from '../lib/portfolioPages'
 
 export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const videoRef = useRef(null)
+  const imgRef   = useRef(null)
+  const [loaded, setLoaded] = useState(false)
   const { t } = useLang()
   const m = t.modal
 
@@ -31,6 +33,24 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
       videoRef.current.currentTime = 0
     }
   }, [item?.id])
+
+  // Nagy kép: reset váltáskor; ha már cache-ből teljes, azonnal kész (nincs villanás)
+  useEffect(() => {
+    setLoaded(false)
+    const el = imgRef.current
+    if (el && el.complete && el.naturalWidth > 0) setLoaded(true)
+  }, [item?.id])
+
+  // Előző/következő kép háttér-előtöltése → azonnali lapozás
+  useEffect(() => {
+    if (!item) return
+    const idx = items.findIndex(i => i.id === item.id)
+    ;[items[idx - 1], items[idx + 1]].forEach(n => {
+      if (!n || n.category === 'video' || !n.cloudinaryUrl) return
+      const im = new Image()
+      im.src = cldLarge(n.cloudinaryUrl, 1600)
+    })
+  }, [item?.id, items])
 
   if (!item) return null
 
@@ -85,7 +105,21 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
               </p>
             </div>
           ) : (
-            <img className="modal-image" src={fullUrl} alt={item.title} draggable={false} />
+            <>
+              {/* LQIP: a rácsból már cache-elt thumbnail azonnal, elmosva */}
+              <img
+                className="modal-image-ph"
+                src={cldThumb(item.cloudinaryUrl, 800)}
+                alt="" aria-hidden="true" draggable={false}
+              />
+              <img
+                ref={imgRef}
+                className={`modal-image ${loaded ? 'is-loaded' : ''}`}
+                src={fullUrl}
+                alt={item.title} draggable={false}
+                onLoad={() => setLoaded(true)}
+              />
+            </>
           )}
         </div>
 

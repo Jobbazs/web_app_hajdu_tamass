@@ -4,7 +4,7 @@ import { usePortfolio, useCategories } from '../hooks'
 import { useCategorySections } from '../hooks'
 import CategorySections from './CategorySections'
 import HeroWords from './HeroWords'
-import { cldThumb, alignStyle, sizeClass, catLabel, catIntro, catSubtitle } from '../lib/portfolioPages'
+import { cldThumb, alignStyle, sizeClass, catLabel, catIntro, catSubtitle, prefetchLarge, goodConnection } from '../lib/portfolioPages'
 import Navbar from './Navbar'
 import Contact from './Contact'
 import Footer from './Footer'
@@ -123,6 +123,25 @@ export default function CategoryPage({ slug }) {
     }
   }, [notFound])
 
+  // Jó kapcsolaton (4g, nincs Save-Data) az első pár kép modal-méretét
+  // tétlen időben előtöltjük → a modal azonnal éles lesz.
+  useEffect(() => {
+    if (!catItems.length || !goodConnection()) return
+    const urls = catItems
+      .filter((i) => !i.videoUrl && i.cloudinaryUrl)
+      .slice(0, 12)
+      .map((i) => i.cloudinaryUrl)
+    if (!urls.length) return
+    const run = () => urls.forEach(prefetchLarge)
+    const ric = window.requestIdleCallback
+    const id  = ric ? ric(run, { timeout: 2000 }) : window.setTimeout(run, 1200)
+    return () => {
+      const cic = window.cancelIdleCallback
+      if (ric && cic) cic(id)
+      else window.clearTimeout(id)
+    }
+  }, [catItems])
+
   // Nem létező kategória (a betöltés után)
   if (!loading && !category) {
     return (
@@ -203,6 +222,8 @@ export default function CategoryPage({ slug }) {
                         key={it.id}
                         className="cat-tile"
                         onClick={() => setSelected(it)}
+                        onMouseEnter={() => { if (!it.videoUrl) prefetchLarge(it.cloudinaryUrl) }}
+                        onTouchStart={() => { if (!it.videoUrl) prefetchLarge(it.cloudinaryUrl) }}
                         aria-label={it.title || label}
                       >
                         <img

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useLang } from '../LangContext'
-import { cldThumb, alignStyle, sizeClass } from '../lib/portfolioPages'
+import { cldThumb, alignStyle, sizeClass, prefetchLarge } from '../lib/portfolioPages'
 
 // Hány képet mutat egy szekció (auto módban ennyit fogyaszt a kategória-poolból)
 const IMG_COUNT = { text_images: 4, images_text: 4, images_only: 8, text_only: 0 }
@@ -36,6 +36,8 @@ export default function CategorySections({ sections, catItems, onImageClick }) {
       key={it.id}
       className="cat-tile"
       onClick={() => onImageClick(it)}
+      onMouseEnter={() => { if (!(it.videoUrl || it.video_url)) prefetchLarge(it.cloudinaryUrl || it.cloudinary_url) }}
+      onTouchStart={() => { if (!(it.videoUrl || it.video_url)) prefetchLarge(it.cloudinaryUrl || it.cloudinary_url) }}
       aria-label={it.title || title || ''}
     >
       <img
