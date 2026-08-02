@@ -1,8 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useLang } from '../LangContext'
 import '../Styles/MediaModal.css'
-import { cldThumb, cldLarge } from '../lib/portfolioPages'
-
+import { cldThumb, cldLarge, prefetchLarge } from '../lib/portfolioPages'
 
 export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const videoRef = useRef(null)
@@ -34,21 +33,20 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
     }
   }, [item?.id])
 
-  // Nagy kép: reset váltáskor; ha már cache-ből teljes, azonnal kész (nincs villanás)
+  // Nagy kép: reset váltáskor; ha már cache-ből teljes, azonnal "kész" (nincs villanás)
   useEffect(() => {
     setLoaded(false)
     const el = imgRef.current
     if (el && el.complete && el.naturalWidth > 0) setLoaded(true)
   }, [item?.id])
 
-  // Előző/következő kép háttér-előtöltése → azonnali lapozás
+  // Előző/következő 2-2 kép háttér-előtöltése → azonnali lapozás
   useEffect(() => {
     if (!item) return
     const idx = items.findIndex(i => i.id === item.id)
-    ;[items[idx - 1], items[idx + 1]].forEach(n => {
-      if (!n || n.category === 'video' || !n.cloudinaryUrl) return
-      const im = new Image()
-      im.src = cldLarge(n.cloudinaryUrl, 1600)
+    ;[idx - 2, idx - 1, idx + 1, idx + 2].forEach((k) => {
+      const n = items[k]
+      if (n && n.category !== 'video' && n.cloudinaryUrl) prefetchLarge(n.cloudinaryUrl)
     })
   }, [item?.id, items])
 
@@ -57,7 +55,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const isVideo    = item.category === 'video'
   const currentIdx = items.findIndex(i => i.id === item.id)
   const total      = items.length
-  const fullUrl    = cldLarge(item.cloudinaryUrl, 1600)
+  const fullUrl    = cldLarge(item.cloudinaryUrl, 2000)
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -106,17 +104,20 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
             </div>
           ) : (
             <>
-              {/* LQIP: a rácsból már cache-elt thumbnail azonnal, elmosva */}
+              {/* Placeholder: közepes felbontású, jó minőségű előnézet, amíg a full betölt */}
               <img
                 className="modal-image-ph"
-                src={cldThumb(item.cloudinaryUrl, 800)}
-                alt="" aria-hidden="true" draggable={false}
+                src={cldLarge(item.cloudinaryUrl, 1280)}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
               />
               <img
                 ref={imgRef}
                 className={`modal-image ${loaded ? 'is-loaded' : ''}`}
                 src={fullUrl}
-                alt={item.title} draggable={false}
+                alt={item.title}
+                draggable={false}
                 onLoad={() => setLoaded(true)}
               />
             </>
