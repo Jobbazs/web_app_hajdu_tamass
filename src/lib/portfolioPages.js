@@ -12,7 +12,7 @@ export function cldThumb(url, w = 800) {
 // Nagy (modal) nézet: garantáltan méret- és minőség-cap, akkor is ha a tárolt
 // URL nyers (/upload/<id>) VAGY már tartalmaz transzformációt. A modalban q_auto
 // (jó) minőséget hagyunk, mert itt egy hibás pixel is látszana.
-export function cldLarge(url, w = 1600) {
+export function cldLarge(url, w = 2000) {
   if (!url || !url.includes('/upload/')) return url
   const seg = url.match(/\/upload\/([^/]+)\//)
   const isTransform = seg && /(?:^|,)(?:w_|h_|c_|q_|f_|e_|dpr_|ar_)/.test(seg[1])
@@ -28,7 +28,17 @@ export function cldLarge(url, w = 1600) {
 }
 
 // ── Modal-méretű kép háttér-előtöltés ──────────────────────
-const _prefetched = new Set()
+const _prefetched = new Set()   // már elindított előtöltés (dedup)
+const _ready      = new Set()   // már teljesen betöltött full URL-ek
+
+// A full (modal) URL már készen áll? (előtöltve VAGY korábban megnézve)
+export function largeReady(url) {
+  return !!url && _ready.has(cldLarge(url, 2000))
+}
+// Kézi jelölés, hogy egy full kép betöltött (a modal onLoad-ból hívjuk)
+export function markLargeReady(url) {
+  if (url) _ready.add(cldLarge(url, 2000))
+}
 
 function _conn() {
   if (typeof navigator === 'undefined') return null
@@ -49,11 +59,13 @@ export function prefetchLarge(url) {
   if (!url || typeof Image === 'undefined') return
   const c = _conn()
   if (c && c.saveData) return
-  const large = cldLarge(url, 1600)
+  const large = cldLarge(url, 2000)
   if (_prefetched.has(large)) return
   _prefetched.add(large)
   const im = new Image()
+  im.onload = () => _ready.add(large)
   im.src = large
+  if (im.complete && im.naturalWidth > 0) _ready.add(large)
 }
 
 // Igazítási presetek (bal 0-75%, közép 0-100%, jobb 25-100%)

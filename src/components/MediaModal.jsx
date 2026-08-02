@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useLang } from '../LangContext'
 import '../Styles/MediaModal.css'
-import { cldThumb, cldLarge, prefetchLarge } from '../lib/portfolioPages'
+import { cldThumb, cldLarge, prefetchLarge, largeReady, markLargeReady } from '../lib/portfolioPages'
 
 export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const videoRef = useRef(null)
@@ -33,11 +33,16 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
     }
   }, [item?.id])
 
-  // Nagy kép: reset váltáskor; ha már cache-ből teljes, azonnal "kész" (nincs villanás)
+  // Nagy kép: ha már előtöltött/kész → azonnal éles (nincs elmosás lapozáskor).
+  // Különben reset; ha cache-ből mégis teljes, akkor is azonnal kész.
   useEffect(() => {
+    if (largeReady(item.cloudinaryUrl)) { setLoaded(true); return }
     setLoaded(false)
     const el = imgRef.current
-    if (el && el.complete && el.naturalWidth > 0) setLoaded(true)
+    if (el && el.complete && el.naturalWidth > 0) {
+      markLargeReady(item.cloudinaryUrl)
+      setLoaded(true)
+    }
   }, [item?.id])
 
   // Előző/következő 2-2 kép háttér-előtöltése → azonnali lapozás
@@ -118,7 +123,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
                 src={fullUrl}
                 alt={item.title}
                 draggable={false}
-                onLoad={() => setLoaded(true)}
+                onLoad={() => { markLargeReady(item.cloudinaryUrl); setLoaded(true) }}
               />
             </>
           )}
