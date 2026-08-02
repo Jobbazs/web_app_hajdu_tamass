@@ -36,6 +36,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   // Nagy kép: ha már előtöltött/kész → azonnal éles (nincs elmosás lapozáskor).
   // Különben reset; ha cache-ből mégis teljes, akkor is azonnal kész.
   useEffect(() => {
+    if (!item) return
     if (largeReady(item.cloudinaryUrl)) { setLoaded(true); return }
     setLoaded(false)
     const el = imgRef.current
@@ -69,7 +70,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
         {/* Header */}
         <div className="modal-header">
           <div className="modal-meta">
-            {/* <span className="modal-title">{item.title}</span> */}
+            <span className="modal-title">{item.title}</span>
             <span className="modal-counter">{currentIdx + 1} / {total}</span>
           </div>
           <button className="modal-close" onClick={onClose} aria-label={m.close}>✕</button>
