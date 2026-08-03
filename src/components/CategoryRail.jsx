@@ -17,6 +17,11 @@ export default function CategoryRail({ categories, activeSlug, variant = 'top' }
       aria-label={isBottom ? `${label} (${lang === 'hu' ? 'oldal alja' : 'bottom'})` : label}
     >
       <div className="cat-rail-inner">
+        {!isBottom && (
+          <a href="/" className="home-cta home-cta--rail">
+            {lang === 'hu' ? 'Főoldal' : 'Home'}
+          </a>
+        )}
         <a
           href="/portfolio"
           className={`cat-rail-link cat-rail-all ${!activeSlug ? 'active' : ''}`}

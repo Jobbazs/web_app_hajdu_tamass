@@ -47,6 +47,7 @@ export default function AdminPortfolio() {
   const [selectMode,  setSelectMode]  = useState(false)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [assignTo,    setAssignTo]    = useState('')
+  const [undoStack,   setUndoStack]   = useState([])
 
   // Normalizált elemek kategória szerint csoportosítva
   const normalized = useMemo(() => items.map(item => ({
@@ -210,19 +211,61 @@ export default function AdminPortfolio() {
     setDeleteCat(null); await refetchCats(); await refetch()
   }
 
-  // Tömeges kijelölés + kategóriához rendelés
-  const toggleSelect = (id) => setSelectedIds(prev => {
-    const next = new Set(prev)
-    if (next.has(id)) next.delete(id); else next.add(id)
-    return next
-  })
-  const clearSelection = () => { setSelectMode(false); setSelectedIds(new Set()); setAssignTo('') }
+  // Tömeges kijelölés + kategóriához rendelés + univerzális visszavonás
+  const pushUndo      = (entry) => setUndoStack(s => [...s, entry])
+  const snapSelection = () => pushUndo({ type: 'selection', prev: new Set(selectedIds) })
+
+  const toggleSelect = (id) => {
+    snapSelection()
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+  const allSelected = filtered.length > 0 && filtered.every(i => selectedIds.has(i.id))
+  const toggleAll = () => {
+    snapSelection()
+    setSelectedIds(allSelected ? new Set() : new Set(filtered.map(i => i.id)))
+  }
+  const clearSelection = () => { setSelectMode(false); setSelectedIds(new Set()); setAssignTo(''); setUndoStack([]) }
+
+  // Visszavonás: kijelölés VAGY áthelyezés (a legutolsó művelettől visszafelé)
+  const undo = async () => {
+    const entry = undoStack[undoStack.length - 1]
+    if (!entry) return
+    setUndoStack(s => s.slice(0, -1))
+    if (entry.type === 'selection') {
+      setSelectedIds(new Set(entry.prev))
+    } else if (entry.type === 'move') {
+      await Promise.all(entry.changes.map(c =>
+        supabase.from('portfolio_items').update({ category_id: c.prev }).eq('id', c.id)
+      ))
+      await refetch()
+    }
+  }
+
   const bulkAssign = async () => {
     if (!assignTo || selectedIds.size === 0) return
-    const { error } = await supabase.from('portfolio_items')
-      .update({ category_id: assignTo }).in('id', [...selectedIds])
+    const ids = [...selectedIds]
+    const changes = normalized.filter(i => selectedIds.has(i.id)).map(i => ({ id: i.id, prev: i.category_id ?? null }))
+    const { error } = await supabase.from('portfolio_items').update({ category_id: assignTo }).in('id', ids)
     if (error) { alert('Áthelyezési hiba: ' + error.message); return }
-    clearSelection(); await refetch()
+    pushUndo({ type: 'move', changes })
+    setSelectedIds(new Set()); setAssignTo('')
+    await refetch()
+  }
+
+  const bulkDelete = async () => {
+    if (selectedIds.size === 0) return
+    if (!window.confirm(`Véglegesen törlöd a kijelölt ${selectedIds.size} képet?\n\nEz NEM vonható vissza (a Cloudinary-fájlok is törlődnek).`)) return
+    const ids  = [...selectedIds]
+    const urls = normalized.filter(i => selectedIds.has(i.id)).map(i => i.cloudinary_url).filter(Boolean)
+    const { error } = await supabase.from('portfolio_items').delete().in('id', ids)
+    if (error) { alert('Törlési hiba: ' + error.message); return }
+    if (urls.length) await deleteCloudinaryAssets(urls)
+    setSelectedIds(new Set())
+    await refetch()
   }
 
   return (
@@ -317,14 +360,23 @@ export default function AdminPortfolio() {
           {selectMode && (
             <div className="acms-bulk-bar">
               <span className="acms-bulk-count">{selectedIds.size} kijelölve</span>
-              <button className="acms-btn-sm" onClick={() => setSelectedIds(new Set(filtered.map(i => i.id)))}>Mind kijelöl</button>
+
+              <label className="acms-switch" title="Összes ki/be">
+                <input type="checkbox" checked={allSelected} onChange={toggleAll} />
+                <span className="acms-switch-track"><span className="acms-switch-thumb" /></span>
+                <span>Mind kijelöl</span>
+              </label>
+
+              <button className="acms-btn-sm" onClick={undo} disabled={undoStack.length === 0}>↶ Visszavonás</button>
+
+              <span className="acms-bulk-sep" />
+
               <select className="acms-input acms-input--sm" value={assignTo} onChange={e => setAssignTo(e.target.value)}>
                 <option value="">Kategória kiválasztása…</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.label_hu}</option>)}
               </select>
-              <button className="acms-btn-primary" disabled={!assignTo || selectedIds.size === 0} onClick={bulkAssign}>
-                Hozzáad a kategóriához
-              </button>
+              <button className="acms-btn-primary" disabled={!assignTo || selectedIds.size === 0} onClick={bulkAssign}>Áthelyezés</button>
+              <button className="acms-btn-danger"  disabled={selectedIds.size === 0} onClick={bulkDelete}>Törlés</button>
             </div>
           )}
 

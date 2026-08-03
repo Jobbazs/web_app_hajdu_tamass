@@ -242,6 +242,11 @@ export default function CategoryPage({ slug }) {
         </div>
       </main>
 
+      {/* Mobil: vissza a főoldalra a rács aljáról (desktopon a navbar viszi haza) */}
+      <div className="cat-home-wrap">
+        <a href="/" className="home-cta">{lang === 'hu' ? 'Főoldal' : 'Home'}</a>
+      </div>
+
       {/* Kategóriaválasztó az oldal alján is – így a képek végignézése után
           nem kell visszagörgetni. Csak reszponzív nézetben látszik. */}
       <CategoryRail categories={categories} activeSlug={slug} variant="bottom" />

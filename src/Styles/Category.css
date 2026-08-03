@@ -430,3 +430,28 @@
     border-top: 1px solid var(--border-subtle, #2a2520);
   }
 }
+
+/* ── "Főoldal" narancs CTA (a hero-cta mintájára) ── */
+.home-cta {
+  display: inline-block;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ash-deep);
+  background: var(--rust-light);
+  padding: 0.85rem 2rem;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: background 0.3s;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+.home-cta:hover { background: var(--parchment); }
+
+/* Rács alatti változat – csak valódi mobilon (érintős) látszik */
+.cat-home-wrap { display: none; text-align: center; padding: 1.4rem 1rem 0.4rem; }
+@media (pointer: coarse) { .cat-home-wrap { display: block; } }
+
+/* Rail-beli (kategória-navbar) változat – kisebb, beleillik a sávba */
+.home-cta--rail { padding: 0.55rem 1.3rem; font-size: 0.62rem; align-self: center; }
