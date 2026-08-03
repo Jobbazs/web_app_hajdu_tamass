@@ -6,7 +6,9 @@ import { cldThumb, cldLarge, prefetchLarge, largeReady, markLargeReady } from '.
 export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
   const videoRef = useRef(null)
   const imgRef   = useRef(null)
-  const [loaded, setLoaded] = useState(false)
+  const phRef    = useRef(null)
+  const [loaded, setLoaded]     = useState(false)
+  const [phLoaded, setPhLoaded] = useState(false)
   const { t } = useLang()
   const m = t.modal
 
@@ -33,10 +35,14 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
     }
   }, [item?.id])
 
-  // Nagy kép: ha már előtöltött/kész → azonnal éles (nincs elmosás lapozáskor).
-  // Különben reset; ha cache-ből mégis teljes, akkor is azonnal kész.
+  // Váltáskor a placeholdert elrejtjük, amíg a SAJÁT új képe be nem tölt →
+  // fizikailag nem tudja megmutatni az előző képet. Az éles kép: ha előtöltött, azonnal.
   useEffect(() => {
     if (!item) return
+    setPhLoaded(false)
+    const pel = phRef.current
+    if (pel && pel.complete && pel.naturalWidth > 0) setPhLoaded(true)
+
     if (largeReady(item.cloudinaryUrl)) { setLoaded(true); return }
     setLoaded(false)
     const el = imgRef.current
@@ -114,11 +120,13 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
                   key → új elem képenként, hogy sose látszódjon az előző kép. */}
               <img
                 key={`ph-${item.id}`}
-                className={`modal-image-ph ${loaded ? 'is-hidden' : ''}`}
+                ref={phRef}
+                className={`modal-image-ph ${phLoaded && !loaded ? 'is-shown' : ''}`}
                 src={cldLarge(item.cloudinaryUrl, 1280)}
                 alt=""
                 aria-hidden="true"
                 draggable={false}
+                onLoad={() => setPhLoaded(true)}
               />
               <img
                 key={`full-${item.id}`}

@@ -140,12 +140,12 @@
   filter: blur(4px);
   transform: scale(1.02);
   pointer-events: none;
-  opacity: 1;
+  opacity: 0;
   transition: opacity .2s ease;
   -webkit-user-select: none;   /* Safari <17 */
   user-select: none;
 }
-.modal-image-ph.is-hidden { opacity: 0; }
+.modal-image-ph.is-shown { opacity: 1; }
 
 .modal-video {
   width: 100%;
