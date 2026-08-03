@@ -58,13 +58,13 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
     const idx = items.findIndex(i => i.id === item.id)
     ;[idx - 2, idx - 1, idx + 1, idx + 2].forEach((k) => {
       const n = items[k]
-      if (n && n.category !== 'video' && n.cloudinaryUrl) prefetchLarge(n.cloudinaryUrl)
+      if (n && !n.videoUrl && n.cloudinaryUrl) prefetchLarge(n.cloudinaryUrl)
     })
   }, [item?.id, items])
 
   if (!item) return null
 
-  const isVideo    = item.category === 'video'
+  const isVideo    = !!item.videoUrl
   const currentIdx = items.findIndex(i => i.id === item.id)
   const total      = items.length
   const fullUrl    = cldLarge(item.cloudinaryUrl, 2000)
@@ -166,7 +166,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
                   />
                 ) : (
                   <div className="modal-thumb-placeholder">
-                    {it.category === 'video' ? '▶' : '·'}
+                    {it.videoUrl ? '▶' : '·'}
                   </div>
                 )}
               </button>

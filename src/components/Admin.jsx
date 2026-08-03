@@ -1,68 +1,1240 @@
-import { useState } from 'react'
-import { supabase } from '../supabaseClient'
-import AdminDashboard from './admin/AdminDashboard'
-import AdminMessages  from './admin/AdminMessages'
-import '../Styles/Admin.css'
-import AdminPortfolio from './admin/AdminPortfolio'
-import AdminCategories from './admin/AdminCategories'
-import AdminServices  from './admin/AdminServices'
-import AdminContent   from './admin/AdminContent'
-import AdminBookings  from './admin/AdminBookings'
-import AdminAdvanced  from './admin/AdminAdvanced'
+/* ============================================================
+   ADMIN – shell, header, tabs, shared form elements
+   ============================================================ */
+.admin-bg { min-height: 100vh; padding-top: 0; overflow-x: clip; }
 
-const TABS = [
-  { key: 'dashboard', label: 'Áttekintés' },
-  { key: 'messages',  label: 'Üzenetek' },
-  { key: 'portfolio', label: 'Portfólió' },
-  { key: 'categories', label: 'Kategória-oldalak' },
-  { key: 'services',  label: 'Szolgáltatások' },
-  { key: 'content',   label: 'Tartalom' },
-  { key: 'bookings',  label: 'Foglalások' },
-  { key: 'advanced',  label: 'Haladó beállítások' },
-]
+.admin-title {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+}
 
-export default function Admin() {
-  const [activeTab, setActiveTab] = useState('dashboard')
+.admin-subtitle {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
+.admin-header-left { display: flex; flex-direction: column; }
+
+.admin-logout-btn {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid var(--border-mid);
+  color: var(--text-muted);
+  padding: 0.5rem 1.2rem;
+  min-height: 40px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-logout-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.admin-empty {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+/* ============================================================
+   ADMIN CMS – TABS
+   ============================================================ */
+
+/* Tab sáv */
+.acms-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 2rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.acms-tabs::-webkit-scrollbar { display: none; }
+
+.acms-tab {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.acms-tab:hover { color: var(--text-primary); }
+
+.acms-tab--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Tab tartalom */
+.acms-content { padding: 2rem; }
+
+/* Section fejléc */
+.acms-section { max-width: 960px; }
+.acms-section--wide { max-width: none; }   /* pl. portfólió rács – teljes szélesség */
+
+.acms-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.acms-section-title {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+}
+
+.acms-section-sub {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+/* ============================================================
+   ADMIN CMS – SHARED BUTTONS
+   ============================================================ */
+
+.acms-btn-primary {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--bg-primary);
+  background: var(--accent);
+  border: none;
+  padding: 0.65rem 1.4rem;
+  min-height: 40px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.acms-btn-primary:hover { opacity: 0.85; }
+.acms-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.acms-btn-secondary {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border-mid);
+  padding: 0.65rem 1.4rem;
+  min-height: 40px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.acms-btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+.acms-btn-sm {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border-subtle);
+  padding: 0.3rem 0.7rem;
+  min-height: 32px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.acms-btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+.acms-btn-danger:hover {
+  border-color: rgba(200, 50, 50, 0.5) !important;
+  color: #e05050 !important;
+}
+
+/* ============================================================
+   ADMIN CMS – SHARED LIST ITEMS
+   ============================================================ */
+
+.acms-list { display: flex; flex-direction: column; gap: 6px; }
+
+.acms-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 0.8rem 1rem;
+  transition: border-color 0.2s;
+}
+
+.acms-list-item:hover { border-color: var(--border-mid); }
+.acms-hidden { opacity: 0.45; }
+
+.acms-thumb {
+  width: 56px;
+  height: 42px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+.acms-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.acms-thumb-ph {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 1.2rem;
+}
+
+.acms-list-info { flex: 1; min-width: 0; }
+
+.acms-list-name {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acms-list-meta { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem; }
+
+.acms-tag {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border-mid);
+  color: var(--accent);
+}
+.acms-tag--dim { color: var(--text-muted); border-color: var(--border-subtle); }
+
+.acms-list-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ============================================================
+   ADMIN CMS – SHARED FORM ELEMENTS
+   ============================================================ */
+
+.acms-form { display: flex; flex-direction: column; gap: 0; }
+
+.acms-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.acms-form-group label {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.acms-form-group--check {
+  justify-content: flex-end;
+  padding-top: 1.6rem;
+}
+
+.acms-form-group--check label {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  text-transform: none;
+  font-size: 0.65rem;
+}
+
+.acms-form-group--check input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.acms-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.acms-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-mid);
+  color: var(--text-primary);
+  padding: 0.7rem 0.9rem;
+  font-family: 'Crimson Pro', 'Rajdhani', serif;
+  font-size: 1rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s;
+  min-height: 40px;
+}
+.acms-input:focus { border-color: var(--accent); }
+.acms-textarea { min-height: 80px; resize: vertical; }
+
+.acms-hint {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.acms-preview {
+  margin: 0.5rem 0 1rem;
+  width: 120px;
+  height: 80px;
+  overflow: hidden;
+  border: 1px solid var(--border-mid);
+}
+.acms-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+.acms-form-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.acms-error {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: #e05050;
+  padding: 0.6rem 0;
+}
+
+.acms-success {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+}
+
+.acms-changed-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: 4px;
+}
+
+/* Sticky mentés gomb */
+.acms-sticky-save {
+  position: sticky;
+  bottom: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  pointer-events: none;
+}
+.acms-sticky-save button { pointer-events: all; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+
+/* ============================================================
+   ADMIN CMS – SHARED MODAL
+   ============================================================ */
+
+.acms-modal-backdrop {
+  position: fixed; inset: 0; z-index: 4000;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);   /* Safari <18 */
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+
+.acms-modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-mid);
+  display: flex;
+  flex-direction: column;
+}
+
+.acms-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.acms-modal-close {
+  background: none; border: none;
+  color: var(--text-muted); font-size: 1rem;
+  cursor: pointer; padding: 0.3rem;
+  transition: color 0.2s;
+}
+.acms-modal-close:hover { color: var(--text-primary); }
+
+.acms-form { padding: 1.4rem; }
+
+.acms-modal--wide { max-width: 820px; }
+
+/* ============================================================
+   ADMIN CMS – STATUS BADGE
+   ============================================================ */
+
+.acms-sect-status {
+  flex-shrink: 0;
+  margin-right: 0;
+  /* Mobilon is a sor elején legyen */
+  order: -1;
+}
+
+.acms-status-badge {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.acms-status-visible {
+  border-color: rgba(196,97,42,0.5);
+  color: var(--accent);
+}
+
+.acms-status-hidden {
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   ALIGN PICKER – gombsor az igazítás választáshoz
+   ============================================================ */
+
+.acms-align-picker {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.acms-align-btn {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.7rem;
+  min-height: 32px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.acms-align-btn:hover {
+  border-color: var(--border-mid);
+  color: var(--text-primary);
+}
+
+.acms-align-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(196,97,42,0.08);
+}
+
+/* ============================================================
+   ADMIN CMS – Reszponzív
+   ============================================================ */
+
+@media (max-width: 767px) {
+  .acms-modal-backdrop { align-items: flex-start; padding-top: max(1rem, env(safe-area-inset-top)); }
+  .acms-content { padding: 1rem; }
+  /* Fő fülek: több sorba tördelnek, nincs vízszintes húzogatás */
+  .acms-tabs { flex-wrap: wrap; overflow-x: visible; padding: 0 1rem; row-gap: 2px; }
+  .acms-tab { padding: 0.5rem 0.7rem; font-size: 0.56rem; letter-spacing: 0.1em; }
+  .acms-form-row { grid-template-columns: 1fr; }
+  .acms-list-item { flex-wrap: wrap; }
+  .acms-list-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .acms-modal {
+    max-height: calc(100vh - 2rem);
+  }
+  @supports (height: 100dvh) {
+    .acms-modal {
+      max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 2rem);
+    }
   }
 
-  return (
-    <div className="admin-bg">
-      {/* Header */}
-      <div className="admin-header">
-        <div className="admin-header-left">
-          <div className="admin-title">Admin</div>
-          <div className="admin-subtitle">Portfólió kezelőfelület</div>
-        </div>
-        <button className="admin-logout-btn" onClick={handleLogout}>Kilépés</button>
-      </div>
-
-      {/* Tab navigáció */}
-      <div className="acms-tabs">
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            className={`acms-tab ${activeTab === tab.key ? 'acms-tab--active' : ''}`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab tartalom */}
-      <div className="acms-content">
-        {activeTab === 'dashboard' && <AdminDashboard />}
-        {activeTab === 'messages'  && <AdminMessages />}
-        {activeTab === 'portfolio' && <AdminPortfolio />}
-        {activeTab === 'categories' && <AdminCategories />}
-        {activeTab === 'services'  && <AdminServices />}
-        {activeTab === 'content'   && <AdminContent />}
-        {activeTab === 'bookings'  && <AdminBookings />}
-        {activeTab === 'advanced'  && <AdminAdvanced />}
-      </div>
-    </div>
-  )
+  /* Gombok mindig láthatók – sticky az alján */
+  .acms-form-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-secondary);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    margin: 0 -1.4rem -1.4rem;
+    padding-left: 1.4rem;
+    padding-right: 1.4rem;
+    z-index: 10;
+  }
 }
+
+/* ── Booking kártyák ── */
+.acms-booking-filters {
+  display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+}
+.acms-booking-card {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  padding: 1.2rem;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.acms-booking-card:hover { border-color: var(--border-mid); }
+.acms-booking-card-header {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;
+}
+.acms-booking-name {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem; letter-spacing: 0.06em; color: var(--text-primary);
+}
+.acms-booking-contact {
+  font-family: 'Space Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.1em; color: var(--text-muted);
+}
+.acms-booking-status {
+  font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  white-space: nowrap; flex-shrink: 0;
+}
+.acms-booking-slot-info {
+  font-size: 0.85rem; color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+.acms-booking-message {
+  font-size: 0.9rem; color: var(--text-secondary);
+  border-left: 2px solid var(--border-mid);
+  padding-left: 0.8rem; margin: 0.6rem 0;
+  line-height: 1.6;
+}
+.acms-booking-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem; }
+.acms-booking-meta {
+  font-family: 'Space Mono', monospace; font-size: 0.58rem;
+  color: var(--text-muted); margin-top: 0.6rem;
+}
+
+/* ── Foglalás-táblázat (Foglalások fül) ─────────────────── */
+.acms-booking-toolbar {
+  display: flex; flex-wrap: wrap; gap: 0.75rem;
+  align-items: center; margin-bottom: 1.2rem;
+}
+.acms-booking-search { flex: 1; min-width: 220px; }
+.acms-booking-export { white-space: nowrap; }
+
+.acms-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-mid);
+  background: var(--bg-card);
+}
+.acms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.acms-table th {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-mid);
+  white-space: nowrap;
+}
+.acms-table td {
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+.acms-table tbody tr:last-child td { border-bottom: none; }
+.acms-row-open > td { background: var(--bg-secondary); }
+
+.acms-cell-strong {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+.acms-cell-sub {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  word-break: break-word;
+}
+
+.acms-status-pill {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid currentColor;
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.acms-row-toggle {
+  background: none; border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0.1rem 0.3rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.acms-row-toggle:hover { color: var(--accent); }
+
+.acms-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+/* Részletek sor */
+.acms-table-detail > td { background: var(--bg-secondary); padding: 1rem 0.8rem; }
+.acms-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.6rem 1.5rem;
+  margin-bottom: 0.6rem;
+}
+.acms-detail-grid > div { display: flex; flex-direction: column; gap: 0.15rem; }
+.acms-detail-k {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.acms-detail-message { margin-top: 0.4rem; }
+.acms-detail-message > div {
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+  line-height: 1.6;
+  border-left: 2px solid var(--border-mid);
+  padding-left: 0.8rem;
+}
+.acms-detail-cancel { margin-top: 0.7rem; }
+.acms-detail-cancel-row {
+  display: flex; gap: 0.4rem;
+  margin-top: 0.25rem; max-width: 520px;
+}
+.acms-detail-cancel-row .acms-input { flex: 1; font-size: 0.72rem; }
+
+@media (max-width: 767px) {
+  .acms-booking-toolbar { flex-direction: column; align-items: stretch; }
+  .acms-booking-search { min-width: 0; }
+  .acms-row-actions { justify-content: flex-start; }
+  .acms-table th:nth-child(5),
+  .acms-table td:nth-child(5) { display: none; } /* "Létrehozva" oszlop elrejtése mobilon */
+}
+
+/* ── Slot kártyák ── */
+.acms-slot-card {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  padding: 1.2rem; margin-bottom: 8px;
+}
+.acms-slot-header {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;
+}
+.acms-slot-date {
+  font-family: 'Space Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.12em; color: var(--accent); margin-bottom: 0.2rem;
+}
+.acms-slot-title {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.3rem; letter-spacing: 0.06em; color: var(--text-primary);
+}
+.acms-slot-capacity {
+  display: flex; flex-direction: column; align-items: flex-end;
+  font-family: 'Space Mono', monospace; font-size: 0.72rem;
+  color: var(--text-muted); flex-shrink: 0;
+}
+
+/* ── Reliability kártyák ── */
+.acms-reliability-card {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  padding: 1.2rem; margin-bottom: 8px;
+}
+.acms-reliability-header {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;
+}
+.acms-reliability-level {
+  font-family: 'Space Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.12em; font-weight: bold; flex-shrink: 0;
+}
+.acms-reliability-stats {
+  display: flex; gap: 1.2rem; flex-wrap: wrap;
+  font-family: 'Space Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.1em; color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+
+/* ── rrule preset gombok ── */
+.acms-booking-rrule-presets {
+  display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem;
+}
+
+/* ── Portfólió grid ── */
+.acms-port-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.acms-port-cat-filter {
+  max-width: 260px;
+  min-height: 38px;
+  font-size: 0.85rem;
+}
+
+/* 8 oszlop desktopon, arányos csökkentés */
+.acms-port-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+
+.acms-port-card {
+  position: relative;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.acms-port-card:hover { border-color: var(--accent); }
+
+.acms-port-card--hidden { opacity: 0.5; }
+
+/* A kép a kártya – nagy, négyzetes */
+.acms-port-card-img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.acms-port-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.acms-port-card-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+}
+
+.acms-port-card-hidden-badge {
+  position: absolute;
+  top: 4px; right: 4px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+/* Akciók: overlay a kép alján – hoverre látszik, így a kártya = a kép */
+.acms-port-card-actions {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 1.1rem 0.4rem 0.4rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 65%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.acms-port-card:hover .acms-port-card-actions { opacity: 1; }
+
+.acms-port-card-title {
+  font-size: 0.62rem;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.acms-port-card-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acms-port-card-btns .acms-btn-sm {
+  font-size: 0.55rem;
+  padding: 0.25rem 0.3rem;
+  min-height: 22px;
+  text-align: center;
+}
+
+/* Reszponzív oszlopszám (a rács mindig kitölti a teljes szélességet) */
+@media (max-width: 1400px) { .acms-port-grid { grid-template-columns: repeat(7, 1fr); } }
+@media (max-width: 1150px) { .acms-port-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (max-width: 950px)  { .acms-port-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 700px)  { .acms-port-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 520px)  { .acms-port-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* Érintőeszköz (nincs hover): az akciók legyenek MINDIG láthatók a kép alatt */
+@media (hover: none) {
+  .acms-port-card-actions {
+    position: static;
+    opacity: 1;
+    background: var(--bg-card);
+    padding: 0.4rem;
+  }
+  .acms-port-card-title { color: var(--text-muted); }
+}
+
+/* ── Szekció sorrend ── */
+.acms-order-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 4px;
+  cursor: grab;
+  transition: background 0.2s, border-color 0.2s;
+  -webkit-user-select: none;   /* Safari <17 */
+  user-select: none;
+}
+
+.acms-order-item:active { cursor: grabbing; }
+
+.acms-order-item--fixed {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.acms-order-item--dragging {
+  border-color: var(--accent);
+  background: var(--bg-secondary);
+}
+
+.acms-order-handle {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.acms-order-label {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.acms-order-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  padding: 0.2rem 0.5rem;
+}
+
+/* ── Haladó beállítások – publikálás ── */
+.adv-doc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 1.5rem;
+}
+.adv-doc p { margin-bottom: 0.9rem; }
+.adv-doc strong { color: var(--text-primary); }
+
+.adv-doc-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 1.4rem 0;
+}
+
+.adv-doc-col {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  padding: 1rem 1.2rem;
+}
+
+.adv-doc-col-title {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+.adv-doc-col-title--yes { color: var(--accent); }
+.adv-doc-col-title--no  { color: var(--text-muted); }
+
+.adv-doc-col ul { margin: 0; padding-left: 1.1rem; }
+.adv-doc-col li { font-size: 0.88rem; line-height: 1.7; }
+
+.adv-doc-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-left: 2px solid var(--border-mid);
+  padding-left: 0.9rem;
+  margin-top: 1.2rem !important;
+}
+
+.adv-publish-row {
+  display: flex; align-items: center; gap: 1.2rem;
+  flex-wrap: wrap;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.adv-publish-status { min-height: 1.2rem; }
+
+@media (max-width: 767px) {
+  .adv-doc-split { grid-template-columns: 1fr; gap: 0.8rem; }
+  .adv-publish-row { flex-direction: column; align-items: stretch; }
+  .adv-publish-row .acms-btn-primary { width: 100%; }
+}
+
+/* ============================================================
+   KATEGÓRIA-OLDALAK SZERKESZTŐ (AdminCategories)
+   ============================================================ */
+.acms-loading { padding: 3rem 1rem; text-align: center; color: #8a7a68; font-size: 0.85rem; letter-spacing: 0.1em; }
+
+.acms-cat-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.2rem; }
+.acms-h2 { font-size: 1.15rem; color: #fff; margin: 0 0 0.35rem; letter-spacing: 0.03em; }
+.acms-cat-head code { background: #2a2520; padding: 0.05rem 0.3rem; border-radius: 3px; color: #C4612A; font-size: 0.82em; }
+
+.acms-label { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.4rem; }
+
+/* HU/EN kapcsoló */
+.acms-lang-toggle { display: inline-flex; border: 1px solid #3a332a; border-radius: 5px; overflow: hidden; flex-shrink: 0; }
+.acms-lang-toggle button { background: transparent; border: none; color: #8a7a68; padding: 0.4rem 0.9rem; font-size: 0.72rem; font-weight: bold; letter-spacing: 0.1em; cursor: pointer; }
+.acms-lang-toggle button.active { background: #C4612A; color: #fff; }
+
+/* Kategória-választó tabok */
+.acms-cat-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid #2a2520; padding-bottom: 1rem; }
+.acms-cat-tab { background: #201a14; border: 1px solid #2a2520; color: #C8B89A; padding: 0.45rem 0.9rem; border-radius: 5px; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+.acms-cat-tab:hover { border-color: #8B6A4A; }
+.acms-cat-tab.active { background: #C4612A; border-color: #C4612A; color: #fff; font-weight: bold; }
+
+/* Szerkesztő + előnézet elrendezés */
+.acms-cat-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+.acms-preset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+
+.acms-cat-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
+.acms-cat-view { color: #8B6A4A; text-decoration: none; font-size: 0.78rem; margin-left: auto; }
+.acms-cat-view:hover { color: #C4612A; }
+
+/* Élő előnézet */
+.acms-cat-preview { position: sticky; top: 1rem; }
+.acms-cat-preview-label { font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.5rem; }
+.acms-cat-preview-box { background: #1a1510; border: 1px solid #2a2520; border-radius: 6px; padding: 1.5rem; min-height: 200px; }
+.acms-cat-preview-cover { width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 1.2rem; display: block; }
+
+@media (max-width: 860px) {
+  .acms-cat-editor { grid-template-columns: 1fr; }
+  .acms-cat-preview { position: static; }
+}
+
+/* ============================================================
+   SZEKCIÓ-SZERKESZTŐ (AdminCategorySections)
+   ============================================================ */
+.acms-secs { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #2a2520; }
+.acms-secs-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.acms-secs-title { font-size: 1rem; color: #fff; margin: 0; letter-spacing: 0.03em; }
+.acms-btn-sm { padding: 0.4rem 0.8rem !important; font-size: 0.78rem !important; }
+.acms-secs-empty { color: #8a7a68; font-size: 0.85rem; padding: 1.2rem 0; }
+
+.acms-secs-list { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+.acms-sec-row {
+  display: flex; align-items: center; gap: 0.8rem;
+  background: #201a14; border: 1px solid #2a2520; border-radius: 6px; padding: 0.6rem 0.8rem;
+}
+.acms-sec-row.is-hidden { opacity: 0.5; }
+.acms-sec-move { display: flex; flex-direction: column; gap: 2px; }
+.acms-sec-move button {
+  background: #2a2520; border: none; color: #C8B89A; width: 24px; height: 18px;
+  border-radius: 3px; cursor: pointer; font-size: 0.6rem; line-height: 1;
+}
+.acms-sec-move button:disabled { opacity: 0.3; cursor: default; }
+.acms-sec-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.acms-sec-type { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: #C4612A; }
+.acms-sec-name { color: #fff; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.acms-sec-meta { font-size: 0.68rem; color: #8a7a68; }
+.acms-sec-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.acms-chip {
+  background: transparent; border: 1px solid #3a332a; color: #C8B89A;
+  padding: 0.35rem 0.7rem; border-radius: 5px; font-size: 0.72rem; cursor: pointer; transition: all 0.15s;
+}
+.acms-chip:hover { border-color: #8B6A4A; color: #fff; }
+.acms-chip--danger:hover { border-color: #c0392b; color: #e74c3c; }
+
+.acms-sec-editor {
+  margin-top: 1rem; background: #1a1510; border: 1px solid #3a332a; border-radius: 8px; padding: 1.3rem;
+}
+.acms-sec-editor-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: #fff; }
+
+/* Képválasztó rács */
+.acms-img-picker {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px;
+  max-height: 320px; overflow-y: auto; padding: 4px; background: #15110c; border-radius: 6px;
+}
+.acms-img-cell {
+  position: relative; padding: 0; border: 2px solid transparent; border-radius: 5px;
+  overflow: hidden; cursor: pointer; aspect-ratio: 1/1; background: #201a14;
+}
+.acms-img-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.acms-img-cell.selected { border-color: #C4612A; }
+.acms-img-badge {
+  position: absolute; top: 3px; right: 3px; background: #C4612A; color: #fff;
+  font-size: 0.65rem; font-weight: bold; min-width: 17px; height: 17px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; padding: 0 4px;
+}
+
+@media (max-width: 560px) {
+  .acms-sec-row { flex-wrap: wrap; }
+  .acms-sec-actions { width: 100%; }
+}
+
+/* ============================================================
+   DASHBOARD (AdminDashboard)
+   ============================================================ */
+.dash { padding-bottom: 2rem; }
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 1rem 0 1.5rem;
+}
+.dash-stat {
+  background: #201a14; border: 1px solid #2a2520; border-radius: 8px;
+  padding: 1.1rem 1.2rem;
+}
+.dash-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 2.1rem; color: #fff; line-height: 1; }
+.dash-stat-label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: #C8B89A; margin-top: 0.4rem; }
+.dash-stat-sub { font-size: 0.66rem; color: #8a7a68; margin-top: 0.2rem; }
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.dash-card {
+  background: #1a1510; border: 1px solid #2a2520; border-radius: 8px; padding: 1.2rem 1.3rem;
+}
+.dash-card--wide { grid-column: 1 / -1; }
+.dash-card-title {
+  font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #C4612A; margin-bottom: 1rem; font-weight: bold;
+}
+.dash-empty { color: #8a7a68; font-size: 0.82rem; padding: 0.5rem 0; }
+
+.dash-bar-row { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.55rem; }
+.dash-bar-label {
+  flex: 0 0 40%; max-width: 40%; font-size: 0.74rem; color: #C8B89A;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dash-bar-track { flex: 1; height: 10px; background: #2a2520; border-radius: 5px; overflow: hidden; }
+.dash-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; min-width: 2px; }
+.dash-bar-val { flex: 0 0 auto; font-family: 'Space Mono', monospace; font-size: 0.72rem; color: #fff; min-width: 34px; text-align: right; }
+
+@media (max-width: 720px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .dash-bar-label { flex-basis: 46%; max-width: 46%; }
+}
+
+/* ============================================================
+   DRAG & DROP (SortableList / SortableItem)
+   ============================================================ */
+.dnd-row { display: flex; align-items: stretch; gap: 0.5rem; }
+.dnd-row--dragging { box-shadow: 0 6px 20px rgba(0,0,0,0.4); border-radius: 8px; }
+.dnd-row-body { flex: 1; min-width: 0; }
+
+.dnd-handle {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; padding: 0;
+  background: transparent; border: none;
+  color: #6b5f50; font-size: 1.1rem; line-height: 1;
+  cursor: grab; touch-action: none;   /* fontos: mobilon a húzás elkapja */
+  border-radius: 6px; transition: color 0.15s, background 0.15s;
+}
+.dnd-handle:hover { color: #C4612A; background: rgba(196,97,42,0.08); }
+.dnd-handle:active { cursor: grabbing; }
+
+/* ============================================================
+   CLOUDINARY FELTÖLTŐ (CloudinaryUpload)
+   ============================================================ */
+.cld-upload-wrap { width: 100%; }
+.cld-upload {
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px dashed #3a332a; border-radius: 8px;
+  background: #1a1510; color: #8a7a68;
+  padding: 1.1rem 1rem; cursor: pointer; text-align: center;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.cld-upload:hover { border-color: #8B6A4A; color: #C8B89A; }
+.cld-upload.is-over { border-color: #C4612A; background: rgba(196,97,42,0.08); color: #C4612A; }
+.cld-upload.is-uploading { cursor: default; border-style: solid; }
+.cld-upload--compact { padding: 0.7rem 0.9rem; }
+
+.cld-upload-label { font-size: 0.8rem; line-height: 1.3; }
+.cld-upload-label small { display: block; font-size: 0.66rem; opacity: 0.7; margin-top: 0.2rem; }
+
+.cld-upload-progress { width: 100%; display: flex; flex-direction: column; gap: 0.4rem; }
+.cld-upload-progress span { font-size: 0.72rem; color: #C8B89A; }
+.cld-upload-bar { width: 100%; height: 8px; background: #2a2520; border-radius: 4px; overflow: hidden; }
+.cld-upload-bar > div { height: 100%; background: #C4612A; border-radius: 4px; transition: width 0.2s; }
+
+.cld-upload-error {
+  margin-top: 0.4rem; font-size: 0.72rem; color: #e07a5f;
+  background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3);
+  border-radius: 5px; padding: 0.4rem 0.6rem;
+}
+
+/* Rács-elem drag (portfólió képek) */
+.dnd-grid-item { position: relative; }
+.dnd-handle--overlay {
+  position: absolute; top: 6px; left: 6px; z-index: 6;
+  width: 28px; height: 28px; align-self: auto;
+  background: rgba(0,0,0,0.55); color: #fff; border-radius: 6px;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);   /* Safari <18 */
+}
+.dnd-handle--overlay:hover { background: #C4612A; color: #fff; }
+
+/* ── Dashboard: havi kártya fejléc + év-választó + 2 oszlop ── */
+.dash-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 1rem; }
+.dash-card-head .dash-card-title { margin-bottom: 0; }
+.dash-year-select {
+  background: #201a14; border: 1px solid #3a332a; color: #C8B89A;
+  border-radius: 5px; padding: 0.25rem 0.55rem; font-size: 0.78rem; cursor: pointer;
+}
+.dash-months { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.6rem; }
+.dash-months-col { min-width: 0; }
+
+/* ── Dashboard: info tooltip ── */
+.dash-info {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; margin-left: 0.4rem;
+  border-radius: 50%; border: 1px solid #6b5f50;
+  color: #8a7a68; font-size: 0.6rem; font-family: Georgia, 'Times New Roman', serif; font-style: italic;
+  cursor: pointer; position: relative; vertical-align: middle; line-height: 1;
+  text-transform: none; letter-spacing: 0;
+}
+.dash-info:hover { border-color: #C4612A; color: #C4612A; }
+.dash-tip {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  width: max-content; max-width: 200px;
+  background: #2a2520; color: #C8B89A; border: 1px solid #4a4038;
+  padding: 0.55rem 0.7rem; border-radius: 6px;
+  font-size: 0.68rem; line-height: 1.45; font-weight: normal;
+  text-transform: none; letter-spacing: normal; font-style: normal;
+  white-space: normal; text-align: left;
+  z-index: 100; box-shadow: 0 6px 20px rgba(0,0,0,0.55);
+}
+
+@media (max-width: 480px) {
+  .dash-months { gap: 0 0.8rem; }
+  .dash-tip { max-width: 160px; }
+}
+
+/* ── Portfólió: tömeges kijelölés + kategória-törlés modal ── */
+.acms-port-card { position: relative; }
+.acms-port-card--selected { outline: 2px solid #c8a24a; outline-offset: 2px; }
+.acms-port-select {
+  position: absolute; top: 8px; left: 8px; z-index: 3;
+  display: inline-flex; align-items: center;
+  background: rgba(0,0,0,.55); border-radius: 4px; padding: 3px 5px; cursor: pointer;
+}
+.acms-port-select input { width: 18px; height: 18px; cursor: pointer; margin: 0; }
+
+.acms-bulk-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .6rem;
+  margin: .2rem 0 .9rem; padding: .6rem .8rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10); border-radius: 8px;
+}
+.acms-bulk-count { font-weight: 600; }
+
+.acms-modal--sm { max-width: 460px; }
+.acms-del-options { display: flex; flex-direction: column; gap: 1.1rem; padding: 1rem 1.1rem 1.2rem; }
+.acms-del-option { display: flex; flex-direction: column; gap: .45rem; }
+.acms-del-option > button { align-self: flex-start; }
+.acms-del-option .acms-hint { margin: 0; line-height: 1.45; }

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { supabase } from '../../supabaseClient'
 import { usePortfolio, useCategories } from '../../hooks'
 import { cldThumb } from '../../lib/portfolioPages'
+import { deleteCloudinaryAssets } from '../../lib/cloudinaryDelete'
 import SortableList, { SortableItem } from './SortableList'
 import CloudinaryUpload from './CloudinaryUpload'
 
@@ -41,6 +42,12 @@ export default function AdminPortfolio() {
   // Kategória szűrő
   const [filterCat, setFilterCat] = useState('all')
 
+  // Törlés-modal + tömeges kijelölés
+  const [deleteCat,   setDeleteCat]   = useState(null)
+  const [selectMode,  setSelectMode]  = useState(false)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [assignTo,    setAssignTo]    = useState('')
+
   // Normalizált elemek kategória szerint csoportosítva
   const normalized = useMemo(() => items.map(item => ({
     ...item,
@@ -48,9 +55,13 @@ export default function AdminPortfolio() {
     categoryLabel: categories.find(c => c.id === item.category_id)?.label_hu || '—',
   })), [items, categories])
 
+  const uncategorizedCount = useMemo(() => normalized.filter(i => !i.category_id).length, [normalized])
+
   const filtered = filterCat === 'all'
     ? normalized
-    : normalized.filter(i => i.category_id === filterCat)
+    : filterCat === 'uncategorized'
+      ? normalized.filter(i => !i.category_id)
+      : normalized.filter(i => i.category_id === filterCat)
 
   // Kategórián belüli kép-sorrend (drag-and-drop). Csak akkor aktív, ha egy
   // konkrét kategória van kiválasztva a szűrőben.
@@ -67,7 +78,12 @@ export default function AdminPortfolio() {
   }
 
   const renderCard = (item) => (
-    <div key={item.id} className={`acms-port-card ${!item.visible ? 'acms-port-card--hidden' : ''}`}>
+    <div key={item.id} className={`acms-port-card ${!item.visible ? 'acms-port-card--hidden' : ''} ${selectedIds.has(item.id) ? 'acms-port-card--selected' : ''}`}>
+      {selectMode && (
+        <label className="acms-port-select">
+          <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => toggleSelect(item.id)} />
+        </label>
+      )}
       <div className="acms-port-card-img">
         {item.cloudinary_url ? (
           <img src={cldThumb(item.cloudinary_url, 400)} alt={item.title} loading="lazy" decoding="async" />
@@ -83,7 +99,7 @@ export default function AdminPortfolio() {
             {item.visible ? 'Elrejt' : 'Megjelenit'}
           </button>
           <button className="acms-btn-sm" onClick={() => openEdit(item)}>Szerkeszt</button>
-          <button className="acms-btn-sm acms-btn-danger" onClick={() => handleDelete(item.id, item.title)}>Töröl</button>
+          <button className="acms-btn-sm acms-btn-danger" onClick={() => handleDelete(item.id, item.title, item.cloudinary_url)}>Töröl</button>
         </div>
       </div>
     </div>
@@ -140,9 +156,11 @@ export default function AdminPortfolio() {
     await refetch(); setShowForm(false); setSaving(false)
   }
 
-  const handleDelete = async (id, title) => {
+  const handleDelete = async (id, title, cloudinaryUrl) => {
     if (!window.confirm(`Törlöd: "${title}"?`)) return
-    await supabase.from('portfolio_items').delete().eq('id', id)
+    const { error } = await supabase.from('portfolio_items').delete().eq('id', id)
+    if (error) { alert('Törlési hiba: ' + error.message); return }
+    if (cloudinaryUrl) await deleteCloudinaryAssets(cloudinaryUrl)
     await refetch()
   }
 
@@ -175,12 +193,36 @@ export default function AdminPortfolio() {
     await refetchCats(); setEditingCat(null); setCatForm(EMPTY_CAT); setCatSaving(false)
   }
 
-  const handleCatDelete = async (id, slug) => {
-    if (!window.confirm(`Törlöd a(z) "${slug}" kategóriát?\n\nEz VÉGLEGESEN törli a kategóriát ÉS a benne lévő összes képet is. A művelet nem vonható vissza.`)) return
-    const { error } = await supabase.from('portfolio_categories').delete().eq('id', id)
+  const deleteCategoryOnly = async () => {
+    if (!deleteCat) return
+    const { error } = await supabase.from('portfolio_categories').delete().eq('id', deleteCat.id)
     if (error) { alert('Törlési hiba: ' + error.message); return }
-    await refetchCats()
-    await refetch()
+    setDeleteCat(null); await refetchCats(); await refetch()
+  }
+  const deleteCategoryWithImages = async () => {
+    if (!deleteCat) return
+    const urls = normalized.filter(i => i.category_id === deleteCat.id).map(i => i.cloudinary_url).filter(Boolean)
+    const { error: e1 } = await supabase.from('portfolio_items').delete().eq('category_id', deleteCat.id)
+    if (e1) { alert('Képek törlési hiba: ' + e1.message); return }
+    const { error: e2 } = await supabase.from('portfolio_categories').delete().eq('id', deleteCat.id)
+    if (e2) { alert('Törlési hiba: ' + e2.message); return }
+    if (urls.length) await deleteCloudinaryAssets(urls)
+    setDeleteCat(null); await refetchCats(); await refetch()
+  }
+
+  // Tömeges kijelölés + kategóriához rendelés
+  const toggleSelect = (id) => setSelectedIds(prev => {
+    const next = new Set(prev)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    return next
+  })
+  const clearSelection = () => { setSelectMode(false); setSelectedIds(new Set()); setAssignTo('') }
+  const bulkAssign = async () => {
+    if (!assignTo || selectedIds.size === 0) return
+    const { error } = await supabase.from('portfolio_items')
+      .update({ category_id: assignTo }).in('id', [...selectedIds])
+    if (error) { alert('Áthelyezési hiba: ' + error.message); return }
+    clearSelection(); await refetch()
   }
 
   return (
@@ -224,7 +266,7 @@ export default function AdminPortfolio() {
                         <span className="acms-cat-label acms-cat-label--en">{cat.label_en}</span>
                         <span className="acms-cat-order">#{cat.sort_order}</span>
                         <button className="acms-btn-sm" onClick={() => openEditCat(cat)}>Szerkeszt</button>
-                        <button className="acms-btn-sm acms-btn-danger" onClick={() => handleCatDelete(cat.id, cat.slug)}>Töröl</button>
+                        <button className="acms-btn-sm acms-btn-danger" onClick={() => setDeleteCat(cat)}>Töröl</button>
                       </>
                     )}
                   </div>
@@ -253,16 +295,38 @@ export default function AdminPortfolio() {
             <select
               className="acms-input acms-port-cat-filter"
               value={filterCat}
-              onChange={e => { setFilterCat(e.target.value); setPendingImgOrder(null) }}
+              onChange={e => { setFilterCat(e.target.value); setPendingImgOrder(null); clearSelection() }}
             >
               <option value="all">Mind ({items.length})</option>
               {categories.map(c => {
                 const cnt = normalized.filter(i => i.category_id === c.id).length
                 return <option key={c.id} value={c.id}>{c.label_hu} ({cnt})</option>
               })}
+              {uncategorizedCount > 0 && (
+                <option value="uncategorized">⚠ Kategória nélküli képek ({uncategorizedCount})</option>
+              )}
             </select>
             <span className="acms-hint">{filtered.length} elem látható</span>
+            {filtered.length > 0 && (
+              selectMode
+                ? <button className="acms-btn-sm" onClick={clearSelection}>Mégse</button>
+                : <button className="acms-btn-sm" onClick={() => setSelectMode(true)}>Kiválasztás</button>
+            )}
           </div>
+
+          {selectMode && (
+            <div className="acms-bulk-bar">
+              <span className="acms-bulk-count">{selectedIds.size} kijelölve</span>
+              <button className="acms-btn-sm" onClick={() => setSelectedIds(new Set(filtered.map(i => i.id)))}>Mind kijelöl</button>
+              <select className="acms-input acms-input--sm" value={assignTo} onChange={e => setAssignTo(e.target.value)}>
+                <option value="">Kategória kiválasztása…</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.label_hu}</option>)}
+              </select>
+              <button className="acms-btn-primary" disabled={!assignTo || selectedIds.size === 0} onClick={bulkAssign}>
+                Hozzáad a kategóriához
+              </button>
+            </div>
+          )}
 
           {loading || catLoading ? (
             <div className="admin-empty">Betöltés...</div>
@@ -346,6 +410,40 @@ export default function AdminPortfolio() {
           </div>
         </div>
       )}
+
+      {/* ── KATEGÓRIA TÖRLÉS: 2 opció ── */}
+      {deleteCat && (() => {
+        const imgCount = normalized.filter(i => i.category_id === deleteCat.id).length
+        return (
+          <div className="acms-modal-backdrop" onClick={() => setDeleteCat(null)}>
+            <div className="acms-modal acms-modal--sm" onClick={e => e.stopPropagation()}>
+              <div className="acms-modal-header">
+                <span>Kategória törlése: „{deleteCat.label_hu}"</span>
+                <button className="acms-modal-close" onClick={() => setDeleteCat(null)}>✕</button>
+              </div>
+              <div className="acms-del-options">
+                <div className="acms-del-option">
+                  <button className="acms-btn-secondary" onClick={deleteCategoryOnly}>Kategória törlése</button>
+                  <p className="acms-hint">
+                    Csak a kategória törlődik, a képek ({imgCount} db) az adatbázisban maradnak.
+                    A kategória nélküli képek csak az admin felületen látszanak, a „Kategória nélküli
+                    képek" nézetben.
+                  </p>
+                </div>
+                <div className="acms-del-option">
+                  <button className="acms-btn-danger" onClick={deleteCategoryWithImages}>
+                    Kategória törlése képekkel ({imgCount} kép)
+                  </button>
+                  <p className="acms-hint">
+                    A kategóriával együtt minden kép törlődik az adatbázisból. Ha meg akarod tartani
+                    a képeket, válaszd a „Kategória törlése" opciót.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

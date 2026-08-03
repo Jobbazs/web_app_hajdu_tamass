@@ -87,8 +87,9 @@ on conflict (slug) do update
 create table if not exists public.portfolio_items (
   id             uuid primary key default gen_random_uuid(),
   created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
   title          text not null,
-  category       text not null,
+  category_id    uuid references public.portfolio_categories(id) on delete set null,
   cloudinary_url text not null,
   video_url      text,
   span           text not null default 'medium'
@@ -106,6 +107,67 @@ create policy "Public read portfolio"
   on public.portfolio_items for select using (true);
 create policy "Admin all portfolio"
   on public.portfolio_items for all using (auth.role() = 'authenticated');
+
+-- ── Kategória: automatikus sorrend + törlés-takarítás ───────────────────────
+-- Új kategória sort_order-e mindig a következő szabad szám (kézi ütközés kizárva).
+create or replace function public.portfolio_categories_autoorder()
+returns trigger language plpgsql as $$
+begin
+  select coalesce(max(sort_order), 0) + 1 into new.sort_order
+    from public.portfolio_categories;
+  return new;
+end $$;
+drop trigger if exists trg_pc_autoorder on public.portfolio_categories;
+create trigger trg_pc_autoorder
+  before insert on public.portfolio_categories
+  for each row execute function public.portfolio_categories_autoorder();
+
+-- Törlés után a maradék kategóriák sorszámának 1..N újratömörítése.
+create or replace function public.portfolio_categories_recompact()
+returns trigger language plpgsql as $$
+begin
+  with ranked as (
+    select id, row_number() over (order by sort_order, label_hu) as rn
+      from public.portfolio_categories
+  )
+  update public.portfolio_categories p
+     set sort_order = r.rn
+    from ranked r
+   where p.id = r.id and p.sort_order is distinct from r.rn;
+  return null;
+end $$;
+drop trigger if exists trg_pc_recompact on public.portfolio_categories;
+create trigger trg_pc_recompact
+  after delete on public.portfolio_categories
+  for each statement execute function public.portfolio_categories_recompact();
+
+-- Kategória törlésekor a képek ÁRVÁK legyenek (category_id = NULL), NE törlődjenek.
+-- A "képekkel törlés" opciót az admin app intézi (előbb törli a képeket).
+drop trigger if exists trg_pc_del_items on public.portfolio_categories;
+drop function if exists public.portfolio_categories_del_items();
+do $$
+declare
+  fk_name text;
+begin
+  if exists (
+    select 1 from information_schema.columns
+     where table_schema='public' and table_name='portfolio_items' and column_name='category_id'
+  ) then
+    alter table public.portfolio_items alter column category_id drop not null;
+    select con.conname into fk_name
+      from pg_constraint con
+      join pg_class rel on rel.oid = con.conrelid
+     where rel.relname='portfolio_items' and con.contype='f'
+       and con.confrelid = 'public.portfolio_categories'::regclass
+     limit 1;
+    if fk_name is not null then
+      execute format('alter table public.portfolio_items drop constraint %I', fk_name);
+    end if;
+    alter table public.portfolio_items
+      add constraint portfolio_items_category_id_fkey
+      foreign key (category_id) references public.portfolio_categories(id) on delete set null;
+  end if;
+end $$;
 
 
 -- ============================================================================
