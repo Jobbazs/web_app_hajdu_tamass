@@ -76,7 +76,6 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
         {/* Header */}
         <div className="modal-header">
           <div className="modal-meta">
-            <span className="modal-title">{item.title}</span>
             <span className="modal-counter">{currentIdx + 1} / {total}</span>
           </div>
           <button className="modal-close" onClick={onClose} aria-label={m.close}>✕</button>
