@@ -427,7 +427,6 @@
     position: static;
     padding-top: 0.7rem;
     padding-bottom: 0.7rem;
-    border-top: 1px solid var(--border-subtle, #2a2520);
   }
 }
 
@@ -450,8 +449,9 @@
 .home-cta:hover { background: var(--parchment); }
 
 /* Rács alatti változat – csak valódi mobilon (érintős) látszik */
-.cat-home-wrap { display: none; text-align: center; padding: 1.4rem 1rem 0.4rem; }
+.cat-home-wrap { display: none; text-align: center; padding: 1.6rem 1rem; }
 @media (pointer: coarse) { .cat-home-wrap { display: block; } }
 
 /* Rail-beli (kategória-navbar) változat – kisebb, beleillik a sávba */
-.home-cta--rail { padding: 0.55rem 1.3rem; font-size: 0.62rem; align-self: center; }
+.home-cta--rail { padding: 0.55rem 1.3rem; font-size: 0.62rem; align-self: center; margin-bottom: 1rem; }
+@media (max-width: 900px) { .home-cta--rail { margin-bottom: 0; } }

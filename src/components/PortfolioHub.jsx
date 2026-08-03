@@ -103,6 +103,11 @@ export default function PortfolioHub() {
         </div>
       </main>
 
+      {/* Mobil: vissza a főoldalra a rács aljáról */}
+      <div className="cat-home-wrap">
+        <a href="/" className="home-cta">{lang === 'hu' ? 'Főoldal' : 'Home'}</a>
+      </div>
+
       <Contact />
       <Footer />
     </>
