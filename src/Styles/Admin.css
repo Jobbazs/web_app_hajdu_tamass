@@ -1214,3 +1214,27 @@
   .dash-months { gap: 0 0.8rem; }
   .dash-tip { max-width: 160px; }
 }
+
+/* ── Portfólió: tömeges kijelölés + kategória-törlés modal ── */
+.acms-port-card { position: relative; }
+.acms-port-card--selected { outline: 2px solid #c8a24a; outline-offset: 2px; }
+.acms-port-select {
+  position: absolute; top: 8px; left: 8px; z-index: 3;
+  display: inline-flex; align-items: center;
+  background: rgba(0,0,0,.55); border-radius: 4px; padding: 3px 5px; cursor: pointer;
+}
+.acms-port-select input { width: 18px; height: 18px; cursor: pointer; margin: 0; }
+
+.acms-bulk-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .6rem;
+  margin: .2rem 0 .9rem; padding: .6rem .8rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10); border-radius: 8px;
+}
+.acms-bulk-count { font-weight: 600; }
+
+.acms-modal--sm { max-width: 460px; }
+.acms-del-options { display: flex; flex-direction: column; gap: 1.1rem; padding: 1rem 1.1rem 1.2rem; }
+.acms-del-option { display: flex; flex-direction: column; gap: .45rem; }
+.acms-del-option > button { align-self: flex-start; }
+.acms-del-option .acms-hint { margin: 0; line-height: 1.45; }
