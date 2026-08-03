@@ -110,15 +110,18 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
             </div>
           ) : (
             <>
-              {/* Placeholder: közepes felbontású, jó minőségű előnézet, amíg a full betölt */}
+              {/* Placeholder: közepes felbontású, jó minőségű előnézet, amíg a full betölt.
+                  key → új elem képenként, hogy sose látszódjon az előző kép. */}
               <img
-                className="modal-image-ph"
+                key={`ph-${item.id}`}
+                className={`modal-image-ph ${loaded ? 'is-hidden' : ''}`}
                 src={cldLarge(item.cloudinaryUrl, 1280)}
                 alt=""
                 aria-hidden="true"
                 draggable={false}
               />
               <img
+                key={`full-${item.id}`}
                 ref={imgRef}
                 className={`modal-image ${loaded ? 'is-loaded' : ''}`}
                 src={fullUrl}
