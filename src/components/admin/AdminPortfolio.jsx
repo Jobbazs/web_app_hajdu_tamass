@@ -21,7 +21,7 @@ export default function AdminPortfolio() {
     : categories
   const reorderCats = async (ids) => {
     setPendingCatOrder(ids)
-    await Promise.all(ids.map((id, i) => supabase.from('portfolio_categories').update({ sort_order: i }).eq('id', id)))
+    await Promise.all(ids.map((id, i) => supabase.from('portfolio_categories').update({ sort_order: i + 1 }).eq('id', id)))
     await refetchCats()
     setPendingCatOrder(null)
   }
@@ -167,7 +167,7 @@ export default function AdminPortfolio() {
     if (!catForm.label_en.trim()) { setCatError('Az angol név kötelező.'); return }
     if (!/^[a-z0-9-]+$/.test(catForm.slug)) { setCatError('Slug: csak kisbetű, szám, kötőjel.'); return }
     setCatSaving(true); setCatError('')
-    const payload = { slug: catForm.slug.trim(), label_hu: catForm.label_hu.trim(), label_en: catForm.label_en.trim(), sort_order: parseInt(catForm.sort_order) || 0 }
+    const payload = { slug: catForm.slug.trim(), label_hu: catForm.label_hu.trim(), label_en: catForm.label_en.trim() }
     const { error } = editingCat
       ? await supabase.from('portfolio_categories').update(payload).eq('id', editingCat)
       : await supabase.from('portfolio_categories').insert(payload)
@@ -176,11 +176,11 @@ export default function AdminPortfolio() {
   }
 
   const handleCatDelete = async (id, slug) => {
-    const { data } = await supabase.from('portfolio_items').select('id').eq('category_id', id).limit(1)
-    if (data && data.length > 0) { alert('Nem törölhető: vannak elemek ebben a kategóriában.'); return }
-    if (!window.confirm(`Törlöd: "${slug}"?`)) return
-    await supabase.from('portfolio_categories').delete().eq('id', id)
+    if (!window.confirm(`Törlöd a(z) "${slug}" kategóriát?\n\nEz VÉGLEGESEN törli a kategóriát ÉS a benne lévő összes képet is. A művelet nem vonható vissza.`)) return
+    const { error } = await supabase.from('portfolio_categories').delete().eq('id', id)
+    if (error) { alert('Törlési hiba: ' + error.message); return }
     await refetchCats()
+    await refetch()
   }
 
   return (
@@ -213,7 +213,6 @@ export default function AdminPortfolio() {
                         <input name="slug"       className="acms-input acms-input--sm" value={catForm.slug}       onChange={handleCatChange} placeholder="slug" />
                         <input name="label_hu"   className="acms-input acms-input--sm" value={catForm.label_hu}   onChange={handleCatChange} placeholder="Magyar" />
                         <input name="label_en"   className="acms-input acms-input--sm" value={catForm.label_en}   onChange={handleCatChange} placeholder="English" />
-                        <input name="sort_order" type="number" className="acms-input acms-input--sm acms-input--num" value={catForm.sort_order} onChange={handleCatChange} placeholder="0" />
                         {catError && <div className="acms-error acms-error--inline">{catError}</div>}
                         <button type="submit" className="acms-btn-sm" disabled={catSaving}>Ment</button>
                         <button type="button" className="acms-btn-sm" onClick={() => setEditingCat(null)}>Mégse</button>
@@ -239,7 +238,6 @@ export default function AdminPortfolio() {
               <input name="slug"       className="acms-input acms-input--sm" value={catForm.slug}       onChange={handleCatChange} placeholder="pl. wedding" />
               <input name="label_hu"   className="acms-input acms-input--sm" value={catForm.label_hu}   onChange={handleCatChange} placeholder="Magyar felirat" />
               <input name="label_en"   className="acms-input acms-input--sm" value={catForm.label_en}   onChange={handleCatChange} placeholder="English label" />
-              <input name="sort_order" type="number" className="acms-input acms-input--sm acms-input--num" value={catForm.sort_order} onChange={handleCatChange} placeholder="Sorrend" />
               {catError && <div className="acms-error acms-error--inline">{catError}</div>}
               <button type="submit" className="acms-btn-primary" disabled={catSaving}>{catSaving ? 'Mentés...' : 'Hozzáad'}</button>
             </form>
