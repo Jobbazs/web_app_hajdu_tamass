@@ -22,6 +22,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+// Admin-allowlist (opcionális): ha be van állítva, csak ezek az e-mailek hívhatják.
+const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 
 const FROM_EMAIL = "noreply@hajdutamas.hu";
 const FROM_NAME = "Hajdu Tamás — NOX";
@@ -121,6 +123,8 @@ serve(async (req) => {
       error: userErr,
     } = await authClient.auth.getUser(jwt);
     if (userErr || !user) return json({ error: "Jogosulatlan" }, 401);
+    if (ADMIN_EMAILS.length && !ADMIN_EMAILS.includes((user.email ?? "").toLowerCase()))
+      return json({ error: "Nincs jogosultság" }, 403);
 
     // ── 2. Bemenet ──
     const { slotId, reason } = await req.json();

@@ -124,4 +124,18 @@ export function initErrorMonitoring() {
   window.__errorMonitoring = true
 }
 
+// A saját ErrorBoundary hívja hiba esetén: biztosítja az inicializálást,
+// majd jelenti a hibát a Sentrynek (ha egyáltalán aktív – DSN + production).
+export function reportError(error, componentStack) {
+  try {
+    if (!window.__errorMonitoring) initErrorMonitoring()
+    if (window.__errorMonitoring) {
+      Sentry.captureException(
+        error,
+        componentStack ? { contexts: { react: { componentStack } } } : undefined,
+      )
+    }
+  } catch { /* csendben – a hibajelentés sose okozzon újabb hibát */ }
+}
+
 export { Sentry }

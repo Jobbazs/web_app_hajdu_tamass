@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { supabase } from './supabaseClient'
 import { LangProvider } from './LangContext'
 
@@ -10,15 +10,20 @@ import Services       from './components/Services'
 import Contact        from './components/Contact'
 import CustomSections from './components/CustomSections'
 import Footer         from './components/Footer'
-import Admin          from './components/Admin'
-import Login          from './components/Login'
 import Booking        from './components/Booking'
-import Confirm        from './components/Confirm'
 import PortfolioHub   from './components/PortfolioHub'
 import CategoryPage   from './components/CategoryPage'
-import Termekismerteto from './components/Termekismerteto'
 
 import './Styles/global.css'
+
+// Ritka / privát útvonalak – külön chunk, csak igény szerint töltődik.
+// A legnagyobb nyereség: az admin (8 panel + @dnd-kit) így NEM része a
+// főoldali csomagnak. A publikus aloldalak (Hub, CategoryPage) szándékosan
+// eager-ek, mert prerenderelt tartalmuk van – ott a lazy villanást okozna.
+const Admin           = lazy(() => import('./components/Admin'))
+const Login           = lazy(() => import('./components/Login'))
+const Confirm         = lazy(() => import('./components/Confirm'))
+const Termekismerteto = lazy(() => import('./components/Termekismerteto'))
 
 // Szekció komponens térkép
 const SECTION_COMPONENTS = {
@@ -118,13 +123,15 @@ function AppInner() {
 
   if (path === '/admin') {
     if (authLoading) return null
-    return session ? <Admin /> : <Login />
+    return <Suspense fallback={null}>{session ? <Admin /> : <Login />}</Suspense>
   }
 
-  if (path === '/confirm' || path === '/cancel') return <Confirm />
+  if (path === '/confirm' || path === '/cancel')
+    return <Suspense fallback={null}><Confirm /></Suspense>
 
   // Nem publikus termékismertető (noindex, nincs a menüben/sitemapben)
-  if (path === INFO_PATH || path === INFO_PATH + '/') return <Termekismerteto />
+  if (path === INFO_PATH || path === INFO_PATH + '/')
+    return <Suspense fallback={null}><Termekismerteto /></Suspense>
 
   // Portfólió aloldalak (SEO): hub + kategória-oldalak
   if (path === '/portfolio' || path === '/portfolio/') return <PortfolioHub />

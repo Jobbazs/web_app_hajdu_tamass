@@ -64,7 +64,6 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
 
   if (!item) return null
 
-  const isVideo    = !!item.videoUrl
   const currentIdx = items.findIndex(i => i.id === item.id)
   const total      = items.length
   const fullUrl    = cldLarge(item.cloudinaryUrl, 2000)
@@ -97,7 +96,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
               <div className="modal-tap-next" aria-hidden="true">›</div>
             </>
           )}
-          {isVideo && item.videoUrl ? (
+          {item.videoUrl ? (
             <video
               ref={videoRef}
               className="modal-video"
@@ -105,14 +104,6 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
               controls autoPlay playsInline
               poster={cldThumb(item.cloudinaryUrl, 1200)}
             />
-          ) : isVideo && !item.videoUrl ? (
-            <div className="modal-no-video">
-              <div className="modal-no-video-icon">▶</div>
-              <p>{m.noVideo}</p>
-              <p className="modal-no-video-hint">
-                {m.noVideoHint} <code>videoUrl</code>
-              </p>
-            </div>
           ) : (
             <>
               {/* Placeholder: közepes felbontású, jó minőségű előnézet, amíg a full betölt.

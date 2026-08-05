@@ -26,7 +26,7 @@ export default function Portfolio() {
     ...item,
     cloudinaryUrl: item.cloudinary_url,
     videoUrl:      item.video_url,
-    categorySlug:  item.portfolio_categories?.slug || item.category || '',
+    categorySlug:  item.portfolio_categories?.slug || '',
   })), [items])
 
   const getItemsForCat = useCallback((slug) =>

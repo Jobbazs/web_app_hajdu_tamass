@@ -61,7 +61,7 @@ export default function CategoryPage({ slug }) {
         ...it,
         cloudinaryUrl: it.cloudinary_url,
         videoUrl: it.video_url,
-        categorySlug: it.portfolio_categories?.slug || it.category || '',
+        categorySlug: it.portfolio_categories?.slug || '',
       }))
       .filter((i) => i.categorySlug === slug)
   }, [items, slug])

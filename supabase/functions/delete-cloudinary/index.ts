@@ -17,6 +17,8 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 const API_KEY      = Deno.env.get('CLOUDINARY_API_KEY') ?? ''
 const API_SECRET   = Deno.env.get('CLOUDINARY_API_SECRET') ?? ''
+// Admin-allowlist (opcionális): ha be van állítva, csak ezek az e-mailek hívhatják.
+const ADMIN_EMAILS = (Deno.env.get('ADMIN_EMAILS') ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
 
 const CLOUD_NAME = 'dpeavk0xh'                 // publikus adat
 const ALLOWED_PREFIXES = ['WebAppHajduTamas/'] // csak a saját mappa törölhető
@@ -79,6 +81,8 @@ serve(async (req) => {
     })
     const { data: { user }, error: authErr } = await supabase.auth.getUser()
     if (authErr || !user) return json({ error: 'Érvénytelen munkamenet' }, 401)
+    if (ADMIN_EMAILS.length && !ADMIN_EMAILS.includes((user.email ?? '').toLowerCase()))
+      return json({ error: 'Nincs jogosultság' }, 403)
 
     // ── Bemenet: URL-ek és/vagy public_id-k ──
     const body = await req.json().catch(() => ({}))

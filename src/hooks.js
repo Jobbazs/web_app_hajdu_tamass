@@ -14,6 +14,12 @@ import { supabase } from './supabaseClient'
 // ─────────────────────────────────────────────────────────────
 function useRealtimeRefetch(tables, refetch) {
   useEffect(() => {
+    // Realtime CSAK az adminban kell (élő frissítés a szerkesztéshez).
+    // Publikus oldalakon felesleges WebSocket-kapcsolat lenne: az adatok az
+    // első betöltéskor megvannak, és úgyis teljes újratöltéssel navigálunk.
+    // Ez csökkenti a kapcsolatokat és megszünteti a publikus WS-hibákat.
+    if (typeof window === 'undefined' || !window.location.pathname.startsWith('/admin')) return
+
     let timer = null
     const bump = () => {
       clearTimeout(timer)

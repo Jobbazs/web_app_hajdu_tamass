@@ -164,13 +164,27 @@ function cldThumb(url, w = 800) {
   return url.replace('/upload/', `/upload/f_auto,q_auto:eco,c_limit,w_${w}/`)
 }
 
+// SEO / JSON-LD képhivatkozás – jó minőség (ezt a Google indexeli, nem a rács tölti)
+function cldSeo(url, w = 1200) {
+  if (!url || !url.includes('/upload/')) return url
+  if (/\/upload\/[^/]*(?:w_|q_|f_)/.test(url)) return url
+  return url.replace('/upload/', `/upload/f_auto,q_auto,c_limit,w_${w}/`)
+}
+
+// OG-kép: 1200×630 kivágás a közösségi előnézethez (Facebook/Discord/X)
+function cldOg(url) {
+  if (!url || !url.includes('/upload/')) return url
+  if (/\/upload\/[^/]*(?:w_|h_|c_|q_|f_)/.test(url)) return url
+  return url.replace('/upload/', '/upload/w_1200,h_630,c_fill,f_auto,q_auto/')
+}
+
 // Egy head-tag lecserélése (multiline-biztos). Ha nincs találat, változatlan.
 function replaceTag(html, regex, replacement) {
   return regex.test(html) ? html.replace(regex, replacement) : html
 }
 
 // Per-oldal head: title, description, canonical, og:*
-function setHead(html, { title, description, url }) {
+function setHead(html, { title, description, url, image }) {
   html = replaceTag(html, /<title>[\s\S]*?<\/title>/, `<title>${esc(title)}</title>`)
   html = replaceTag(html, /<meta\s+name="description"[\s\S]*?\/>/,
     `<meta name="description" content="${esc(description)}" />`)
@@ -182,6 +196,12 @@ function setHead(html, { title, description, url }) {
     `<meta property="og:url" content="${esc(url)}" />`)
   html = replaceTag(html, /<link\s+rel="canonical"[\s\S]*?\/>/,
     `<link rel="canonical" href="${esc(url)}" />`)
+  if (image) {
+    html = replaceTag(html, /<meta\s+property="og:image"[\s\S]*?\/>/,
+      `<meta property="og:image" content="${esc(image)}" />`)
+    html = replaceTag(html, /<meta\s+name="twitter:image"[\s\S]*?\/>/,
+      `<meta name="twitter:image" content="${esc(image)}" />`)
+  }
   return html
 }
 
@@ -436,10 +456,12 @@ async function main() {
     const catSecs = categorySections.filter((s) => s.category_id === cat.id)
     let html = injectRoot(template, categoryPageHtml(cat, catItems, catSecs))
     const desc = cat.hero_subtitle_hu || (cat.intro_hu ? cat.intro_hu.slice(0, 155) : `${cat.label_hu} fotók — Hajdu Tamás, budapesti fotós és videós.`)
+    const ogCover = cat.cover_url || catItems[0]?.cloudinary_url
     html = setHead(html, {
       title: `${cat.label_hu} — Hajdu Tamás Fotós & Videós | Budapest`,
       description: desc,
       url: `${SITE}/portfolio/${cat.slug}`,
+      image: ogCover ? cldOg(ogCover) : undefined,
     })
     html = injectLd(html, {
       '@context': 'https://schema.org',
@@ -462,13 +484,6 @@ async function main() {
     await writePage(`portfolio/${cat.slug}`, html)
     pageCount++
   }
-
-  // ÚJ függvény
-function cldSeo(url, w = 1200) {
-  if (!url || !url.includes('/upload/')) return url
-  if (/\/upload\/[^/]*(?:w_|q_|f_)/.test(url)) return url
-  return url.replace('/upload/', `/upload/f_auto,q_auto,c_limit,w_${w}/`)
-}
 
   // 4) Sitemap
   // Figyelem: contentRows (nyers sorok) kell, nem a lapított 'content' objektum,

@@ -20,6 +20,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const VERCEL_HOOK  = Deno.env.get('VERCEL_DEPLOY_HOOK') ?? ''
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+// Admin-allowlist (opcionális): ha be van állítva, csak ezek az e-mailek hívhatják.
+const ADMIN_EMAILS = (Deno.env.get('ADMIN_EMAILS') ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
 
 // ── IndexNow ──
 const SITE          = 'https://hajdutamas.hu'
@@ -112,6 +114,8 @@ serve(async (req) => {
     if (authErr || !user) {
       return json({ error: 'Érvénytelen munkamenet' }, 401)
     }
+    if (ADMIN_EMAILS.length && !ADMIN_EMAILS.includes((user.email ?? '').toLowerCase()))
+      return json({ error: 'Nincs jogosultság' }, 403)
 
     // ── Deploy indítása ──
     const res = await fetch(VERCEL_HOOK, { method: 'POST' })

@@ -135,7 +135,7 @@ export default function AdminDashboard() {
     // Kategóriánkénti képszám
     const catCounts = categories.map((c) => ({
       label: c.label_hu,
-      count: items.filter((i) => (i.portfolio_categories?.slug || i.category) === c.slug).length,
+      count: items.filter((i) => (i.portfolio_categories?.slug ) === c.slug).length,
     }))
 
     // Megbízhatóság szintek

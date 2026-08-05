@@ -35,7 +35,7 @@ export default function PortfolioHub() {
       items.map((it) => ({
         ...it,
         cloudinaryUrl: it.cloudinary_url,
-        categorySlug: it.portfolio_categories?.slug || it.category || '',
+        categorySlug: it.portfolio_categories?.slug || '',
       })),
     [items]
   )

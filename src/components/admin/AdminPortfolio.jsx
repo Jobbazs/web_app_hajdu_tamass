@@ -52,7 +52,7 @@ export default function AdminPortfolio() {
   // Normalizált elemek kategória szerint csoportosítva
   const normalized = useMemo(() => items.map(item => ({
     ...item,
-    categorySlug: item.portfolio_categories?.slug || item.category || '',
+    categorySlug: item.portfolio_categories?.slug || '',
     categoryLabel: categories.find(c => c.id === item.category_id)?.label_hu || '—',
   })), [items, categories])
 
