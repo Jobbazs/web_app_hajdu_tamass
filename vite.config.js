@@ -6,13 +6,19 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // A nagy, ritkán változó third-party kód külön, jól cache-elhető
-        // chunk-okba kerül – így egy app-módosítás nem érvényteleníti őket.
-        // (A @dnd-kit már az admin lazy-chunkjában van; a Sentry pedig
-        //  dinamikus importtal külön chunk – lásd main.jsx.)
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          supabase: ['@supabase/supabase-js'],
+        // Vite 8 / Rolldown: a manualChunks FÜGGVÉNY-formát vár (nem objektumot).
+        // A nagy, ritkán változó third-party kód külön, jól cache-elhető chunk-okba
+        // kerül – egy app-módosítás után ezek cache-ből jönnek.
+        // (A @dnd-kit már az admin lazy-chunkjában van; a Sentry dinamikus
+        //  importtal külön chunk – lásd main.jsx.)
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('@supabase')) return 'supabase'
+          if (
+            id.includes('react-dom') ||
+            id.includes('/react/') ||
+            id.includes('/scheduler/')
+          ) return 'react-vendor'
         },
       },
     },
