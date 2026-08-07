@@ -85,7 +85,7 @@
 
 /* Cím scale-el nő – 1.7rem × 1.76 ≈ 3rem vizuálisan */
 .service-card:hover .service-name {
-  transform: scale(1.60);
+  transform: scale(1.20);
   letter-spacing: 0.04em;
 }
 
