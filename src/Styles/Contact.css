@@ -36,6 +36,7 @@
 /* Touch barát input magasság */
 .form-input {
   min-height: 44px;
+  font-size: 16px; /* iOS: <16px fókuszkor auto-zoomolna – 16px kikapcsolja */
 }
 
 .form-hint {
