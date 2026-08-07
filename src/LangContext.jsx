@@ -71,7 +71,7 @@ export const TRANSLATIONS = {
     contact: {
       label:       'Írj nekem',
       title:       'Kapcsolat',
-      intro:       'Legyen szó rendezvényről, klippről vagy egyedi projektről – szívesen hallom az elképzeléseidet.',
+      intro:       'Ha velem szeretnél dolgozni, írj itt az oldalon vagy keress meg social platformon. Ha van konkrét ötleted, csatolhatsz hozzá inspirációt vagy referenciát is, aztán megbeszéljük a részleteket.',
       name:        'Neved',
       namePh:      'Kis János',
       email:       'Email',
@@ -176,7 +176,7 @@ export const TRANSLATIONS = {
     contact: {
       label:      'Get in touch',
       title:      'Contact',
-      intro:      "Whether it's an event, a music video or a unique project — I'd love to hear your idea.",
+      intro:      "If you'd like to work with me, drop me a message here on the site or reach out on social. If you already have a specific idea in mind, feel free to attach inspiration or references — then we'll talk through the details.",
       name:       'Your name',
       namePh:     'John Smith',
       email:      'Email',
