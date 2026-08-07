@@ -27,7 +27,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: var(--accent, #C4612A);
+  color: var(--accent, var(--rust-light));
   margin-bottom: 0.9rem;
 }
 
@@ -41,7 +41,7 @@
   margin: 0 0 0.9rem;
 }
 
-.ti-plus { color: var(--accent, #C4612A); }
+.ti-plus { color: var(--accent, var(--rust-light)); }
 
 .ti-lead {
   font-size: 1.05rem;
@@ -106,7 +106,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent, #C4612A);
+  background: var(--accent, var(--rust-light));
 }
 
 .ti-term {
@@ -120,8 +120,8 @@
 .ti-callout {
   margin-top: 1.6rem;
   padding: 1.1rem 1.3rem;
-  border-left: 3px solid var(--accent, #C4612A);
-  background: rgba(196, 97, 42, 0.08);
+  border-left: 3px solid var(--accent, var(--rust-light));
+  background: rgba(var(--rust-light-rgb), 0.08);
   border-radius: 0 6px 6px 0;
   font-size: 0.97rem;
   line-height: 1.6;
@@ -150,13 +150,13 @@
   text-transform: uppercase;
   text-decoration: none;
   color: var(--accent, #D4845A);
-  border: 1px solid var(--accent-dim, rgba(196, 97, 42, 0.4));
+  border: 1px solid var(--accent-dim, rgba(var(--rust-light-rgb), 0.4));
   padding: 0.7rem 1.3rem;
   border-radius: 4px;
   transition: background 0.2s, color 0.2s;
 }
 .ti-download:hover {
-  background: var(--accent, #C4612A);
+  background: var(--accent, var(--rust-light));
   color: #fff;
 }
 

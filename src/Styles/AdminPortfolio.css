@@ -15,9 +15,9 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.15rem 0.5rem;
-  border: 1px solid rgba(196, 97, 42, 0.4);
+  border: 1px solid rgba(var(--rust-light-rgb), 0.4);
   color: var(--accent);
-  background: rgba(196, 97, 42, 0.08);
+  background: rgba(var(--rust-light-rgb), 0.08);
 }
 
 /* ── Kép-sorrend kezelő ── */

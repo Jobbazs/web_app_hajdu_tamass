@@ -435,7 +435,7 @@
 }
 
 .acms-status-visible {
-  border-color: rgba(196,97,42,0.5);
+  border-color: rgba(var(--rust-light-rgb),0.5);
   color: var(--accent);
 }
 
@@ -476,7 +476,7 @@
 .acms-align-btn.active {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(196,97,42,0.08);
+  background: rgba(var(--rust-light-rgb),0.08);
 }
 
 /* ============================================================
@@ -975,20 +975,20 @@
 
 .acms-cat-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.2rem; }
 .acms-h2 { font-size: 1.15rem; color: #fff; margin: 0 0 0.35rem; letter-spacing: 0.03em; }
-.acms-cat-head code { background: #2a2520; padding: 0.05rem 0.3rem; border-radius: 3px; color: #C4612A; font-size: 0.82em; }
+.acms-cat-head code { background: #2a2520; padding: 0.05rem 0.3rem; border-radius: 3px; color: var(--rust-light); font-size: 0.82em; }
 
 .acms-label { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.4rem; }
 
 /* HU/EN kapcsoló */
 .acms-lang-toggle { display: inline-flex; border: 1px solid #3a332a; border-radius: 5px; overflow: hidden; flex-shrink: 0; }
 .acms-lang-toggle button { background: transparent; border: none; color: #8a7a68; padding: 0.4rem 0.9rem; font-size: 0.72rem; font-weight: bold; letter-spacing: 0.1em; cursor: pointer; }
-.acms-lang-toggle button.active { background: #C4612A; color: #fff; }
+.acms-lang-toggle button.active { background: var(--rust-light); color: #fff; }
 
 /* Kategória-választó tabok */
 .acms-cat-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid #2a2520; padding-bottom: 1rem; }
 .acms-cat-tab { background: #201a14; border: 1px solid #2a2520; color: #C8B89A; padding: 0.45rem 0.9rem; border-radius: 5px; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
 .acms-cat-tab:hover { border-color: #8B6A4A; }
-.acms-cat-tab.active { background: #C4612A; border-color: #C4612A; color: #fff; font-weight: bold; }
+.acms-cat-tab.active { background: var(--rust-light); border-color: var(--rust-light); color: #fff; font-weight: bold; }
 
 /* Szerkesztő + előnézet elrendezés */
 .acms-cat-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
@@ -996,7 +996,7 @@
 
 .acms-cat-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
 .acms-cat-view { color: #8B6A4A; text-decoration: none; font-size: 0.78rem; margin-left: auto; }
-.acms-cat-view:hover { color: #C4612A; }
+.acms-cat-view:hover { color: var(--rust-light); }
 
 /* Élő előnézet */
 .acms-cat-preview { position: sticky; top: 1rem; }
@@ -1031,7 +1031,7 @@
 }
 .acms-sec-move button:disabled { opacity: 0.3; cursor: default; }
 .acms-sec-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
-.acms-sec-type { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: #C4612A; }
+.acms-sec-type { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rust-light); }
 .acms-sec-name { color: #fff; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .acms-sec-meta { font-size: 0.68rem; color: #8a7a68; }
 .acms-sec-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
@@ -1058,9 +1058,9 @@
   overflow: hidden; cursor: pointer; aspect-ratio: 1/1; background: #201a14;
 }
 .acms-img-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.acms-img-cell.selected { border-color: #C4612A; }
+.acms-img-cell.selected { border-color: var(--rust-light); }
 .acms-img-badge {
-  position: absolute; top: 3px; right: 3px; background: #C4612A; color: #fff;
+  position: absolute; top: 3px; right: 3px; background: var(--rust-light); color: #fff;
   font-size: 0.65rem; font-weight: bold; min-width: 17px; height: 17px; border-radius: 9px;
   display: flex; align-items: center; justify-content: center; padding: 0 4px;
 }
@@ -1100,7 +1100,7 @@
 .dash-card--wide { grid-column: 1 / -1; }
 .dash-card-title {
   font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
-  color: #C4612A; margin-bottom: 1rem; font-weight: bold;
+  color: var(--rust-light); margin-bottom: 1rem; font-weight: bold;
 }
 .dash-empty { color: #8a7a68; font-size: 0.82rem; padding: 0.5rem 0; }
 
@@ -1135,7 +1135,7 @@
   cursor: grab; touch-action: none;   /* fontos: mobilon a húzás elkapja */
   border-radius: 6px; transition: color 0.15s, background 0.15s;
 }
-.dnd-handle:hover { color: #C4612A; background: rgba(196,97,42,0.08); }
+.dnd-handle:hover { color: var(--rust-light); background: rgba(var(--rust-light-rgb),0.08); }
 .dnd-handle:active { cursor: grabbing; }
 
 /* ============================================================
@@ -1150,7 +1150,7 @@
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .cld-upload:hover { border-color: #8B6A4A; color: #C8B89A; }
-.cld-upload.is-over { border-color: #C4612A; background: rgba(196,97,42,0.08); color: #C4612A; }
+.cld-upload.is-over { border-color: var(--rust-light); background: rgba(var(--rust-light-rgb),0.08); color: var(--rust-light); }
 .cld-upload.is-uploading { cursor: default; border-style: solid; }
 .cld-upload--compact { padding: 0.7rem 0.9rem; }
 
@@ -1160,7 +1160,7 @@
 .cld-upload-progress { width: 100%; display: flex; flex-direction: column; gap: 0.4rem; }
 .cld-upload-progress span { font-size: 0.72rem; color: #C8B89A; }
 .cld-upload-bar { width: 100%; height: 8px; background: #2a2520; border-radius: 4px; overflow: hidden; }
-.cld-upload-bar > div { height: 100%; background: #C4612A; border-radius: 4px; transition: width 0.2s; }
+.cld-upload-bar > div { height: 100%; background: var(--rust-light); border-radius: 4px; transition: width 0.2s; }
 
 .cld-upload-error {
   margin-top: 0.4rem; font-size: 0.72rem; color: #e07a5f;
@@ -1177,7 +1177,7 @@
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);   /* Safari <18 */
 }
-.dnd-handle--overlay:hover { background: #C4612A; color: #fff; }
+.dnd-handle--overlay:hover { background: var(--rust-light); color: #fff; }
 
 /* ── Dashboard: havi kártya fejléc + év-választó + 2 oszlop ── */
 .dash-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 1rem; }
@@ -1198,7 +1198,7 @@
   cursor: pointer; position: relative; vertical-align: middle; line-height: 1;
   text-transform: none; letter-spacing: 0;
 }
-.dash-info:hover { border-color: #C4612A; color: #C4612A; }
+.dash-info:hover { border-color: var(--rust-light); color: var(--rust-light); }
 .dash-tip {
   position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
   width: max-content; max-width: 200px;

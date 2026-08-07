@@ -28,7 +28,7 @@
 
 .acms-icon-btn.active {
   border-color: var(--accent);
-  background: rgba(196, 97, 42, 0.1);
+  background: rgba(var(--rust-light-rgb), 0.1);
 }
 
 /* ── Ár mező ── */
@@ -464,4 +464,3 @@
   .acms-services-grid { grid-template-columns: 1fr; }
   .acms-content-fields { grid-template-columns: 1fr; }
 }
-

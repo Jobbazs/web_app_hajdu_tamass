@@ -29,7 +29,7 @@
   font-size: 0.72rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--accent, #C4612A);
+  color: var(--accent, var(--rust-light));
   margin-bottom: 0.85rem;
 }
 .cat-hero-band {
@@ -79,9 +79,9 @@
 }
 .cat-rail-link:hover { color: var(--text-primary, #fff); background: rgba(255,255,255,0.03); }
 .cat-rail-link.active {
-  color: var(--accent, #C4612A);
-  border-left-color: var(--accent, #C4612A);
-  background: rgba(196,97,42,0.07);
+  color: var(--accent, var(--rust-light));
+  border-left-color: var(--accent, var(--rust-light));
+  background: rgba(var(--rust-light-rgb),0.07);
 }
 .cat-rail-all { color: var(--text-secondary, #C8B89A); font-weight: bold; }
 
@@ -94,7 +94,7 @@
 }
 .pp-breadcrumb li { display: flex; align-items: center; gap: 0.4rem; }
 .pp-breadcrumb a { color: var(--text-muted, #8a7a68); text-decoration: none; }
-.pp-breadcrumb a:hover { color: var(--accent, #C4612A); }
+.pp-breadcrumb a:hover { color: var(--accent, var(--rust-light)); }
 .pp-breadcrumb span[aria-current] { color: var(--text-secondary, #C8B89A); }
 .pp-bc-sep { color: var(--border-mid, #3a332a); }
 
@@ -176,7 +176,7 @@
   color: var(--text-primary, #fff); margin-bottom: 1rem;
 }
 .cat-back-link, a.cat-back-link {
-  color: var(--accent, #C4612A); text-decoration: none;
+  color: var(--accent, var(--rust-light)); text-decoration: none;
   font-family: 'Space Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em;
 }
 
@@ -194,7 +194,7 @@
   overflow: hidden;
   transition: border-color 0.2s, transform 0.2s;
 }
-.hub-card:hover { border-color: var(--accent, #C4612A); transform: translateY(-3px); }
+.hub-card:hover { border-color: var(--accent, var(--rust-light)); transform: translateY(-3px); }
 .hub-card-img { aspect-ratio: 4 / 3; overflow: hidden; background: var(--bg-secondary, #201a14); }
 .hub-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.55s; }
 .hub-card:hover .hub-card-img img { transform: scale(1.08); }
@@ -214,7 +214,7 @@
 
 /* Főoldali portfólió cím link */
 .portfolio-title-link { text-decoration: none; display: inline-block; cursor: pointer; }
-.portfolio-title-link:hover .section-title { color: var(--accent, #C4612A); }
+.portfolio-title-link:hover .section-title { color: var(--accent, var(--rust-light)); }
 .portfolio-title-link .section-label { transition: color 0.2s; }
 .portfolio-title-link:hover .section-label { color: var(--accent-pale, #D4845A); }
 
@@ -257,7 +257,7 @@
   }
   .cat-rail-link.active {
     border-left-color: transparent;
-    border-bottom-color: var(--accent, #C4612A);
+    border-bottom-color: var(--accent, var(--rust-light));
     background: transparent;
   }
 
@@ -358,7 +358,7 @@
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--accent, #C4612A);
+  color: var(--accent, var(--rust-light));
   opacity: 0.1;
   white-space: nowrap;
   transform-origin: center;

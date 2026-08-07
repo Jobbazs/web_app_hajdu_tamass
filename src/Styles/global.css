@@ -15,8 +15,8 @@ html {
   /* iOS Safari scroll fix */
   -webkit-text-size-adjust: 100%;
   /* Megakadályozza az iOS Safari automatikus betűméret-növelést tájképes fordulásnál */
-  /* Pinch-zoom tiltása: csak görgetés engedélyezett */
-  touch-action: pan-x pan-y;
+  /* Görgetés + szándékos csippentős nagyítás engedélyezve (dupla-koppintásos zoom nélkül) */
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 body {
@@ -28,8 +28,8 @@ body {
   overflow-x: hidden;
   /* iOS momentum scroll */
   -webkit-overflow-scrolling: touch;
-  /* Pinch-zoom tiltása body szinten is (redundáns biztonsági háló) */
-  touch-action: pan-x pan-y;
+  /* Ugyanaz body szinten is: görgetés + csippentős nagyítás */
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 /* A 'hidden' görgetőkonténert hoz létre, ami elrontja a position: sticky-t
@@ -97,7 +97,7 @@ section {
 .rust-divider {
   width: 100%;
   height: 3px;
-  background: linear-gradient(to right, transparent, var(--rust, #8B3A1A), var(--rust-light, #C4612A), var(--rust, #8B3A1A), transparent);
+  background: linear-gradient(to right, transparent, var(--rust, #8B3A1A), var(--rust-light, var(--rust-light)), var(--rust, #8B3A1A), transparent);
   opacity: 0.4;
 }
 

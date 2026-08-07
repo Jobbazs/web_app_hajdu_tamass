@@ -4,7 +4,7 @@ import { useAppointments, useAllSlots, useClientReliability } from '../../hooks'
 import { usePortfolio, useCategories } from '../../hooks'
 
 const STATUS = {
-  pending_confirmation: { label: 'Megerősítésre vár', color: '#C4612A' },
+  pending_confirmation: { label: 'Megerősítésre vár', color: '#FF3B30' },
   confirmed:            { label: 'Megerősítve',       color: '#3B82C4' },
   approved:             { label: 'Jóváhagyva',        color: '#4A9B6E' },
   completed:            { label: 'Teljesült',         color: '#5B9AA0' },
@@ -13,7 +13,7 @@ const STATUS = {
 }
 const RELIABILITY = [
   { label: 'Tiszta',            color: '#4A9B6E' },
-  { label: 'Meg nem erősített', color: '#C4612A' },
+  { label: 'Meg nem erősített', color: '#FF3B30' },
   { label: 'Késői lemondás',    color: '#D4845A' },
   { label: 'No-show',           color: '#C0392B' },
   { label: 'Blokkolt',          color: '#6b2020' },
@@ -59,7 +59,7 @@ function BarRow({ label, value, max, color, suffix }) {
     <div className="dash-bar-row">
       <span className="dash-bar-label" title={label}>{label}</span>
       <div className="dash-bar-track">
-        <div className="dash-bar-fill" style={{ width: `${pct}%`, background: color || 'var(--accent, #C4612A)' }} />
+        <div className="dash-bar-fill" style={{ width: `${pct}%`, background: color || 'var(--accent, #FF3B30)' }} />
       </div>
       <span className="dash-bar-val">{value}{suffix || ''}</span>
     </div>

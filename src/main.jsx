@@ -33,7 +33,7 @@ function Fallback() {
       }}
     >
       <div style={{ fontFamily: 'Arial Black, Impact, sans-serif', fontSize: '1.4rem', letterSpacing: '0.2em' }}>
-        NOX<span style={{ color: '#c4612a' }}>.</span>
+        NOX<span style={{ color: '#FF3B30' }}>.</span>
       </div>
       <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)', margin: 0 }}>Valami elromlott</h1>
       <p style={{ maxWidth: '32rem', color: '#9a9088', lineHeight: 1.6, margin: 0 }}>
@@ -49,9 +49,9 @@ function Fallback() {
           fontSize: '0.7rem',
           letterSpacing: '0.15em',
           textTransform: 'uppercase',
-          color: '#c4612a',
+          color: '#FF3B30',
           background: 'none',
-          border: '1px solid #c4612a',
+          border: '1px solid #FF3B30',
           cursor: 'pointer',
         }}
       >

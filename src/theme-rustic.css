@@ -3,9 +3,10 @@
    ============================================================ */
 
 :root {
-  --rust: #8B3A1A;
-  --rust-light: #C4612A;
-  --rust-pale: #D4845A;
+  --rust: #B5231E;
+  --rust-light: #FF3B30;
+  --rust-light-rgb: 255, 59, 48;   /* az rgba(var(--rust-light-rgb), α) használatokhoz */
+  --rust-pale: #FF5067;
   --ash: #2A2520;
   --ash-deep: #1A1510;
   --ash-mid: #3D3530;
@@ -28,7 +29,7 @@
   --accent-pale: var(--rust-pale);
   --border-subtle: rgba(139,58,26,0.15);
   --border-mid: rgba(139,58,26,0.3);
-  --border-strong: rgba(196,97,42,0.5);
+  --border-strong: rgba(255,59,48,0.5);
   --nav-border: rgba(139,58,26,0.2);
   --footer-bg: #110E0A;
 }
