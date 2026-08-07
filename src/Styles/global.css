@@ -188,7 +188,7 @@ body { font-size: 18px; }
 
   /* Hero */
   #hero { padding: 0 1.2rem 4.5rem; }
-  .hero-title { font-size: clamp(3.2rem, 15vw, 5.5rem); }
+  .hero-title { font-size: clamp(1.9rem, 8.5vw, 3.4rem); }
   .hero-subtitle { font-size: 0.95rem; max-width: 100%; }
   .hero-cta { width: 100%; text-align: center; }
   /* scroll-hint: Hero.css kezeli */
@@ -212,7 +212,7 @@ body { font-size: 18px; }
   section { padding: 4rem 1rem; }
   #hero { padding: 0 1rem 4rem; }
 
-  .hero-title { font-size: clamp(2.8rem, 17vw, 4.5rem); }
+  .hero-title { font-size: clamp(1.6rem, 9vw, 2.8rem); }
 
   /* Admin */
   .admin-messages { padding: 1rem; }

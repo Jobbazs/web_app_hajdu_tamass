@@ -39,7 +39,7 @@
 .hero-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
   font-weight: 500;
-  font-size: clamp(4rem, 14vw, 9.5rem);
+  font-size: clamp(2.5rem, 8vw, 5.5rem);
   line-height: 0.88;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -116,7 +116,7 @@
   }
 
   .hero-title {
-    font-size: clamp(2.8rem, 13vw, 4.8rem);
+    font-size: clamp(1.9rem, 8.5vw, 3.4rem);
   }
 
   .hero-title .accent {
@@ -134,7 +134,7 @@
   }
 
   .hero-title {
-    font-size: clamp(2.4rem, 14vw, 3.8rem);
+    font-size: clamp(1.6rem, 9vw, 2.8rem);
     line-height: 0.92;
   }
 }
