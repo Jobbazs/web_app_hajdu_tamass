@@ -438,7 +438,7 @@
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--ash-deep);
-  background: var(--rust-light);
+  background: var(--rust);
   padding: 0.85rem 2rem;
   text-decoration: none;
   cursor: pointer;
