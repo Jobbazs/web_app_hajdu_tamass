@@ -611,7 +611,7 @@ export default function AdminContent() {
           Egyedi szekciók {sections.length > 0 && `(${sections.length})`}
         </button>
         <button className={`acms-subtab ${tab === 'footer' ? 'active' : ''}`} onClick={() => setTab('footer')}>
-          Footer & Portré
+          Social Linkek
         </button>
         <button className={`acms-subtab ${tab === 'portfolio' ? 'active' : ''}`} onClick={() => setTab('portfolio')}>
           Portfólió coverek
@@ -633,6 +633,24 @@ export default function AdminContent() {
           <div className="acms-fixed-hint">
             Igazítás és betűméret beállítások: minden szöveg alatt megjelenik az igazítás gombsor.
             A változás az oldalon azonnal látható mentés után.
+          </div>
+
+          <div className="acms-content-group">
+            <div className="acms-content-group-label">Portré kép (Rólam szekció)</div>
+            <div className="acms-form-group">
+              <label>Cloudinary kép URL</label>
+              <CloudinaryUpload compact label="Portré feltöltése" folder="WebAppHajduTamas/content" onUploaded={(url) => handleChange('about_portrait_url', url)} />
+              <input type="text" className="acms-input"
+                value={getValue('about_portrait_url')}
+                onChange={e => handleChange('about_portrait_url', e.target.value)}
+                placeholder="…vagy illeszd be az URL-t" style={{ marginTop: '0.5rem' }} />
+              <span className="acms-hint">Ez jelenik meg a Rólam szekció bal oldalán</span>
+            </div>
+            {getValue('about_portrait_url') && (
+              <div className="acms-preview" style={{width:100,height:130}}>
+                <img src={cldThumb(getValue('about_portrait_url'), 300)} alt="előnézet" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+              </div>
+            )}
           </div>
 
           {contentLoading ? <div className="admin-empty">Betöltés...</div> : FIXED_GROUPS.map(group => (
@@ -758,25 +776,7 @@ export default function AdminContent() {
       {tab === 'footer' && (
         <>
           <div className="acms-content-group">
-            <div className="acms-content-group-label">Portré kép (Rólam szekció)</div>
-            <div className="acms-form-group">
-              <label>Cloudinary kép URL</label>
-              <CloudinaryUpload compact label="Portré feltöltése" folder="WebAppHajduTamas/content" onUploaded={(url) => handleChange('about_portrait_url', url)} />
-              <input type="text" className="acms-input"
-                value={getValue('about_portrait_url')}
-                onChange={e => handleChange('about_portrait_url', e.target.value)}
-                placeholder="…vagy illeszd be az URL-t" style={{ marginTop: '0.5rem' }} />
-              <span className="acms-hint">Ez jelenik meg a Rólam szekció bal oldalán</span>
-            </div>
-            {getValue('about_portrait_url') && (
-              <div className="acms-preview" style={{width:100,height:130}}>
-                <img src={cldThumb(getValue('about_portrait_url'), 300)} alt="előnézet" style={{width:'100%',height:'100%',objectFit:'cover'}} />
-              </div>
-            )}
-          </div>
-
-          <div className="acms-content-group">
-            <div className="acms-content-group-label">Footer – Social linkek</div>
+            <div className="acms-content-group-label">Social linkek</div>
             <div className="acms-hint" style={{marginBottom:'1rem'}}>
               Hozzáadhatsz bármilyen platformot (Instagram, TikTok, Behance, YouTube stb.)
             </div>

@@ -99,6 +99,19 @@ export default function Navbar({ subpage = false }) {
     { id: 'contact',   label: t.nav.contact },
   ]
 
+  // A CMS-ből elrejtett szekciók gombja a navbaron se jelenjen meg.
+  // A sections_order JSON: [{ key, visible }]. Csak a visible===false-t szűrjük.
+  const hiddenSections = new Set()
+  try {
+    const rawOrder = content['sections_order']
+    if (rawOrder) {
+      for (const s of JSON.parse(rawOrder)) {
+        if (s && s.visible === false) hiddenSections.add(s.key)
+      }
+    }
+  } catch {}
+  const visibleLinks = links.filter(l => !hiddenSections.has(l.id))
+
   return (
     <>
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
@@ -135,7 +148,7 @@ export default function Navbar({ subpage = false }) {
                 </a>
               </li>
             )}
-            {links.map(l => (
+            {visibleLinks.map(l => (
               <li key={l.id}>
                 <a href={subpage ? `/#${l.id}` : `#${l.id}`} onClick={e => { e.preventDefault(); scrollTo(l.id) }}>
                   {l.label}
@@ -174,7 +187,7 @@ export default function Navbar({ subpage = false }) {
             {lang === 'hu' ? 'Főoldal' : 'Home'}
           </a>
         )}
-        {links.map(l => (
+        {visibleLinks.map(l => (
           <a key={l.id} href={subpage ? `/#${l.id}` : `#${l.id}`} onClick={e => { e.preventDefault(); scrollTo(l.id) }}>
             {l.label}
           </a>
