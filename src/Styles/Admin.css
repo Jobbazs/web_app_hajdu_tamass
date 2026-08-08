@@ -177,48 +177,7 @@
    ADMIN CMS – SHARED LIST ITEMS
    ============================================================ */
 
-.acms-list { display: flex; flex-direction: column; gap: 6px; }
-
-.acms-list-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  padding: 0.8rem 1rem;
-  transition: border-color 0.2s;
-}
-
-.acms-list-item:hover { border-color: var(--border-mid); }
 .acms-hidden { opacity: 0.45; }
-
-.acms-thumb {
-  width: 56px;
-  height: 42px;
-  flex-shrink: 0;
-  overflow: hidden;
-  background: var(--bg-secondary);
-}
-.acms-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.acms-thumb-ph {
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-muted); font-size: 1.2rem;
-}
-
-.acms-list-info { flex: 1; min-width: 0; }
-
-.acms-list-name {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.1rem;
-  letter-spacing: 0.06em;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.acms-list-meta { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem; }
 
 .acms-tag {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
@@ -229,7 +188,6 @@
   border: 1px solid var(--border-mid);
   color: var(--accent);
 }
-.acms-tag--dim { color: var(--text-muted); border-color: var(--border-subtle); }
 
 .acms-list-actions {
   display: flex;
@@ -490,7 +448,7 @@
   .acms-tabs { flex-wrap: wrap; overflow-x: visible; padding: 0 1rem; row-gap: 2px; }
   .acms-tab { padding: 0.5rem 0.7rem; font-size: 0.56rem; letter-spacing: 0.1em; }
   .acms-form-row { grid-template-columns: 1fr; }
-  .acms-list-item { flex-wrap: wrap; }
+  
   .acms-list-actions {
     width: 100%;
     justify-content: flex-start;
@@ -521,18 +479,7 @@
 .acms-booking-filters {
   display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
 }
-.acms-booking-card {
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-card);
-  padding: 1.2rem;
-  margin-bottom: 8px;
-  transition: border-color 0.2s;
-}
-.acms-booking-card:hover { border-color: var(--border-mid); }
-.acms-booking-card-header {
-  display: flex; justify-content: space-between;
-  align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;
-}
+
 .acms-booking-name {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
   font-size: 1.2rem; letter-spacing: 0.06em; color: var(--text-primary);
@@ -541,25 +488,12 @@
   font-family: 'Space Mono', monospace; font-size: 0.62rem;
   letter-spacing: 0.1em; color: var(--text-muted);
 }
-.acms-booking-status {
-  font-family: 'Space Mono', monospace; font-size: 0.6rem;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  white-space: nowrap; flex-shrink: 0;
-}
-.acms-booking-slot-info {
-  font-size: 0.85rem; color: var(--text-secondary);
-  margin-bottom: 0.5rem;
-}
+
 .acms-booking-message {
   font-size: 0.9rem; color: var(--text-secondary);
   border-left: 2px solid var(--border-mid);
   padding-left: 0.8rem; margin: 0.6rem 0;
   line-height: 1.6;
-}
-.acms-booking-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem; }
-.acms-booking-meta {
-  font-family: 'Space Mono', monospace; font-size: 0.58rem;
-  color: var(--text-muted); margin-top: 0.6rem;
 }
 
 /* ── Foglalás-táblázat (Foglalások fül) ─────────────────── */
@@ -678,8 +612,7 @@
   .acms-booking-toolbar { flex-direction: column; align-items: stretch; }
   .acms-booking-search { min-width: 0; }
   .acms-row-actions { justify-content: flex-start; }
-  .acms-table th:nth-child(5),
-  .acms-table td:nth-child(5) { display: none; } /* "Létrehozva" oszlop elrejtése mobilon */
+  .acms-table th:nth-child(5), .acms-table td:nth-child(5) { display: none; } /* "Létrehozva" oszlop elrejtése mobilon */
 }
 
 /* ── Slot kártyák ── */
@@ -883,11 +816,6 @@
   opacity: 0.5;
 }
 
-.acms-order-item--dragging {
-  border-color: var(--accent);
-  background: var(--bg-secondary);
-}
-
 .acms-order-handle {
   font-size: 1.1rem;
   color: var(--text-muted);
@@ -941,7 +869,7 @@
   margin-bottom: 0.6rem;
 }
 .adv-doc-col-title--yes { color: var(--accent); }
-.adv-doc-col-title--no  { color: var(--text-muted); }
+.adv-doc-col-title--no { color: var(--text-muted); }
 
 .adv-doc-col ul { margin: 0; padding-left: 1.1rem; }
 .adv-doc-col li { font-size: 0.88rem; line-height: 1.7; }
@@ -1024,12 +952,7 @@
   background: #201a14; border: 1px solid #2a2520; border-radius: 6px; padding: 0.6rem 0.8rem;
 }
 .acms-sec-row.is-hidden { opacity: 0.5; }
-.acms-sec-move { display: flex; flex-direction: column; gap: 2px; }
-.acms-sec-move button {
-  background: #2a2520; border: none; color: #C8B89A; width: 24px; height: 18px;
-  border-radius: 3px; cursor: pointer; font-size: 0.6rem; line-height: 1;
-}
-.acms-sec-move button:disabled { opacity: 0.3; cursor: default; }
+
 .acms-sec-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
 .acms-sec-type { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rust-light); }
 .acms-sec-name { color: #fff; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

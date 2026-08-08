@@ -2,139 +2,6 @@
    ADMIN – SERVICES
    ============================================================ */
 
-/* ── Ikon választó ── */
-.acms-icon-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.acms-icon-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-subtle);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.acms-icon-btn:hover {
-  border-color: var(--border-mid);
-}
-
-.acms-icon-btn.active {
-  border-color: var(--accent);
-  background: rgba(var(--rust-light-rgb), 0.1);
-}
-
-/* ── Ár mező ── */
-.acms-price-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  align-items: end;
-}
-
-/* ── Húzható sorrend ── */
-.acms-drag-handle {
-  cursor: grab;
-  color: var(--text-muted);
-  font-size: 1rem;
-  padding: 0.2rem 0.4rem;
-  flex-shrink: 0;
-  -webkit-user-select: none;   /* Safari <17 */
-  user-select: none;
-}
-
-.acms-drag-handle:active { cursor: grabbing; }
-
-/* ── Szolgáltatás kártya szerkesztő előnézet ── */
-.acms-service-preview {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  padding: 1.2rem;
-  margin-bottom: 0.4rem;
-}
-
-.acms-service-preview-number {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.55rem;
-  letter-spacing: 0.2em;
-  color: var(--accent);
-  margin-bottom: 0.4rem;
-}
-
-.acms-service-preview-name {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.3rem;
-  letter-spacing: 0.06em;
-  color: var(--text-primary);
-}
-
-/* ── Admin services grid (szerkesztő nézet) ── */
-.acms-services-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1px;
-  background: var(--border-subtle);
-}
-
-.acms-service-card {
-  background: var(--bg-card);
-  padding: 2rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  position: relative;
-}
-.acms-service-card:hover { background: var(--bg-secondary); }
-.acms-service-card--active { background: var(--bg-secondary); cursor: default; }
-
-.acms-service-num {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 2.5rem;
-  color: rgba(139,58,26,0.2);
-  line-height: 1;
-  margin-bottom: 0.8rem;
-}
-
-.acms-service-name {
-  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.4rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.acms-service-desc {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  line-height: 1.65;
-  margin-bottom: 0.8rem;
-}
-
-.acms-service-en {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
-}
-
-.acms-edit-hint {
-  font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.55rem;
-  letter-spacing: 0.15em;
-  color: var(--accent);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.acms-service-card:hover .acms-edit-hint { opacity: 1; }
-
 /* ── Services lista (új design) ── */
 .acms-services-list {
   display: flex;
@@ -271,11 +138,6 @@
   font-size: 0.9rem !important;
   flex: 1;
   min-width: 100px;
-}
-
-.acms-input--num {
-  max-width: 80px;
-  flex: 0 0 80px !important;
 }
 
 .acms-error--inline {
@@ -454,13 +316,10 @@
 
 /* ── Reszponzív ── */
 @media (max-width: 767px) {
-  .acms-price-row { grid-template-columns: 1fr; }
   .acms-extra-field-row { flex-direction: column; }
   .acms-form-row--3 { grid-template-columns: 1fr; }
   .acms-cat-form { flex-direction: column; }
   .acms-input--sm { min-width: unset; width: 100%; }
-  .acms-input--num { max-width: 100%; flex: 1 !important; }
   .acms-srv-item { flex-wrap: wrap; }
-  .acms-services-grid { grid-template-columns: 1fr; }
   .acms-content-fields { grid-template-columns: 1fr; }
 }
