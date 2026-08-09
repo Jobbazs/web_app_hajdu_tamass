@@ -3,7 +3,6 @@ import { supabase } from '../../supabaseClient'
 import '../../Styles/AdminMessages.css'
 
 const ATTACHMENTS_BUCKET = 'attachments'
-const ATTACHMENTS_FOLDER = 'contact-attachments'
 
 // Egy publikus Supabase Storage URL-ből kinyeri a bucketen belüli path-ot
 // (pl. ".../object/public/attachments/contact-attachments/123_abc.jpg"
@@ -27,8 +26,6 @@ export default function AdminMessages() {
   const [messages, setMessages] = useState([])
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('all')
-  const [cleaning, setCleaning] = useState(false)
-  const [cleanMsg, setCleanMsg] = useState('')
 
   const fetchMessages = async () => {
     setLoading(true)
@@ -78,63 +75,6 @@ export default function AdminMessages() {
     setMessages(prev => prev.filter(m => m.id !== id))
   }
 
-  // Árva fájlok törlése: minden, ami a Storage "contact-attachments" mappájában van,
-  // de egyetlen üzenet attachment_url mezőjében sem szerepel.
-  const cleanOrphanFiles = async () => {
-    if (!window.confirm('Ez törli az összes olyan csatolt fájlt a tárhelyről, amely már egyetlen üzenethez sincs hozzárendelve. Folytatod?')) return
-
-    setCleaning(true)
-    setCleanMsg('')
-
-    try {
-      // 1. Az összes jelenleg hivatkozott fájl path-ja (az aktuális szűrőtől függetlenül, MIND az üzenetből)
-      const { data: allMessages, error: msgErr } = await supabase
-        .from('messages')
-        .select('attachment_url')
-
-      if (msgErr) throw msgErr
-
-      const referenced = new Set()
-      for (const m of allMessages || []) {
-        for (const url of parseAttachments(m.attachment_url)) {
-          const path = urlToStoragePath(url)
-          if (path) referenced.add(path)
-        }
-      }
-
-      // 2. Storage-ban lévő összes fájl listázása a contact-attachments mappából
-      const { data: storedFiles, error: listErr } = await supabase.storage
-        .from(ATTACHMENTS_BUCKET)
-        .list(ATTACHMENTS_FOLDER, { limit: 1000 })
-
-      if (listErr) throw listErr
-
-      const orphanPaths = (storedFiles || [])
-        .filter(f => f.name) // mappákat kihagyjuk
-        .map(f => `${ATTACHMENTS_FOLDER}/${f.name}`)
-        .filter(path => !referenced.has(path))
-
-      if (orphanPaths.length === 0) {
-        setCleanMsg('Nincs árva fájl, minden csatolmány aktív üzenethez tartozik.')
-        setCleaning(false)
-        return
-      }
-
-      const { error: removeErr } = await supabase.storage
-        .from(ATTACHMENTS_BUCKET)
-        .remove(orphanPaths)
-
-      if (removeErr) throw removeErr
-
-      setCleanMsg(`${orphanPaths.length} árva fájl törölve a tárhelyről.`)
-    } catch (err) {
-      console.error('Takarítási hiba:', err)
-      setCleanMsg('Hiba történt a takarítás közben. Részletek a konzolon.')
-    } finally {
-      setCleaning(false)
-    }
-  }
-
   const unreadCount = messages.filter(m => !m.read).length
 
   return (
@@ -160,22 +100,8 @@ export default function AdminMessages() {
               {f.label}
             </button>
           ))}
-          <button
-            className="admin-mark-btn"
-            onClick={cleanOrphanFiles}
-            disabled={cleaning}
-            title="Törli azokat a csatolt fájlokat a tárhelyről, amik már egyetlen üzenethez sem tartoznak"
-          >
-            {cleaning ? 'Takarítás...' : 'Árva fájlok törlése'}
-          </button>
         </div>
       </div>
-
-      {cleanMsg && (
-        <div className="admin-card-date" style={{ padding: '0 2rem', marginTop: '-0.5rem' }}>
-          {cleanMsg}
-        </div>
-      )}
 
       <div className="admin-messages" style={{ padding: 0 }}>
         {loading && <div className="admin-empty">Betöltés...</div>}

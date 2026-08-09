@@ -8,6 +8,21 @@ import { supabase } from '../../supabaseClient'
 
 const LAST_KEY = 'last_published_at'
 
+const ATTACHMENTS_BUCKET = 'attachments'
+const ATTACHMENTS_FOLDER = 'contact-attachments'
+
+// Egy publikus Supabase Storage URL-ből kinyeri a bucketen belüli path-ot.
+function urlToStoragePath(url) {
+  const marker = `/object/public/${ATTACHMENTS_BUCKET}/`
+  const idx = url.indexOf(marker)
+  if (idx === -1) return null
+  return decodeURIComponent(url.slice(idx + marker.length))
+}
+function parseAttachments(attachmentUrl) {
+  if (!attachmentUrl) return []
+  return attachmentUrl.split(',').map(u => u.trim()).filter(Boolean)
+}
+
 function formatWhen(iso) {
   if (!iso) return null
   const then = new Date(iso)
@@ -31,6 +46,8 @@ export default function AdminAdvanced() {
   const [lastAt, setLastAt] = useState(null)
   const [errMsg, setErrMsg] = useState('')
   const [indexNow, setIndexNow] = useState(null)   // { ok, count?, error? }
+  const [cleaning, setCleaning] = useState(false)
+  const [cleanMsg, setCleanMsg] = useState('')
 
   useEffect(() => {
     supabase
@@ -63,6 +80,58 @@ export default function AdminAdvanced() {
     setIndexNow(data?.indexNow ?? null)
     setStatus('done')
     setTimeout(() => setStatus('idle'), 10000)
+  }
+
+  // Árva fájlok: minden, ami a Storage "contact-attachments" mappájában van,
+  // de egyetlen üzenet attachment_url mezőjében sem szerepel.
+  const cleanOrphanFiles = async () => {
+    if (!window.confirm('Ez törli az összes olyan csatolt fájlt a tárhelyről, amely már egyetlen üzenethez sincs hozzárendelve. Folytatod?')) return
+
+    setCleaning(true)
+    setCleanMsg('')
+
+    try {
+      const { data: allMessages, error: msgErr } = await supabase
+        .from('messages')
+        .select('attachment_url')
+      if (msgErr) throw msgErr
+
+      const referenced = new Set()
+      for (const m of allMessages || []) {
+        for (const url of parseAttachments(m.attachment_url)) {
+          const path = urlToStoragePath(url)
+          if (path) referenced.add(path)
+        }
+      }
+
+      const { data: storedFiles, error: listErr } = await supabase.storage
+        .from(ATTACHMENTS_BUCKET)
+        .list(ATTACHMENTS_FOLDER, { limit: 1000 })
+      if (listErr) throw listErr
+
+      const orphanPaths = (storedFiles || [])
+        .filter(f => f.name)
+        .map(f => `${ATTACHMENTS_FOLDER}/${f.name}`)
+        .filter(path => !referenced.has(path))
+
+      if (orphanPaths.length === 0) {
+        setCleanMsg('Nincs árva fájl, minden csatolmány aktív üzenethez tartozik.')
+        setCleaning(false)
+        return
+      }
+
+      const { error: removeErr } = await supabase.storage
+        .from(ATTACHMENTS_BUCKET)
+        .remove(orphanPaths)
+      if (removeErr) throw removeErr
+
+      setCleanMsg(`${orphanPaths.length} árva fájl törölve a tárhelyről.`)
+    } catch (err) {
+      console.error('Takarítási hiba:', err)
+      setCleanMsg('Hiba történt a takarítás közben. Részletek a konzolon.')
+    } finally {
+      setCleaning(false)
+    }
   }
 
   const when = formatWhen(lastAt)
@@ -166,6 +235,44 @@ export default function AdminAdvanced() {
             {status === 'idle' && !when && (
               <span className="acms-hint">Még nem volt publikálás</span>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Árva fájlok takarítása ── */}
+      <div className="acms-content-group">
+        <div className="acms-content-group-label">Árva fájlok takarítása</div>
+
+        <div className="adv-doc">
+          <p>
+            <strong>Amikor valaki képet csatol a kapcsolat űrlapon</strong>, a fájl a
+            tárhelyre kerül, és az elküldött üzenethez kötődik. Ha később törlöd az
+            üzenetet, a hozzá tartozó képek is törlődnek – erről nem kell külön gondoskodni.
+          </p>
+          <p>
+            <strong>Ritkán mégis maradhat „gazdátlan" fájl a tárhelyen</strong> – például
+            ha egy spam-beküldést a szűrő kiszűrt (a kép feltöltődött, de üzenet nem készült
+            belőle), vagy ha egy feltöltés félbeszakadt. Ez a gomb megkeresi és törli ezeket:
+            <strong> minden olyan csatolt fájlt, ami már egyetlen üzenethez sem tartozik.</strong>
+          </p>
+          <p className="adv-doc-note">
+            Aktív üzenethez tartozó képet <strong>soha nem töröl</strong>, csak a
+            gazdátlanokat – így teljesen biztonságos. Ha nincs ilyen fájl, egyszerűen azt
+            írja ki. Fölöslegesen megnyomva nem okoz kárt.
+          </p>
+        </div>
+
+        <div className="adv-publish-row">
+          <button
+            className="acms-btn-primary"
+            onClick={cleanOrphanFiles}
+            disabled={cleaning}
+          >
+            {cleaning ? 'Takarítás...' : 'Árva fájlok törlése'}
+          </button>
+
+          <div className="adv-publish-status">
+            {cleanMsg && <span className="acms-hint">{cleanMsg}</span>}
           </div>
         </div>
       </div>

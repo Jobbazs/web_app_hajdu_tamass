@@ -88,8 +88,15 @@ export default function Contact() {
     setStatus('sending')
     setErrMsg('')
 
-    // 1. Fájlok feltöltése Supabase Storage-ba
-    const attachmentUrls = []
+    // 1. Fájlok feltöltése – IDEIGLENESEN a Storage-ba. A kép csak akkor MARAD
+    //    meg, ha a beküldés sikeres; hiba vagy spam-szűrés esetén rögtön a KUKÁBA
+    //    kerül (lásd trashUploads), így nem képződik árva fájl.
+    const attachmentUrls  = []
+    const attachmentPaths = []   // a feltöltött fájlok elérési útjai a törléshez
+    const trashUploads = async () => {
+      if (!attachmentPaths.length) return
+      try { await supabase.storage.from('attachments').remove(attachmentPaths) } catch {}
+    }
     if (files.length > 0) {
       setUploading(true)
       for (const f of files) {
@@ -103,11 +110,13 @@ export default function Contact() {
 
         if (uploadError) {
           console.error('Upload error:', uploadError)
+          await trashUploads()            // a már feltöltött fájlok eltakarítása
           setErrMsg(c.errUpload)
           setStatus('error')
           setUploading(false)
           return
         }
+        attachmentPaths.push(path)
 
         const { data: urlData } = supabase.storage
           .from('attachments')
@@ -141,6 +150,7 @@ export default function Contact() {
     })
 
     if (fnError || !result?.ok) {
+      await trashUploads()   // sikertelen beküldés → a kép a kukába
       const rateLimited = result?.error === 'rate_limited' || fnError?.context?.status === 429
       setErrMsg(
         rateLimited
@@ -156,6 +166,10 @@ export default function Contact() {
     // delivered:false = honeypot/idő-csapda kiszűrte (a felhasználónak sikert mutatunk,
     // de nem szúrtunk be és nem küldünk értesítő emailt)
     const delivered = result?.delivered !== false
+
+    // Spam-szűrő kiszűrte: nincs mentett üzenet, ami a képre hivatkozna → a
+    // feltöltött fájl a kukába, hogy ne maradjon árva a tárhelyen.
+    if (!delivered) await trashUploads()
 
     // 3. EmailJS
     if (delivered && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
