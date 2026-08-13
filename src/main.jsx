@@ -4,6 +4,8 @@ import './fonts'
 import App from './App.jsx'
 import { Analytics } from '@vercel/analytics/react'
 
+//asd
+
 // A hibafigyelést (Sentry / @sentry/react) NEM a fő csomagba tesszük: tétlen
 // időben, KÜLÖN chunk-ként töltjük be és inicializáljuk, hogy ne lassítsa a
 // kezdeti betöltést. A renderhez nem kell – lásd a saját ErrorBoundary-t lent.
