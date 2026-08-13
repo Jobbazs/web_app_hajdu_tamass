@@ -51,32 +51,10 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://hajdutamas.hu" />
 
-    <!-- Font preconnect – legkorábbi kapcsolat a Google Fonts szerverrel -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-    <!-- Kritikus fontok. Sima stylesheet-link, szándékosan:
-         1) nincs inline onload esemény-attribútum, tehát CSP-biztos
-            (a script-src-attr direktíva az ilyeneket tiltja),
-         2) render-blokkoló, ami itt ELŐNY: a display=block amúgy is a font
-            kivárására van hangolva, így nincs FOUT villanás,
-         3) nem kell <noscript> tartalék, mert JS nélkül is betöltődik.
-         A fenti preconnect miatt a DNS/TLS kézfogás már megtörtént. -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,300&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap" />
-
-    <!-- Fallback font definíció – amíg a Google Font betölt, rendszer-font mutatja
-         de ugyanolyan karakterszélességgel, így nem ugrik el a szöveg -->
-    <style>
-      /* Kritikus CSS – font-face fallback hogy ne villogjon az elrendezés */
-      @font-face {
-        font-family: 'Bebas Neue';
-        font-style: normal;
-        font-weight: 400;
-        font-display: block;
-        src: local('Impact'), local('Arial Narrow');
-        size-adjust: 92%;
-      }
-    </style>
+    <!-- Betűtípusok: önállóan tárolva (self-hosted, Fontsource) a src/fonts.js-ből.
+         Nincs külső Google Fonts kérés (nincs IP-továbbítás a Google felé),
+         és nincs hozzájárulás-köteles süti. A súlyok a korábbi Google Fonts
+         beállítással azonosak. -->
 
     <!-- Strukturált adat (JSON-LD) – helyi szolgáltatás Google számára -->
     <script type="application/ld+json">

@@ -1,6 +1,8 @@
 import { StrictMode, Component } from 'react'
 import { createRoot } from 'react-dom/client'
+import './fonts'
 import App from './App.jsx'
+import { Analytics } from '@vercel/analytics/react'
 
 // A hibafigyelést (Sentry / @sentry/react) NEM a fő csomagba tesszük: tétlen
 // időben, KÜLÖN chunk-ként töltjük be és inicializáljuk, hogy ne lassítsa a
@@ -82,6 +84,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary fallback={<Fallback />}>
       <App />
+      <Analytics />
     </ErrorBoundary>
   </StrictMode>
 )
