@@ -220,6 +220,15 @@ function injectRoot(template, bodyHtml) {
   )
 }
 
+// A prerender-időben lekért adatot beinjektáljuk egy globálisba, hogy a React
+// hookok abból induljanak (lásd useSiteContent). Így az első render egyezik a
+// statikus HTML-lel → nincs "villanás". A </ jelet escape-eljük, hogy a JSON
+// ne törhesse meg a <script> taget.
+function injectData(html, data) {
+  const json = JSON.stringify(data).replace(/</g, '\\u003c')
+  return html.replace('</head>', `  <script>window.__PRERENDER__=${json}</script>\n</head>`)
+}
+
 // Bal sáv (belső linkek – SEO)
 function railHtml(cats, activeSlug) {
   const links = [`<a href="/portfolio">Mind</a>`]
@@ -421,11 +430,14 @@ async function main() {
       .join('\n')
 
   // Template EGYSZER beolvasva (üres #root), minden oldal ebből készül
-  const template = await readFile(DIST, 'utf8')
+  let template = await readFile(DIST, 'utf8')
   if (!template.includes('<div id="root"></div>')) {
     console.warn('[prerender] A <div id="root"></div> nem található – kihagyva.')
     return
   }
+  // A kliens-oldali hookok kezdőállapotához (villanás-mentesség) beinjektáljuk
+  // a friss site_content-et. Minden oldal ugyanezt kapja a <head>-ben.
+  template = injectData(template, { siteContent: content })
 
   // 1) Főoldal
   await writeFile(DIST, injectRoot(template, body), 'utf8')

@@ -104,8 +104,11 @@ export function useServices() {
 
 // ─── Site content ────────────────────────────────────────────
 export function useSiteContent() {
-  const [content, setContent] = useState({})
-  const [loading, setLoading] = useState(true)
+  // Kezdőállapot a prerender által injektált adatból (window.__PRERENDER__),
+  // hogy az első React-render EGYEZZEN a statikus HTML-lel – így megszűnik a
+  // hero/navbar "villanás". A háttér-fetch utána frissíti, ha közben változott.
+  const [content, setContent] = useState(() => globalThis.__PRERENDER__?.siteContent ?? {})
+  const [loading, setLoading] = useState(() => !globalThis.__PRERENDER__?.siteContent)
 
   const fetch = useCallback(async () => {
     setLoading(true)
