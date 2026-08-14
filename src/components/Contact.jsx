@@ -3,6 +3,7 @@ import emailjs from '@emailjs/browser'
 import { supabase } from '../supabaseClient'
 import '../Styles/Contact.css'
 import { useLang } from '../LangContext'
+import { useServices } from '../hooks'
 import ThankYou from './ThankYou'
 
 const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  || ''
@@ -29,12 +30,14 @@ export default function Contact() {
   const [files,      setFiles]     = useState([])        // max 5 File object
   const [fileErr,    setFileErr]   = useState('')
   const [uploading,  setUploading] = useState(false)
+  const [consent,    setConsent]   = useState(false)   // GDPR – kötelező bepipálni
   const fileInputRef = useRef(null)
   const renderedAt = useRef(Date.now())   // idő-csapda: mikor töltődött be az űrlap
   const [hp, setHp] = useState('')         // honeypot – embernek láthatatlan
 
   const { t, lang } = useLang()
   const c = t.contact
+  const { services } = useServices()
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -257,9 +260,14 @@ export default function Contact() {
               value={form.service}
               onChange={handleChange}
             >
-              {c.serviceOptions.map((o, i) => (
-                <option key={o} value={i === 0 ? '' : o}>{o}</option>
-              ))}
+              <option value="">{c.serviceOptions[0]}</option>
+              {services.map(svc => {
+                const label = lang === 'hu' ? svc.name_hu : svc.name_en
+                return <option key={svc.id} value={label}>{label}</option>
+              })}
+              <option value={lang === 'hu' ? 'Egyéb' : 'Other'}>
+                {lang === 'hu' ? 'Egyéb' : 'Other'}
+              </option>
             </select>
           </div>
 
@@ -340,12 +348,25 @@ export default function Contact() {
             {fileErr && <div className="form-error">{fileErr}</div>}
           </div>
 
+          <label className="form-consent">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={e => setConsent(e.target.checked)}
+            />
+            <span>
+              {lang === 'hu'
+                ? <>Elolvastam és elfogadom az <a href="/adatkezeles" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</>
+                : <>I have read and accept the <a href="/adatkezeles" target="_blank" rel="noopener">privacy policy</a>.</>}
+            </span>
+          </label>
+
           {errMsg && <div className="form-error">{errMsg}</div>}
 
           <button
             type="submit"
             className="submit-btn"
-            disabled={isSending}
+            disabled={isSending || !consent}
           >
             <span>
               {uploading  ? 'Feltöltés...' :

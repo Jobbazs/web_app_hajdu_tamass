@@ -24,6 +24,8 @@ const Admin           = lazy(() => import('./components/Admin'))
 const Login           = lazy(() => import('./components/Login'))
 const Confirm         = lazy(() => import('./components/Confirm'))
 const Termekismerteto = lazy(() => import('./components/Termekismerteto'))
+const Adatkezeles     = lazy(() => import('./components/Adatkezeles'))
+const Impresszum      = lazy(() => import('./components/Impresszum'))
 
 // Szekció komponens térkép
 const SECTION_COMPONENTS = {
@@ -132,6 +134,12 @@ function AppInner() {
   // Nem publikus termékismertető (noindex, nincs a menüben/sitemapben)
   if (path === INFO_PATH || path === INFO_PATH + '/')
     return <Suspense fallback={null}><Termekismerteto /></Suspense>
+
+  if (path === '/adatkezeles' || path === '/adatkezeles/')
+    return <Suspense fallback={null}><Adatkezeles /></Suspense>
+
+  if (path === '/impresszum' || path === '/impresszum/')
+    return <Suspense fallback={null}><Impresszum /></Suspense>
 
   // Portfólió aloldalak (SEO): hub + kategória-oldalak
   if (path === '/portfolio' || path === '/portfolio/') return <PortfolioHub />

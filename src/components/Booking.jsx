@@ -38,6 +38,7 @@ export default function Booking() {
   const [showThanks,   setShowThanks]   = useState(false)
   const [thanksKind,   setThanksKind]   = useState('booking')  // 'booking' | 'waitlist'
   const [sentEmail,    setSentEmail]    = useState('')
+  const [consent,      setConsent]      = useState(false)   // GDPR – kötelező bepipálni
 
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
 
@@ -241,7 +242,15 @@ export default function Booking() {
                   <form onSubmit={handleWaitlist} className="booking-form" noValidate>
                     {renderFields(form, handleChange, lang)}
                     {error && <div className="form-error">{error}</div>}
-                    <button type="submit" className="submit-btn" disabled={sending}>
+                    <label className="form-consent">
+                      <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} />
+                      <span>
+                        {lang === 'hu'
+                          ? <>Elolvastam és elfogadom az <a href="/adatkezeles" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</>
+                          : <>I have read and accept the <a href="/adatkezeles" target="_blank" rel="noopener">privacy policy</a>.</>}
+                      </span>
+                    </label>
+                    <button type="submit" className="submit-btn" disabled={sending || !consent}>
                       <span>{sending
                         ? (lang === 'hu' ? 'Küldés...' : 'Sending...')
                         : (lang === 'hu' ? 'Feliratkozás a várólistára' : 'Join waitlist')}</span>
@@ -258,7 +267,15 @@ export default function Booking() {
                     ? 'A foglalás megerősítéséhez emailben küldünk egy linket. A link 10 percig érvényes.'
                     : 'We\'ll send a confirmation link to your email. The link is valid for 10 minutes.'}
                 </p>
-                <button type="submit" className="submit-btn" disabled={sending}>
+                <label className="form-consent">
+                  <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} />
+                  <span>
+                    {lang === 'hu'
+                      ? <>Elolvastam és elfogadom az <a href="/adatkezeles" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</>
+                      : <>I have read and accept the <a href="/adatkezeles" target="_blank" rel="noopener">privacy policy</a>.</>}
+                  </span>
+                </label>
+                <button type="submit" className="submit-btn" disabled={sending || !consent}>
                   <span>{sending
                     ? (lang === 'hu' ? 'Küldés...' : 'Sending...')
                     : (lang === 'hu' ? 'Időpont foglalása →' : 'Book this slot →')}</span>

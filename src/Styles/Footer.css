@@ -16,3 +16,20 @@ footer {
   letter-spacing: 0.15em;
   color: var(--text-muted);
 }
+
+/* Footer jogi linkek */
+.footer-legal {
+  display: none;
+  gap: 1.2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+.footer-legal a {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.footer-legal a:hover { color: var(--rust-light); }

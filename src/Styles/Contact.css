@@ -187,3 +187,22 @@
     margin-bottom: 14px; /* more breathing room before the add button */
   }
 }
+
+/* GDPR hozzájárulás-checkbox */
+.form-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.6rem 0 0.2rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.form-consent input {
+  margin-top: 0.15rem;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.form-consent a { color: var(--rust-light); text-decoration: underline; }

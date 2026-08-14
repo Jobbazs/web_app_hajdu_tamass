@@ -22,6 +22,22 @@
       "destination": "/index.html"
     },
     {
+      "source": "/adatkezeles",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/adatkezeles/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/impresszum",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/impresszum/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/portfolio",
       "destination": "/portfolio/index.html"
     },
