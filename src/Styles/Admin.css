@@ -1170,3 +1170,37 @@
 .acms-switch input:checked + .acms-switch-track { background: #c8a24a; }
 .acms-switch input:checked + .acms-switch-track .acms-switch-thumb { transform: translateX(16px); }
 .acms-bulk-sep { flex: 1 1 auto; }
+/* ── DEMO mód sáv ── */
+.admin-demo-banner {
+  background: var(--rust);
+  color: #fff;
+  text-align: center;
+  padding: 0.7rem 1rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+/* ── Jogkezelő táblázat ── */
+.acms-roles-add {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.acms-roles-add input { flex: 1; min-width: 200px; }
+.acms-roles-add select { max-width: 160px; }
+.acms-roles-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+.acms-roles-table th,
+.acms-roles-table td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: middle;
+}
+.acms-roles-table select { max-width: 160px; }

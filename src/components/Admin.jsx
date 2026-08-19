@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { startAdminLog, stopAdminLog } from '../lib/adminLog'
+import { useAdminRole } from '../hooks'
 import AdminDashboard from './admin/AdminDashboard'
 import AdminMessages  from './admin/AdminMessages'
 import '../Styles/Admin.css'
@@ -9,6 +11,7 @@ import AdminServices  from './admin/AdminServices'
 import AdminContent   from './admin/AdminContent'
 import AdminBookings  from './admin/AdminBookings'
 import AdminAdvanced  from './admin/AdminAdvanced'
+import AdminBugReport from './admin/AdminBugReport'
 
 const TABS = [
   { key: 'dashboard', label: 'Áttekintés' },
@@ -19,10 +22,18 @@ const TABS = [
   { key: 'content',   label: 'Tartalom' },
   { key: 'bookings',  label: 'Foglalások' },
   { key: 'advanced',  label: 'Haladó beállítások' },
+  { key: 'bug',       label: 'Hibajegy' },
 ]
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard')
+  const { isDemo } = useAdminRole()
+
+  // Aktivitás-napló: a belépéstől gyűjti a kattintásokat a hibajegyhez.
+  useEffect(() => {
+    startAdminLog()
+    return () => stopAdminLog()
+  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -38,6 +49,12 @@ export default function Admin() {
         </div>
         <button className="admin-logout-btn" onClick={handleLogout}>Kilépés</button>
       </div>
+
+      {isDemo && (
+        <div className="admin-demo-banner">
+          DEMO mód — a módosítások nem menthetők. Nyugodtan próbálj ki bármit, az oldal tartalma nem változik.
+        </div>
+      )}
 
       {/* Tab navigáció */}
       <div className="acms-tabs">
@@ -62,6 +79,7 @@ export default function Admin() {
         {activeTab === 'content'   && <AdminContent />}
         {activeTab === 'bookings'  && <AdminBookings />}
         {activeTab === 'advanced'  && <AdminAdvanced />}
+        {activeTab === 'bug'       && <AdminBugReport />}
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
+import AdminRoles from './AdminRoles'
 
 // ============================================================
 // Haladó beállítások fül
@@ -276,6 +277,9 @@ export default function AdminAdvanced() {
           </div>
         </div>
       </div>
+
+      {/* Jogkezelő – csak superadminnak jelenik meg (a komponens maga dönti el) */}
+      <AdminRoles />
     </div>
   )
 }

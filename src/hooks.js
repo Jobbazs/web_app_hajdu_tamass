@@ -273,3 +273,38 @@ export function useCategorySections() {
   useRealtimeRefetch(['category_sections'], fetch)
   return { sections, loading, refetch: fetch }
 }
+// ─────────────────────────────────────────────────────────────
+//  Admin szerepkör: a bejelentkezett user szerepe az admin_users-ből.
+//  Visszaad: { role, isDemo, isSuperadmin, loading }.
+//  A TÉNYLEGES védelmet az RLS adja (a demo szerver-oldalon nem tud írni);
+//  ez a hook a UI-hoz kell (demo-sáv, jogkezelő láthatósága).
+// ─────────────────────────────────────────────────────────────
+export function useAdminRole() {
+  const [role, setRole] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        if (alive) { setRole(null); setLoading(false) }
+        return
+      }
+      const { data } = await supabase
+        .from('admin_users')
+        .select('role')
+        .ilike('email', user.email)
+        .maybeSingle()
+      if (alive) { setRole(data?.role ?? null); setLoading(false) }
+    })()
+    return () => { alive = false }
+  }, [])
+
+  return {
+    role,
+    isDemo: role === 'demo',
+    isSuperadmin: role === 'superadmin',
+    loading,
+  }
+}

@@ -68,16 +68,6 @@ create policy "Public read categories"
 create policy "Admin all categories"
   on public.portfolio_categories for all using (auth.role() = 'authenticated');
 
-insert into public.portfolio_categories (slug, label_hu, label_en, sort_order) values
-  ('nightlife',     'Nightlife',       'Nightlife',       1),
-  ('studio',        'Studio',          'Studio',          2),
-  ('rendezveny',    'Rendezvény',      'Events',          3),
-  ('sport-kultura', 'Sport & Kultúra', 'Sport & Culture', 4),
-  ('kreativ',       'Kreatív',         'Creative',        5)
-on conflict (slug) do update
-  set label_hu   = excluded.label_hu,
-      label_en   = excluded.label_en,
-      sort_order = excluded.sort_order;
 
 
 -- ============================================================================
@@ -1239,13 +1229,119 @@ end $$;
 
 
 -- ============================================================================
+-- 16. ADMIN SZEREPKÖRÖK (hierarchia) + HIBAJEGYEK
+-- admin_users: superadmin | admin | demo szerepkör + jövőbeli granuláris jogok
+-- (permissions jsonb). current_admin_role(): a bejelentkezett user szerepköre
+-- (SECURITY DEFINER, RLS-rekurzió ellen). bug_tickets: admin hibajegyek a
+-- csatolt aktivitás-naplóval (activity_log). Idempotens.
+-- ============================================================================
+
+-- ── 16a) Admin felhasználók + szerepkörök ───────────────────────────────────
+create table if not exists public.admin_users (
+  id          uuid primary key references auth.users (id) on delete cascade,
+  email       text unique not null,
+  role        text not null default 'admin'
+              check (role in ('superadmin', 'admin', 'demo')),
+  permissions jsonb not null default '{}'::jsonb,   -- jövőbeli granuláris jogok
+  created_at  timestamptz not null default now()
+);
+
+alter table public.admin_users enable row level security;
+
+-- ── 16b) Szerepkör-lekérő helper ────────────────────────────────────────────
+-- SECURITY DEFINER: megkerüli az admin_users RLS-t, hogy ne legyen végtelen
+-- rekurzió, amikor a policy-k maguk is ezt hívják.
+create or replace function public.current_admin_role()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from public.admin_users where id = auth.uid()
+$$;
+
+revoke all on function public.current_admin_role() from public;
+grant execute on function public.current_admin_role() to authenticated;
+
+-- ── 16c) admin_users RLS ────────────────────────────────────────────────────
+drop policy if exists "admin_users read"  on public.admin_users;
+drop policy if exists "admin_users write" on public.admin_users;
+
+-- Bejelentkezett admin láthatja a listát (a kezelő UI-hoz)
+create policy "admin_users read"
+  on public.admin_users for select
+  using (auth.role() = 'authenticated');
+
+-- Írni (felvenni / módosítani / törölni) CSAK superadmin tud
+create policy "admin_users write"
+  on public.admin_users for all
+  using (public.current_admin_role() = 'superadmin')
+  with check (public.current_admin_role() = 'superadmin');
+
+-- ── 16d) Hibajegyek ─────────────────────────────────────────────────────────
+create table if not exists public.bug_tickets (
+  id           uuid primary key default gen_random_uuid(),
+  description  text not null,
+  cause        text,
+  activity_log jsonb,                 -- csatolt kattintás/folyamat-napló
+  created_by   text,                  -- a bejelentő e-mailje
+  status       text not null default 'open' check (status in ('open', 'closed')),
+  created_at   timestamptz not null default now()
+);
+
+alter table public.bug_tickets enable row level security;
+
+drop policy if exists "bug_tickets insert" on public.bug_tickets;
+drop policy if exists "bug_tickets read"   on public.bug_tickets;
+drop policy if exists "bug_tickets update" on public.bug_tickets;
+drop policy if exists "bug_tickets delete" on public.bug_tickets;
+
+-- Bármely bejelentkezett admin (a DEMO is) létrehozhat hibajegyet
+create policy "bug_tickets insert"
+  on public.bug_tickets for insert
+  with check (auth.role() = 'authenticated');
+
+-- Olvasás: bejelentkezett admin
+create policy "bug_tickets read"
+  on public.bug_tickets for select
+  using (auth.role() = 'authenticated');
+
+-- Módosítás: superadmin vagy admin; törlés: csak superadmin
+create policy "bug_tickets update"
+  on public.bug_tickets for update
+  using (public.current_admin_role() in ('superadmin', 'admin'));
+create policy "bug_tickets delete"
+  on public.bug_tickets for delete
+  using (public.current_admin_role() = 'superadmin');
+
+-- ── 16e) A jelenlegi (egyetlen) admin beállítása superadminként ──────────────
+--     >>> Töltsd ki a saját admin-belépési e-mailedet! <<<
+insert into public.admin_users (id, email, role)
+select id, email, 'superadmin'
+from auth.users
+where email = 'hajdutamas@webapp.com'
+on conflict (id) do update set role = 'superadmin', email = excluded.email;
+
+-- ── (opcionális) Demo felhasználó ───────────────────────────────────────────
+--   Előbb hozz létre egy demo auth-felhasználót:
+--   Supabase Dashboard -> Authentication -> Users -> Add user, majd:
+-- insert into public.admin_users (id, email, role)
+-- select id, email, 'demo'
+-- from auth.users where email = '[A_DEMO_EMAILED]'
+-- on conflict (id) do update set role = 'demo';
+
+
+-- ============================================================================
 -- VÉGE
 -- Táblák:   messages, portfolio_categories, portfolio_items, services,
 --           site_content, custom_sections, appointment_slots, appointments,
---           appointment_waitlist, client_reliability
+--           appointment_waitlist, client_reliability, admin_users, bug_tickets
 -- View:     available_slots
 -- RPC:      confirm_appointment, cancel_appointment, respond_waitlist
 --           (SECURITY DEFINER, token-scope-olt publikus műveletek)
+-- Szerep:   admin_users (superadmin/admin/demo) + current_admin_role(),
+--           bug_tickets (hibajegyek az aktivitás-naplóval)
 -- Trigger:  set_updated_at_reliability, trg_00_recalc_booked_count,
 --           trg_set_waitlist_position,
 --           trg_rate_limit_appointments, trg_rate_limit_messages
