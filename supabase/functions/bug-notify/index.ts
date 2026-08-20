@@ -24,6 +24,7 @@ const DAILY_CAP    = 80
 const MONTHLY_CAP  = 2500
 const MAX_ATTEMPTS = 5
 
+
 function sbFetch(path: string, init: RequestInit = {}) {
   return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...init,

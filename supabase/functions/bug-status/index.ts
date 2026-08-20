@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ status }),
     },
   )
+  
   const rows = await res.json().catch(() => [])
   if (!res.ok || !Array.isArray(rows) || rows.length === 0) {
     return page('A hibajegy nem található (elképzelhető, hogy a link elavult).')
