@@ -1235,5 +1235,5 @@
   background: #fff; transition: transform 0.2s;
 }
 .acms-switch.on .acms-switch-thumb { transform: translateX(16px); }
-.acms-switch-label { font-size: 0.72rem; letter-spacing: 0.05em; opacity: 0.85; }
+.acms-switch-label { font-size: 0.72rem; letter-spacing: 0.05em; opacity: 0.85; color: #fff; }
 .acms-switch.off .acms-switch-label { opacity: 0.5; }

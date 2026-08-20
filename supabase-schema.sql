@@ -368,8 +368,7 @@ alter table public.appointment_slots enable row level security;
 
 drop policy if exists "Public read slots" on public.appointment_slots;
 drop policy if exists "Admin all slots"   on public.appointment_slots;
-drop policy if exists "Admin read appointments" on public.appointments;
-drop policy if exists "Admin read appointments_slots" on public.appointments;
+drop policy if exists "Admin read appointment_slots" on public.appointment_slots;
 
 
 create policy "Public read slots"
@@ -430,6 +429,7 @@ drop policy if exists "Public insert appointments"  on public.appointments;
 drop policy if exists "Public confirm appointment"  on public.appointments;
 drop policy if exists "Public update by token"      on public.appointments;
 drop policy if exists "Admin all appointments"      on public.appointments;
+drop policy if exists "Admin read appointments"     on public.appointments;
 
 -- Bárki FOGLALHAT, de CSAK megerősítésre váró státusszal.
 -- (Így nem lehet közvetlenül 'confirmed' foglalást beszúrni a megerősítés
@@ -492,6 +492,7 @@ alter table public.appointment_waitlist enable row level security;
 drop policy if exists "Public join waitlist"  on public.appointment_waitlist;
 drop policy if exists "Public read waitlist"  on public.appointment_waitlist;
 drop policy if exists "Admin all waitlist"    on public.appointment_waitlist;
+drop policy if exists "Admin read appointment_waitlist" on public.appointment_waitlist;
 
 -- Bárki feliratkozhat, de csak "friss" sorral: nem állíthat be magának
 -- értesítést / ajánlat-tokent / választ. A position-t trigger tölti ki (8h).
@@ -550,6 +551,7 @@ create table if not exists public.client_reliability (
 alter table public.client_reliability enable row level security;
 
 drop policy if exists "Admin all reliability" on public.client_reliability;
+drop policy if exists "Admin read client_reliability" on public.client_reliability;
 
 -- Csak admin látja és kezeli
 -- Demo (és minden admin) OLVASHAT; írni csak nem-demo tud
