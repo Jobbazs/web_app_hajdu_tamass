@@ -369,6 +369,8 @@ alter table public.appointment_slots enable row level security;
 drop policy if exists "Public read slots" on public.appointment_slots;
 drop policy if exists "Admin all slots"   on public.appointment_slots;
 drop policy if exists "Admin read appointments" on public.appointments;
+drop policy if exists "Admin read appointments_slots" on public.appointments;
+
 
 create policy "Public read slots"
   on public.appointment_slots for select
@@ -1338,7 +1340,7 @@ create policy "bug_tickets delete" on public.bug_tickets for delete
 
 -- A jelenlegi (egyetlen) admin superadminként  >>> TÖLTSD KI AZ E-MAILEDET! <<<
 insert into public.admin_users (email, role)
-values ('[A_FOADMIN_EMAILED]', 'superadmin')
+values ('hajdutamas@webapp.com', 'superadmin')
 on conflict (email) do update set role = 'superadmin';
 
 

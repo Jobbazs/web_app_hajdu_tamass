@@ -89,7 +89,7 @@
 .acms-content { padding: 2rem; }
 
 /* Section fejléc */
-.acms-section { max-width: 960px; }
+.acms-section { max-width: 960px; margin: 0 auto; }
 .acms-section--wide { max-width: none; }   /* pl. portfólió rács – teljes szélesség */
 
 .acms-section-header {
@@ -996,7 +996,7 @@
 /* ============================================================
    DASHBOARD (AdminDashboard)
    ============================================================ */
-.dash { padding-bottom: 2rem; }
+.dash { padding-bottom: 2rem; max-width: 1100px; margin: 0 auto; }
 
 .dash-stats {
   display: grid;
@@ -1217,3 +1217,5 @@
   opacity: 0.7;
   white-space: nowrap;
 }
+/* ── CMS tartalom középre igazítása ── */
+.acms-tartalom { max-width: 960px; margin: 0 auto; }

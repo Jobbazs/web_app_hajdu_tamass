@@ -592,9 +592,6 @@ export default function AdminContent({ view = 'sekciok' }) {
           <div className="acms-section-title">Oldal tartalom</div>
           <div className="acms-section-sub">Szövegek és egyedi szekciók</div>
         </div>
-        {view === 'sekciok' && (
-          <button className="acms-btn-primary" onClick={openNewSect}>+ Új szekció</button>
-        )}
         {(view === 'sekciok' || view === 'popup') && hasChanges && (
           <button className="acms-btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Mentés...' : `Mentés (${Object.keys(edits).length})`}
@@ -698,6 +695,10 @@ export default function AdminContent({ view = 'sekciok' }) {
       {/* ── EGYEDI SZEKCIÓK LISTA ── */}
       {view === 'sekciok' && (
         <>
+          <div className="acms-sect-header-row">
+            <div className="acms-content-group-label">Egyedi szekciók</div>
+            <button className="acms-btn-primary" onClick={openNewSect}>+ Új szekció</button>
+          </div>
           {sectLoading ? <div className="admin-empty">Betöltés...</div>
           : sections.length === 0 ? (
             <div className="admin-empty">
@@ -804,45 +805,62 @@ export default function AdminContent({ view = 'sekciok' }) {
       {/* ── POPUP SZÖVEGEK ── */}
       {view === 'popup' && (
         <div className="acms-content-group">
-          <div className="acms-content-group-label">Köszönő popup szövegek</div>
-          <div className="acms-content-fields">
-            {[
-              {key:'thankyou_eyebrow_hu',   label:'Eyebrow – Magyar',         type:'text'},
-              {key:'thankyou_title1_hu',    label:'Cím 1. sor – Magyar',      type:'text'},
-              {key:'thankyou_title2_hu',    label:'Cím 2. sor – Magyar',      type:'text'},
-              {key:'thankyou_body_hu',      label:'Szöveg – Magyar',          type:'textarea'},
-              {key:'thankyou_body_name_hu', label:'Szöveg névvel – Magyar',   type:'textarea'},
-              {key:'thankyou_closebtn_hu',  label:'Gomb felirat – Magyar',    type:'text'},
-              {key:'thankyou_dismiss_hu',   label:'Bezárás felirat – Magyar', type:'text'},
-              {key:'thankyou_eyebrow_en',   label:'Eyebrow – EN',             type:'text'},
-              {key:'thankyou_title1_en',    label:'Title line 1 – EN',        type:'text'},
-              {key:'thankyou_title2_en',    label:'Title line 2 – EN',        type:'text'},
-              {key:'thankyou_body_en',      label:'Body – EN',                type:'textarea'},
-              {key:'thankyou_body_name_en', label:'Body with name – EN',      type:'textarea'},
-              {key:'thankyou_closebtn_en',  label:'Button label – EN',        type:'text'},
-              {key:'thankyou_dismiss_en',   label:'Dismiss label – EN',       type:'text'},
-            ].map(field => (
-              <div key={field.key} className="acms-form-group">
-                <label>
-                  {field.label}
-                  {edits[field.key] !== undefined && <span className="acms-changed-dot" />}
-                </label>
-                {field.type === 'textarea' ? (
-                  <textarea className="acms-input acms-textarea"
-                    value={getValue(field.key)}
-                    onChange={e => handleChange(field.key, e.target.value)}
-                    rows={2} />
-                ) : (
-                  <input type="text" className="acms-input"
-                    value={getValue(field.key)}
-                    onChange={e => handleChange(field.key, e.target.value)} />
-                )}
+          <div className="acms-content-group-label">Kapcsolat PopUp szöveg</div>
+          <div className="acms-hint" style={{ marginBottom: '1.2rem' }}>
+            Ez a visszaigazoló ablak jelenik meg, miután valaki elküldte a kapcsolati űrlapot.
+            Szerkeszd közvetlenül az előnézetben – fent a magyar, alatta az angol változat.
+          </div>
+
+          {[
+            { lng: 'Magyar',  sfx: 'hu' },
+            { lng: 'English', sfx: 'en' },
+          ].map(({ lng, sfx }) => (
+            <div key={sfx} className="acms-popup-editor">
+              <div className="acms-popup-lang">{lng}</div>
+              <div className="acms-popup-box">
+                <div className="acms-popup-icon">✓</div>
+
+                <input className="acms-popup-eyebrow"
+                  value={getValue(`thankyou_eyebrow_${sfx}`)}
+                  onChange={e => handleChange(`thankyou_eyebrow_${sfx}`, e.target.value)}
+                  placeholder="kis felirat a cím fölött" />
+
+                <input className="acms-popup-title"
+                  value={getValue(`thankyou_title1_${sfx}`)}
+                  onChange={e => handleChange(`thankyou_title1_${sfx}`, e.target.value)}
+                  placeholder="Cím – 1. sor" />
+
+                <input className="acms-popup-title acms-popup-title--accent"
+                  value={getValue(`thankyou_title2_${sfx}`)}
+                  onChange={e => handleChange(`thankyou_title2_${sfx}`, e.target.value)}
+                  placeholder="Cím – 2. sor (kiemelt)" />
+
+                <div className="acms-popup-field">
+                  <span className="acms-popup-flabel">Szöveg (ha nincs megadva név)</span>
+                  <textarea className="acms-popup-body" rows={2}
+                    value={getValue(`thankyou_body_${sfx}`)}
+                    onChange={e => handleChange(`thankyou_body_${sfx}`, e.target.value)} />
+                </div>
+
+                <div className="acms-popup-field">
+                  <span className="acms-popup-flabel">Szöveg, ha ismert a név (a &#123;name&#125; helyére a küldő neve kerül)</span>
+                  <textarea className="acms-popup-body" rows={2}
+                    value={getValue(`thankyou_body_name_${sfx}`)}
+                    onChange={e => handleChange(`thankyou_body_name_${sfx}`, e.target.value)} />
+                </div>
+
+                <input className="acms-popup-btn"
+                  value={getValue(`thankyou_closebtn_${sfx}`)}
+                  onChange={e => handleChange(`thankyou_closebtn_${sfx}`, e.target.value)}
+                  placeholder="Gomb felirat" />
+
+                <input className="acms-popup-dismiss"
+                  value={getValue(`thankyou_dismiss_${sfx}`)}
+                  onChange={e => handleChange(`thankyou_dismiss_${sfx}`, e.target.value)}
+                  placeholder="bezárás felirat" />
               </div>
-            ))}
-          </div>
-          <div className="acms-hint" style={{marginTop:'0.8rem'}}>
-            A névvel ellátott szövegben a <code>&#123;name&#125;</code> helyére a küldő neve kerül.
-          </div>
+            </div>
+          ))}
         </div>
       )}
 
