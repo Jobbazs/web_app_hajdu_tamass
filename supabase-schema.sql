@@ -1346,6 +1346,40 @@ values ('hajdutamas@webapp.com', 'superadmin')
 on conflict (email) do update set role = 'superadmin';
 
 
+
+-- ============================================================================
+-- Hibajegy: e-mail-továbbítás + státusz-gombok + jegylista (KONSZOLIDÁLT)
+-- Egy fájl mindent tartalmaz. Idempotens. Futtasd a Supabase SQL Editorban.
+-- (A 16. szekció bug_tickets részébe is beépíthető.)
+-- ============================================================================
+
+-- ── Küldés-státusz mezők (e-mail-továbbítás) ────────────────────────────────
+alter table public.bug_tickets add column if not exists notified_at     timestamptz;
+alter table public.bug_tickets add column if not exists notify_attempts int not null default 0;
+
+-- ── Státusz-váltó token (az e-mailben lévő gombokhoz, bejelentkezés nélkül) ──
+alter table public.bug_tickets add column if not exists status_token text not null default gen_random_uuid()::text;
+
+-- ── Státuszok átállítása 3 értékre: reported | in_progress | closed ─────────
+--    (megjelenítve: Bejelentve / Folyamatban / Lezárva)
+alter table public.bug_tickets alter column status drop default;
+alter table public.bug_tickets drop constraint if exists bug_tickets_status_check;
+update public.bug_tickets
+  set status = 'reported'
+  where status not in ('reported', 'in_progress', 'closed');
+alter table public.bug_tickets
+  add constraint bug_tickets_status_check check (status in ('reported', 'in_progress', 'closed'));
+alter table public.bug_tickets alter column status set default 'reported';
+
+-- ── Olvasás: superadmin MINDET lát; más admin CSAK a saját beküldéseit ──────
+drop policy if exists "bug_tickets read" on public.bug_tickets;
+create policy "bug_tickets read" on public.bug_tickets for select
+  using (
+    public.current_admin_role() = 'superadmin'
+    or lower(created_by) = lower(auth.jwt() ->> 'email')
+  );
+
+
 -- ============================================================================
 -- VÉGE
 -- Táblák:   messages, portfolio_categories, portfolio_items, services,

@@ -1,15 +1,47 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../supabaseClient'
 import { getLog, clearLog } from '../../lib/adminLog'
+import { useAdminRole } from '../../hooks'
 
-// Hibajegy űrlap: leírás + hiba oka, a belépés óta gyűjtött aktivitás-naplóval.
+// Hibajegy: beküldő űrlap + jegylista. A lista tartalmát az RLS szűri
+// (superadmin MINDET látja, más admin CSAK a saját beküldéseit).
+function fmt(iso) {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleString('hu-HU', {
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    })
+  } catch { return iso }
+}
+
+// Státuszok: reported = Bejelentve, in_progress = Folyamatban, closed = Lezárva
+function statusLabel(s) {
+  if (s === 'closed') return 'Lezárva'
+  if (s === 'in_progress') return 'Folyamatban'
+  return 'Bejelentve'
+}
+
 export default function AdminBugReport() {
+  const { isSuperadmin } = useAdminRole()
   const [description, setDescription] = useState('')
   const [cause,       setCause]       = useState('')
   const [status,      setStatus]      = useState('idle')  // idle | sending | done | error
   const [logCount,    setLogCount]    = useState(0)
+  const [tickets,     setTickets]     = useState([])
+  const [loading,     setLoading]     = useState(true)
+
+  const load = async () => {
+    const { data } = await supabase
+      .from('bug_tickets')
+      .select('id, created_at, created_by, description, cause, status, notified_at')
+      .order('created_at', { ascending: false })
+      .limit(100)
+    setTickets(data || [])
+    setLoading(false)
+  }
 
   useEffect(() => { setLogCount(getLog().length) }, [status])
+  useEffect(() => { load() }, [])
 
   const submit = async () => {
     if (!description.trim()) return
@@ -30,10 +62,12 @@ export default function AdminBugReport() {
     setDescription('')
     setCause('')
     clearLog()          // tiszta lap a következő jegyhez
+    load()              // lista frissítése
   }
 
   return (
     <div className="acms-section">
+      {/* Beküldő űrlap */}
       <div className="acms-content-group">
         <div className="acms-content-group-label">Hibajegy beküldése</div>
 
@@ -42,7 +76,7 @@ export default function AdminBugReport() {
             Írd le, mit tapasztaltál. A rendszer <strong>automatikusan csatolja</strong> a
             belépés óta végzett kattintások/lépések naplóját, ami segít a hiba
             visszakövetésében. (A beírt szövegek tartalmát a napló nem tárolja, csak az
-            elvégzett műveleteket.)
+            elvégzett műveleteket.) A beérkezett jegyet a rendszer e-mailben is továbbítja.
           </p>
         </div>
 
@@ -83,6 +117,44 @@ export default function AdminBugReport() {
             {status !== 'done'  && <span className="acms-hint">{logCount} naplóesemény lesz csatolva.</span>}
           </div>
         </div>
+      </div>
+
+      {/* Jegylista */}
+      <div className="acms-content-group">
+        <div className="acms-content-group-label">
+          {isSuperadmin ? 'Összes hibajegy' : 'Beküldött hibajegyeim'}
+        </div>
+
+        {loading ? (
+          <div className="admin-empty">Betöltés…</div>
+        ) : tickets.length === 0 ? (
+          <div className="admin-empty">Még nincs beküldött hibajegy.</div>
+        ) : (
+          <table className="acms-roles-table">
+            <thead>
+              <tr>
+                <th>Dátum</th>
+                {isSuperadmin && <th>Beküldő</th>}
+                <th>Hiba</th>
+                <th>Ok</th>
+                <th>Státusz</th>
+                <th>E-mail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tickets.map(t => (
+                <tr key={t.id}>
+                  <td style={{ whiteSpace: 'nowrap' }}>{fmt(t.created_at)}</td>
+                  {isSuperadmin && <td>{t.created_by || '—'}</td>}
+                  <td>{t.description}</td>
+                  <td>{t.cause || '—'}</td>
+                  <td>{statusLabel(t.status)}</td>
+                  <td>{t.notified_at ? 'Elküldve' : 'Várakozik'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )
