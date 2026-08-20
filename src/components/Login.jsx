@@ -25,7 +25,8 @@ export default function Login() {
     <div className="login-page">
       <div className="login-box">
         <div className="login-title">Admin</div>
-        <div className="login-sub">Csak a tulajdonos számára</div>
+        {/* <div className="login-sub">Csak a tulajdonos számára</div> */}
+        
 
         <form onSubmit={handleLogin} noValidate>
           <div className="form-group">
