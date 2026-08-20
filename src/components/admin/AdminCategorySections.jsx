@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../supabaseClient'
 import SortableList, { SortableItem } from './SortableList'
+import CloudinaryUpload from './CloudinaryUpload'
 
 const TYPE_OPTIONS = [
   { value: 'text_images', label: 'Szöveg + 2×2 kép' },
@@ -133,6 +134,19 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
       image_ids: f.image_ids.includes(id) ? f.image_ids.filter((x) => x !== id) : [...f.image_ids, id],
     }))
 
+  // Kép feltöltése közvetlenül a szekcióból: a kategória képkészletébe kerül
+  // (portfolio_items), és RÖGTÖN ehhez a szekcióhoz rendelődik (image_ids),
+  // tehát nem "auto" – nem tolja el a többi szekció képeit.
+  const uploadToSection = async (url) => {
+    const { data, error: err } = await supabase
+      .from('portfolio_items')
+      .insert({ category_id: categoryId, cloudinary_url: url, title: '', span: 'medium', sort_order: 999, visible: true })
+      .select()
+      .single()
+    if (err) { setError('Feltöltési hiba: ' + err.message); return }
+    if (data) setForm((f) => ({ ...f, image_ids: [...(f.image_ids || []), data.id] }))
+  }
+
   const showImages = form && form.type !== 'text_only'
   const showText = form && form.type !== 'images_only'
 
@@ -168,8 +182,15 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
                     </span>
                   </div>
                   <div className="acms-sec-actions">
-                    <button className="acms-chip" onClick={() => toggleVisible(s)}>
-                      {s.visible ? 'Látható' : 'Rejtett'}
+                    <button
+                      type="button"
+                      className={`acms-switch ${s.visible ? 'on' : 'off'}`}
+                      onClick={() => toggleVisible(s)}
+                      role="switch"
+                      aria-checked={s.visible}
+                    >
+                      <span className="acms-switch-track"><span className="acms-switch-thumb" /></span>
+                      <span className="acms-switch-label">{s.visible ? 'Látható' : 'Rejtett'}</span>
                     </button>
                     <button className="acms-chip" onClick={() => openEdit(s)}>Szerkeszt</button>
                     <button className="acms-chip acms-chip--danger" onClick={() => del(s.id)}>Töröl</button>
@@ -238,8 +259,20 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
               <label className="acms-label">
                 Képek — {form.image_ids.length ? `${form.image_ids.length} kijelölve (kézi sorrend)` : 'üres → automatikus'}
               </label>
+
+              <CloudinaryUpload
+                compact
+                label="+ Kép feltöltése ehhez a szekcióhoz"
+                folder="WebAppHajduTamas/portfolio"
+                onUploaded={uploadToSection}
+              />
+              <span className="acms-hint" style={{ display: 'block', margin: '0.4rem 0 0.8rem' }}>
+                A feltöltött kép a kategória képei közé kerül, és rögtön ehhez a szekcióhoz rendelődik.
+                Alább a meglévő képek közül is választhatsz (a sorszám a megjelenési sorrend).
+              </span>
+
               {categoryItems.length === 0 ? (
-                <div className="acms-hint">Ehhez a kategóriához még nincs kép (a Portfólió fülön adhatsz).</div>
+                <div className="acms-hint">Még nincs feltöltött kép — tölts fel egyet fent, vagy a Portfólió fülön.</div>
               ) : (
                 <div className="acms-img-picker">
                   {categoryItems.map((it) => {

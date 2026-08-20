@@ -89,7 +89,7 @@
 .acms-content { padding: 2rem; }
 
 /* Section fejléc */
-.acms-section { max-width: 960px; margin: 0 auto; }
+.acms-section { max-width: 960px; }
 .acms-section--wide { max-width: none; }   /* pl. portfólió rács – teljes szélesség */
 
 .acms-section-header {
@@ -996,7 +996,7 @@
 /* ============================================================
    DASHBOARD (AdminDashboard)
    ============================================================ */
-.dash { padding-bottom: 2rem; max-width: 1100px; margin: 0 auto; }
+.dash { padding-bottom: 2rem; }
 
 .dash-stats {
   display: grid;
@@ -1217,5 +1217,23 @@
   opacity: 0.7;
   white-space: nowrap;
 }
-/* ── CMS tartalom középre igazítása ── */
-.acms-tartalom { max-width: 960px; margin: 0 auto; }
+/* ── Látható/Rejtett kapcsoló (on-off switch) ── */
+.acms-switch {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: none; border: none; cursor: pointer;
+  padding: 0.2rem 0.4rem; font-family: inherit;
+}
+.acms-switch-track {
+  width: 34px; height: 18px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative; transition: background 0.2s; flex: none;
+}
+.acms-switch.on .acms-switch-track { background: var(--rust-light); }
+.acms-switch-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; transition: transform 0.2s;
+}
+.acms-switch.on .acms-switch-thumb { transform: translateX(16px); }
+.acms-switch-label { font-size: 0.72rem; letter-spacing: 0.05em; opacity: 0.85; }
+.acms-switch.off .acms-switch-label { opacity: 0.5; }
