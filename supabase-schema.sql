@@ -41,9 +41,9 @@ drop policy if exists "Admin delete messages"  on public.messages;
 create policy "Admin select messages"
   on public.messages for select using (auth.role() = 'authenticated');
 create policy "Admin update messages"
-  on public.messages for update using (auth.role() = 'authenticated');
+  on public.messages for update using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 create policy "Admin delete messages"
-  on public.messages for delete using (auth.role() = 'authenticated');
+  on public.messages for delete using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
 -- ============================================================================
@@ -66,7 +66,10 @@ drop policy if exists "Admin all categories"   on public.portfolio_categories;
 create policy "Public read categories"
   on public.portfolio_categories for select using (true);
 create policy "Admin all categories"
-  on public.portfolio_categories for all using (auth.role() = 'authenticated');
+  on public.portfolio_categories for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
+
 
 
 
@@ -96,7 +99,9 @@ drop policy if exists "Admin all portfolio"   on public.portfolio_items;
 create policy "Public read portfolio"
   on public.portfolio_items for select using (true);
 create policy "Admin all portfolio"
-  on public.portfolio_items for all using (auth.role() = 'authenticated');
+  on public.portfolio_items for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 -- ── Kategória: automatikus sorrend + törlés-takarítás ───────────────────────
 -- Új kategória sort_order-e mindig a következő szabad szám (kézi ütközés kizárva).
@@ -186,7 +191,9 @@ drop policy if exists "Admin all services"   on public.services;
 create policy "Public read services"
   on public.services for select using (true);
 create policy "Admin all services"
-  on public.services for all using (auth.role() = 'authenticated');
+  on public.services for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 insert into public.services (number, name_hu, name_en, desc_hu, desc_en, sort_order)
 select v.number, v.name_hu, v.name_en, v.desc_hu, v.desc_en, v.sort_order
@@ -221,7 +228,9 @@ drop policy if exists "Admin all content"   on public.site_content;
 create policy "Public read content"
   on public.site_content for select using (true);
 create policy "Admin all content"
-  on public.site_content for all using (auth.role() = 'authenticated');
+  on public.site_content for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 insert into public.site_content (key, value) values
   ('hero_line1_hu',    'Ahol a fény'),
@@ -281,7 +290,9 @@ drop policy if exists "Admin all sections"   on public.custom_sections;
 create policy "Public read sections"
   on public.custom_sections for select using (true);
 create policy "Admin all sections"
-  on public.custom_sections for all using (auth.role() = 'authenticated');
+  on public.custom_sections for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
 -- ============================================================================
@@ -309,7 +320,7 @@ create policy "Public read attachments"
   on storage.objects for select using (bucket_id = 'attachments');
 create policy "Admin delete attachments"
   on storage.objects for delete
-  using (bucket_id = 'attachments' and auth.role() = 'authenticated');
+  using (bucket_id = 'attachments' and auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
 -- ============================================================================
@@ -357,13 +368,18 @@ alter table public.appointment_slots enable row level security;
 
 drop policy if exists "Public read slots" on public.appointment_slots;
 drop policy if exists "Admin all slots"   on public.appointment_slots;
+drop policy if exists "Admin read appointments" on public.appointments;
 
 create policy "Public read slots"
   on public.appointment_slots for select
   using (visible = true);
+-- Demo (és minden admin) OLVASHAT; írni csak nem-demo tud
+create policy "Admin read appointment_slots"
+  on public.appointment_slots for select using (auth.role() = 'authenticated');
 create policy "Admin all slots"
   on public.appointment_slots for all
-  using (auth.role() = 'authenticated');
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
 -- ── 8b. Foglalások ────────────────────────────────────────────────────────
@@ -430,9 +446,13 @@ create policy "Public insert appointments"
 -- Az anonim kliens így csak beszúrni tud (fent), olvasni/módosítani nem.
 
 -- Admin mindent lát és módosíthat
+-- Demo (és minden admin) OLVASHAT; írni csak nem-demo tud
+create policy "Admin read appointments"
+  on public.appointments for select using (auth.role() = 'authenticated');
 create policy "Admin all appointments"
   on public.appointments for all
-  using (auth.role() = 'authenticated');
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
 -- ── 8c. Várólisták ────────────────────────────────────────────────────────
@@ -483,8 +503,13 @@ create policy "Public join waitlist"
 -- SZÁNDÉKOSAN NINCS publikus SELECT: korábban a "Public read waitlist"
 -- (using true) minden várólistás nevét/emailjét/offer_token-jét kiadta.
 -- Az elfogadás/elutasítás a respond_waitlist RPC-n megy (8h).
+-- Demo (és minden admin) OLVASHAT; írni csak nem-demo tud
+create policy "Admin read appointment_waitlist"
+  on public.appointment_waitlist for select using (auth.role() = 'authenticated');
 create policy "Admin all waitlist"
-  on public.appointment_waitlist for all using (auth.role() = 'authenticated');
+  on public.appointment_waitlist for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
 -- ── 8d. Kliens megbízhatósági lista ────────────────────────────────────────
@@ -525,9 +550,13 @@ alter table public.client_reliability enable row level security;
 drop policy if exists "Admin all reliability" on public.client_reliability;
 
 -- Csak admin látja és kezeli
+-- Demo (és minden admin) OLVASHAT; írni csak nem-demo tud
+create policy "Admin read client_reliability"
+  on public.client_reliability for select using (auth.role() = 'authenticated');
 create policy "Admin all reliability"
   on public.client_reliability for all
-  using (auth.role() = 'authenticated');
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
 -- ── 8e. Trigger: updated_at automatikus frissítése ──────────────────────
@@ -1092,7 +1121,9 @@ drop policy if exists "Admin all category_sections"     on public.category_secti
 create policy "Public read category_sections"
   on public.category_sections for select using (true);
 create policy "Admin all category_sections"
-  on public.category_sections for all using (auth.role() = 'authenticated');
+  on public.category_sections for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 -- Realtime a category_sections-re (itt, a tábla létrehozása UTÁN – idempotens)
 do $$
@@ -1231,26 +1262,22 @@ end $$;
 -- ============================================================================
 -- 16. ADMIN SZEREPKÖRÖK (hierarchia) + HIBAJEGYEK
 -- admin_users: superadmin | admin | demo szerepkör + jövőbeli granuláris jogok
--- (permissions jsonb). current_admin_role(): a bejelentkezett user szerepköre
+-- (permissions jsonb), EMAIL-kulcsú (a UI-ból e-mail alapján kezelhető).
+-- current_admin_role(): a bejelentkezett user szerepköre a JWT e-mailjéből
 -- (SECURITY DEFINER, RLS-rekurzió ellen). bug_tickets: admin hibajegyek a
--- csatolt aktivitás-naplóval (activity_log). Idempotens.
+-- csatolt aktivitás-naplóval. A DEMO-blokkot a fenti tartalmi tábla-policy-k
+-- "is distinct from 'demo'" feltétele adja (a demo olvas, de nem ír). Idempotens.
 -- ============================================================================
 
--- ── 16a) Admin felhasználók + szerepkörök ───────────────────────────────────
 create table if not exists public.admin_users (
-  id          uuid primary key references auth.users (id) on delete cascade,
-  email       text unique not null,
+  email       text primary key,
   role        text not null default 'admin'
               check (role in ('superadmin', 'admin', 'demo')),
-  permissions jsonb not null default '{}'::jsonb,   -- jövőbeli granuláris jogok
+  permissions jsonb not null default '{}'::jsonb,
   created_at  timestamptz not null default now()
 );
-
 alter table public.admin_users enable row level security;
 
--- ── 16b) Szerepkör-lekérő helper ────────────────────────────────────────────
--- SECURITY DEFINER: megkerüli az admin_users RLS-t, hogy ne legyen végtelen
--- rekurzió, amikor a policy-k maguk is ezt hívják.
 create or replace function public.current_admin_role()
 returns text
 language sql
@@ -1258,78 +1285,61 @@ stable
 security definer
 set search_path = public
 as $$
-  select role from public.admin_users where id = auth.uid()
+  select role from public.admin_users
+  where lower(email) = lower(auth.jwt() ->> 'email')
 $$;
-
 revoke all on function public.current_admin_role() from public;
 grant execute on function public.current_admin_role() to authenticated;
 
--- ── 16c) admin_users RLS ────────────────────────────────────────────────────
-drop policy if exists "admin_users read"  on public.admin_users;
-drop policy if exists "admin_users write" on public.admin_users;
+drop policy if exists "admin_users read"   on public.admin_users;
+drop policy if exists "admin_users write"  on public.admin_users;
+drop policy if exists "admin_users insert" on public.admin_users;
+drop policy if exists "admin_users update" on public.admin_users;
+drop policy if exists "admin_users delete" on public.admin_users;
 
--- Bejelentkezett admin láthatja a listát (a kezelő UI-hoz)
 create policy "admin_users read"
-  on public.admin_users for select
-  using (auth.role() = 'authenticated');
-
--- Írni (felvenni / módosítani / törölni) CSAK superadmin tud
-create policy "admin_users write"
-  on public.admin_users for all
-  using (public.current_admin_role() = 'superadmin')
+  on public.admin_users for select using (auth.role() = 'authenticated');
+-- Superadmin vehet fel / módosíthat / törölhet – de SAJÁT magát NEM.
+create policy "admin_users insert"
+  on public.admin_users for insert
   with check (public.current_admin_role() = 'superadmin');
+create policy "admin_users update"
+  on public.admin_users for update
+  using (public.current_admin_role() = 'superadmin'
+         and lower(email) <> lower(auth.jwt() ->> 'email'));
+create policy "admin_users delete"
+  on public.admin_users for delete
+  using (public.current_admin_role() = 'superadmin'
+         and lower(email) <> lower(auth.jwt() ->> 'email'));
 
--- ── 16d) Hibajegyek ─────────────────────────────────────────────────────────
+-- Hibajegyek
 create table if not exists public.bug_tickets (
   id           uuid primary key default gen_random_uuid(),
   description  text not null,
   cause        text,
-  activity_log jsonb,                 -- csatolt kattintás/folyamat-napló
-  created_by   text,                  -- a bejelentő e-mailje
+  activity_log jsonb,
+  created_by   text,
   status       text not null default 'open' check (status in ('open', 'closed')),
   created_at   timestamptz not null default now()
 );
-
 alter table public.bug_tickets enable row level security;
-
 drop policy if exists "bug_tickets insert" on public.bug_tickets;
 drop policy if exists "bug_tickets read"   on public.bug_tickets;
 drop policy if exists "bug_tickets update" on public.bug_tickets;
 drop policy if exists "bug_tickets delete" on public.bug_tickets;
-
--- Bármely bejelentkezett admin (a DEMO is) létrehozhat hibajegyet
-create policy "bug_tickets insert"
-  on public.bug_tickets for insert
+create policy "bug_tickets insert" on public.bug_tickets for insert
   with check (auth.role() = 'authenticated');
-
--- Olvasás: bejelentkezett admin
-create policy "bug_tickets read"
-  on public.bug_tickets for select
+create policy "bug_tickets read" on public.bug_tickets for select
   using (auth.role() = 'authenticated');
-
--- Módosítás: superadmin vagy admin; törlés: csak superadmin
-create policy "bug_tickets update"
-  on public.bug_tickets for update
+create policy "bug_tickets update" on public.bug_tickets for update
   using (public.current_admin_role() in ('superadmin', 'admin'));
-create policy "bug_tickets delete"
-  on public.bug_tickets for delete
+create policy "bug_tickets delete" on public.bug_tickets for delete
   using (public.current_admin_role() = 'superadmin');
 
--- ── 16e) A jelenlegi (egyetlen) admin beállítása superadminként ──────────────
---     >>> Töltsd ki a saját admin-belépési e-mailedet! <<<
-insert into public.admin_users (id, email, role)
-select id, email, 'superadmin'
-from auth.users
-where email = 'hajdutamas@webapp.com'
-on conflict (id) do update set role = 'superadmin', email = excluded.email;
-
--- ── (opcionális) Demo felhasználó ───────────────────────────────────────────
---   Előbb hozz létre egy demo auth-felhasználót:
---   Supabase Dashboard -> Authentication -> Users -> Add user, majd:
--- insert into public.admin_users (id, email, role)
--- select id, email, 'demo'
--- from auth.users where email = '[A_DEMO_EMAILED]'
--- on conflict (id) do update set role = 'demo';
+-- A jelenlegi (egyetlen) admin superadminként  >>> TÖLTSD KI AZ E-MAILEDET! <<<
+insert into public.admin_users (email, role)
+values ('[A_FOADMIN_EMAILED]', 'superadmin')
+on conflict (email) do update set role = 'superadmin';
 
 
 -- ============================================================================
@@ -1340,7 +1350,8 @@ on conflict (id) do update set role = 'superadmin', email = excluded.email;
 -- View:     available_slots
 -- RPC:      confirm_appointment, cancel_appointment, respond_waitlist
 --           (SECURITY DEFINER, token-scope-olt publikus műveletek)
--- Szerep:   admin_users (superadmin/admin/demo) + current_admin_role(),
+-- Szerep:   admin_users (superadmin/admin/demo, EMAIL-kulcsú) + current_admin_role();
+--           a demo a tartalmi táblákon NEM írhat (RLS: is distinct from demo);
 --           bug_tickets (hibajegyek az aktivitás-naplóval)
 -- Trigger:  set_updated_at_reliability, trg_00_recalc_booked_count,
 --           trg_set_waitlist_position,

@@ -365,3 +365,402 @@ export default function Contact() {
     </section>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+// import { useState, useRef } from 'react'
+// import emailjs from '@emailjs/browser'
+// import { supabase } from '../supabaseClient'
+// import '../Styles/Contact.css'
+// import { useLang } from '../LangContext'
+// import { useServices } from '../hooks'
+// import ThankYou from './ThankYou'
+
+// const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  || ''
+// const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || ''
+// const EMAILJS_PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  || ''
+
+// const ACCEPTED_TYPES = [
+//   'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
+//   'image/heic', 'image/heif', 'image/gif', 'image/avif',
+// ]
+// const ACCEPTED_EXT  = '.jpg,.jpeg,.png,.webp,.heic,.heif,.gif,.avif'
+// const MAX_SIZE_MB   = 10
+// const MAX_SIZE_B    = MAX_SIZE_MB * 1024 * 1024
+// const MAX_FILES     = 5
+
+// const EMPTY = { name: '', email: '', service: '', message: '' }
+
+// export default function Contact() {
+//   const [form,       setForm]      = useState(EMPTY)
+//   const [status,     setStatus]    = useState('idle')
+//   const [errMsg,     setErrMsg]    = useState('')
+//   const [showThanks, setThanks]    = useState(false)
+//   const [senderName, setSender]    = useState('')
+//   const [files,      setFiles]     = useState([])        // max 5 File object
+//   const [fileErr,    setFileErr]   = useState('')
+//   const [uploading,  setUploading] = useState(false)
+//   const [consent,    setConsent]   = useState(false)   // GDPR – kötelező bepipálni
+//   const fileInputRef = useRef(null)
+//   const renderedAt = useRef(Date.now())   // idő-csapda: mikor töltődött be az űrlap
+//   const [hp, setHp] = useState('')         // honeypot – embernek láthatatlan
+
+//   const { t, lang } = useLang()
+//   const c = t.contact
+//   const { services } = useServices()
+
+//   const handleChange = (e) => {
+//     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+//   }
+
+//   // Fájl kiválasztás – max 5 db
+//   const handleFileChange = (e) => {
+//     const selected = Array.from(e.target.files || [])
+//     if (!selected.length) return
+//     setFileErr('')
+
+//     const remaining = MAX_FILES - files.length
+//     if (remaining <= 0) {
+//       setFileErr(`Maximum ${MAX_FILES} fájl csatolható.`)
+//       e.target.value = ''
+//       return
+//     }
+
+//     const toAdd = []
+//     for (const f of selected.slice(0, remaining)) {
+//       if (!ACCEPTED_TYPES.includes(f.type.toLowerCase())) {
+//         setFileErr(c.errFileType); e.target.value = ''; return
+//       }
+//       if (f.size > MAX_SIZE_B) {
+//         setFileErr(c.errFileSize); e.target.value = ''; return
+//       }
+//       toAdd.push(f)
+//     }
+
+//     setFiles(prev => [...prev, ...toAdd])
+//     e.target.value = ''   // reset hogy ugyanazt újra lehessen választani
+//   }
+
+//   const removeFile = (idx) => {
+//     setFiles(prev => prev.filter((_, i) => i !== idx))
+//     setFileErr('')
+//   }
+
+//   const validate = () => {
+//     if (!form.name.trim())    return c.errName
+//     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) return c.errEmail
+//     if (!form.message.trim()) return c.errMessage
+//     return null
+//   }
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault()
+//     const err = validate()
+//     if (err) { setErrMsg(err); return }
+
+//     setStatus('sending')
+//     setErrMsg('')
+
+//     // 1. Fájlok feltöltése – IDEIGLENESEN a Storage-ba. A kép csak akkor MARAD
+//     //    meg, ha a beküldés sikeres; hiba vagy spam-szűrés esetén rögtön a KUKÁBA
+//     //    kerül (lásd trashUploads), így nem képződik árva fájl.
+//     const attachmentUrls  = []
+//     const attachmentPaths = []   // a feltöltött fájlok elérési útjai a törléshez
+//     const trashUploads = async () => {
+//       if (!attachmentPaths.length) return
+//       try { await supabase.storage.from('attachments').remove(attachmentPaths) } catch {}
+//     }
+//     if (files.length > 0) {
+//       setUploading(true)
+//       for (const f of files) {
+//         const ext      = f.name.split('.').pop()
+//         const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+//         const path     = `contact-attachments/${fileName}`
+
+//         const { error: uploadError } = await supabase.storage
+//           .from('attachments')
+//           .upload(path, f, { contentType: f.type, upsert: false })
+
+//         if (uploadError) {
+//           console.error('Upload error:', uploadError)
+//           await trashUploads()            // a már feltöltött fájlok eltakarítása
+//           setErrMsg(c.errUpload)
+//           setStatus('error')
+//           setUploading(false)
+//           return
+//         }
+//         attachmentPaths.push(path)
+
+//         const { data: urlData } = supabase.storage
+//           .from('attachments')
+//           .getPublicUrl(path)
+//         if (urlData?.publicUrl) attachmentUrls.push(urlData.publicUrl)
+//       }
+//       setUploading(false)
+//     }
+
+//     // 2. Supabase DB – üzenet mentése
+//     const payload = {
+//       name:            form.name.trim(),
+//       email:           form.email.trim(),
+//       service:         form.service || 'Nem megadott',
+//       message:         form.message.trim(),
+//       read:            false,
+//       attachment_url:  attachmentUrls.length > 0 ? attachmentUrls.join(', ') : null,
+//     }
+
+//     // 2. Beküldés az Edge Function-ön keresztül (honeypot + idő-csapda + IP-limit + beszúrás)
+//     const { data: result, error: fnError } = await supabase.functions.invoke('submit-contact', {
+//       body: {
+//         name:           payload.name,
+//         email:          payload.email,
+//         service:        payload.service,
+//         message:        payload.message,
+//         attachment_url: payload.attachment_url,
+//         hp,
+//         rendered_at:    renderedAt.current,
+//       },
+//     })
+
+//     if (fnError || !result?.ok) {
+//       await trashUploads()   // sikertelen beküldés → a kép a kukába
+//       const rateLimited = result?.error === 'rate_limited' || fnError?.context?.status === 429
+//       setErrMsg(
+//         rateLimited
+//           ? (lang === 'hu'
+//               ? 'Túl sok próbálkozás erről a hálózatról. Kérlek, várj pár percet, és próbáld újra.'
+//               : 'Too many attempts from this network. Please wait a few minutes and try again.')
+//           : c.errSend
+//       )
+//       setStatus('error')
+//       return
+//     }
+
+//     // delivered:false = honeypot/idő-csapda kiszűrte (a felhasználónak sikert mutatunk,
+//     // de nem szúrtunk be és nem küldünk értesítő emailt)
+//     const delivered = result?.delivered !== false
+
+//     // Spam-szűrő kiszűrte: nincs mentett üzenet, ami a képre hivatkozna → a
+//     // feltöltött fájl a kukába, hogy ne maradjon árva a tárhelyen.
+//     if (!delivered) await trashUploads()
+
+//     // 3. EmailJS
+//     if (delivered && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
+//       try {
+//         await emailjs.send(
+//           EMAILJS_SERVICE_ID,
+//           EMAILJS_TEMPLATE_ID,
+//           {
+//             from_name:      payload.name,
+//             from_email:     payload.email,
+//             service_type:   payload.service,
+//             message:        payload.message,
+//             attachment_url: attachmentUrls.length > 0 ? attachmentUrls.join('\n') : 'Nincs csatolmány',
+//           },
+//           EMAILJS_PUBLIC_KEY
+//         )
+//       } catch (emailErr) {
+//         console.warn('EmailJS error (nem kritikus):', emailErr)
+//       }
+//     }
+
+//     setStatus('success')
+//     setSender(form.name.trim())
+//     setForm(EMPTY)
+//     setFiles([])
+//     if (fileInputRef.current) fileInputRef.current.value = ''
+//     setThanks(true)
+//   }
+
+//   const isSending = status === 'sending' || uploading
+
+//   return (
+//     <section id="contact">
+//       <div className="container contact-inner">
+//         <div className="section-label">{c.label}</div>
+//         <h2 className="section-title">{c.title}</h2>
+//         <p className="contact-intro">{c.intro}</p>
+
+//         {status === 'success' && (
+//           <div className="form-success">{c.success}</div>
+//         )}
+
+//         <form onSubmit={handleSubmit} noValidate>
+
+//           {/* Honeypot – emberek nem látják; ha kitöltött, a beküldést eldobjuk */}
+//           <input
+//             type="text"
+//             name="website"
+//             tabIndex={-1}
+//             autoComplete="off"
+//             value={hp}
+//             onChange={(e) => setHp(e.target.value)}
+//             aria-hidden="true"
+//             style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
+//           />
+
+//           <div className="form-row">
+//             <div className="form-group">
+//               <label className="form-label" htmlFor="name">{c.name}</label>
+//               <input
+//                 id="name" name="name" type="text"
+//                 className="form-input"
+//                 placeholder={c.namePh}
+//                 value={form.name}
+//                 onChange={handleChange}
+//               />
+//             </div>
+//             <div className="form-group">
+//               <label className="form-label" htmlFor="email">{c.email}</label>
+//               <input
+//                 id="email" name="email" type="email"
+//                 className="form-input"
+//                 placeholder={c.emailPh}
+//                 value={form.email}
+//                 onChange={handleChange}
+//               />
+//             </div>
+//           </div>
+
+//           <div className="form-group">
+//             <label className="form-label" htmlFor="service">{c.service}</label>
+//             <select
+//               id="service" name="service"
+//               className="form-input"
+//               value={form.service}
+//               onChange={handleChange}
+//             >
+//               <option value="">{c.serviceOptions[0]}</option>
+//               {services.map(svc => {
+//                 const label = lang === 'hu' ? svc.name_hu : svc.name_en
+//                 return <option key={svc.id} value={label}>{label}</option>
+//               })}
+//               <option value={lang === 'hu' ? 'Egyéb' : 'Other'}>
+//                 {lang === 'hu' ? 'Egyéb' : 'Other'}
+//               </option>
+//             </select>
+//           </div>
+
+//           <div className="form-group">
+//             <label className="form-label" htmlFor="message">{c.message}</label>
+//             <textarea
+//               id="message" name="message"
+//               className="form-input"
+//               placeholder={c.messagePh}
+//               rows={6}
+//               value={form.message}
+//               onChange={handleChange}
+//             />
+//           </div>
+
+//           {/* ── Fájl csatolás – max 5 db ── */}
+//           <div className="form-group">
+//             <input
+//               ref={fileInputRef}
+//               id="attachment"
+//               type="file"
+//               accept={ACCEPTED_EXT}
+//               multiple
+//               onChange={handleFileChange}
+//               style={{ display: 'none' }}
+//             />
+
+//             {/* Meglévő fájlok */}
+//             {files.length > 0 && (
+//               <div className="attach-list">
+//                 {files.map((f, idx) => (
+//                   <div key={idx} className="attach-preview">
+//                     <img
+//                       src={URL.createObjectURL(f)}
+//                       alt="előnézet"
+//                       className="attach-preview-img"
+//                     />
+//                     <div className="attach-preview-info">
+//                       <span className="attach-preview-name">{f.name}</span>
+//                       <span className="attach-preview-size">
+//                         {(f.size / 1024 / 1024).toFixed(1)} MB
+//                       </span>
+//                     </div>
+//                     <button
+//                       type="button"
+//                       className="attach-remove-btn"
+//                       onClick={() => removeFile(idx)}
+//                       aria-label={c.attachRemove}
+//                     >
+//                       ✕
+//                     </button>
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+
+//             {/* Hozzáadás gomb – csak ha van még hely */}
+//             {files.length < MAX_FILES && (
+//               <button
+//                 type="button"
+//                 className="attach-btn"
+//                 onClick={() => fileInputRef.current?.click()}
+//               >
+//                 <span className="attach-btn-icon">⊕</span>
+//                 {files.length === 0
+//                   ? c.attachBtn
+//                   : `${c.attachBtn} (${files.length}/${MAX_FILES})`}
+//               </button>
+//             )}
+
+//             {files.length >= MAX_FILES && (
+//               <div className="attach-limit-note">
+//                 Maximum {MAX_FILES} fájl csatolva.
+//               </div>
+//             )}
+
+//             <span className="form-hint">{c.attachHint}</span>
+//             {fileErr && <div className="form-error">{fileErr}</div>}
+//           </div>
+
+//           <label className="form-consent">
+//             <input
+//               type="checkbox"
+//               checked={consent}
+//               onChange={e => setConsent(e.target.checked)}
+//             />
+//             <span>
+//               {lang === 'hu'
+//                 ? <>Elolvastam és elfogadom az <a href="/adatkezeles" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</>
+//                 : <>I have read and accept the <a href="/adatkezeles" target="_blank" rel="noopener">privacy policy</a>.</>}
+//             </span>
+//           </label>
+
+//           {errMsg && <div className="form-error">{errMsg}</div>}
+
+//           <button
+//             type="submit"
+//             className="submit-btn"
+//             disabled={isSending || !consent}
+//           >
+//             <span>
+//               {uploading  ? 'Feltöltés...' :
+//                isSending  ? c.sending :
+//                c.send}
+//             </span>
+//           </button>
+
+//         </form>
+//       </div>
+
+//       <ThankYou
+//         visible={showThanks}
+//         name={senderName}
+//         onClose={() => { setThanks(false); setStatus('idle') }}
+//       />
+//     </section>
+//   )
+// }

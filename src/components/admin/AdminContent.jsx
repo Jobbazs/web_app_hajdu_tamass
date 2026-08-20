@@ -338,7 +338,7 @@ function TagEditor({ getValue, handleChange }) {
   )
 }
 
-export default function AdminContent() {
+export default function AdminContent({ view = 'sekciok' }) {
   const { content, loading: contentLoading, refetch: refetchContent } = useSiteContent()
   const [edits,  setEdits]  = useState({})
   const [saving, setSaving] = useState(false)
@@ -352,7 +352,6 @@ export default function AdminContent() {
   const [sectSaving,   setSectSaving]   = useState(false)
   const [sectError,    setSectError]    = useState('')
 
-  const [tab, setTab] = useState('fixed')
 
   // Szekció sorrend state
   const SECTION_LABELS = {
@@ -593,39 +592,19 @@ export default function AdminContent() {
           <div className="acms-section-title">Oldal tartalom</div>
           <div className="acms-section-sub">Szövegek és egyedi szekciók</div>
         </div>
-        {tab === 'sections' && (
+        {view === 'sekciok' && (
           <button className="acms-btn-primary" onClick={openNewSect}>+ Új szekció</button>
         )}
-        {(tab === 'fixed' || tab === 'footer' || tab === 'portfolio' || tab === 'popup') && hasChanges && (
+        {(view === 'sekciok' || view === 'popup') && hasChanges && (
           <button className="acms-btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Mentés...' : `Mentés (${Object.keys(edits).length})`}
           </button>
         )}
       </div>
 
-      <div className="acms-subtabs">
-        <button className={`acms-subtab ${tab === 'fixed' ? 'active' : ''}`} onClick={() => setTab('fixed')}>
-          Hero & Rólam
-        </button>
-        <button className={`acms-subtab ${tab === 'sections' ? 'active' : ''}`} onClick={() => setTab('sections')}>
-          Egyedi szekciók {sections.length > 0 && `(${sections.length})`}
-        </button>
-        <button className={`acms-subtab ${tab === 'footer' ? 'active' : ''}`} onClick={() => setTab('footer')}>
-          Social Linkek
-        </button>
-        <button className={`acms-subtab ${tab === 'portfolio' ? 'active' : ''}`} onClick={() => setTab('portfolio')}>
-          Portfólió coverek
-        </button>
-        <button className={`acms-subtab ${tab === 'popup' ? 'active' : ''}`} onClick={() => setTab('popup')}>
-          Popup szövegek
-        </button>
-        <button className={`acms-subtab ${tab === 'order' ? 'active' : ''}`} onClick={() => setTab('order')}>
-          Szekció sorrend
-        </button>
-      </div>
 
       {/* ── RÖGZÍTETT SZÖVEGEK ── */}
-      {tab === 'fixed' && (
+      {view === 'sekciok' && (
         <>
           {error && <div className="acms-error" style={{ marginBottom: '1rem' }}>{error}</div>}
           {saved && !hasChanges && <div className="acms-success" style={{ marginBottom: '1rem' }}>✓ Mentve</div>}
@@ -717,7 +696,7 @@ export default function AdminContent() {
       )}
 
       {/* ── EGYEDI SZEKCIÓK LISTA ── */}
-      {tab === 'sections' && (
+      {view === 'sekciok' && (
         <>
           {sectLoading ? <div className="admin-empty">Betöltés...</div>
           : sections.length === 0 ? (
@@ -773,7 +752,7 @@ export default function AdminContent() {
 
 
       {/* ── FOOTER & PORTRÉ ── */}
-      {tab === 'footer' && (
+      {view === 'sekciok' && (
         <>
           <div className="acms-content-group">
             <div className="acms-content-group-label">Social linkek</div>
@@ -821,40 +800,9 @@ export default function AdminContent() {
       )}
 
       {/* ── PORTFÓLIÓ COVEREK ── */}
-      {tab === 'portfolio' && (
-        <div className="acms-content-group">
-          <div className="acms-content-group-label">Kategória borítóképek</div>
-          <div className="acms-hint" style={{marginBottom:'1.2rem'}}>
-            Minden kategóriához kiválaszthatod melyik kép jelenjen meg borítóként.
-            Cloudinary URL-t adj meg – ha üresen hagyod, az első feltöltött kép lesz a borító.
-          </div>
-          {[
-            {slug:'nightlife',     label:'Nightlife'},
-            {slug:'studio',        label:'Studio'},
-            {slug:'rendezveny',    label:'Rendezvény'},
-            {slug:'sport-kultura', label:'Sport & Kultúra'},
-            {slug:'kreativ',       label:'Kreatív'},
-          ].map(cat => (
-            <div key={cat.slug} className="acms-form-group acms-cover-row">
-              <label>{cat.label}</label>
-              <div className="acms-cover-input-wrap">
-                <input type="text" className="acms-input"
-                  value={getValue(`portfolio_cover_${cat.slug}`)}
-                  onChange={e => handleChange(`portfolio_cover_${cat.slug}`, e.target.value)}
-                  placeholder="Cloudinary kép URL (üresen = első kép)" />
-                {getValue(`portfolio_cover_${cat.slug}`) && (
-                  <div className="acms-cover-thumb">
-                    <img src={cldThumb(getValue(`portfolio_cover_${cat.slug}`), 300)} alt={cat.label} loading="lazy" />
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* ── POPUP SZÖVEGEK ── */}
-      {tab === 'popup' && (
+      {view === 'popup' && (
         <div className="acms-content-group">
           <div className="acms-content-group-label">Köszönő popup szövegek</div>
           <div className="acms-content-fields">
@@ -899,7 +847,7 @@ export default function AdminContent() {
       )}
 
       {/* ── SZEKCIÓ SORREND ── */}
-      {tab === 'order' && (
+      {view === 'order' && (
         <div className="acms-content-group">
           <div className="acms-content-group-label">Szekció sorrend & láthatóság</div>
           <div className="acms-hint" style={{marginBottom:'1.2rem'}}>

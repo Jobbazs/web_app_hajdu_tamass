@@ -2,37 +2,37 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { startAdminLog, stopAdminLog } from '../lib/adminLog'
 import { useAdminRole } from '../hooks'
+import '../Styles/Admin.css'
 import AdminDashboard from './admin/AdminDashboard'
 import AdminMessages  from './admin/AdminMessages'
-import '../Styles/Admin.css'
-import AdminPortfolio from './admin/AdminPortfolio'
-import AdminCategories from './admin/AdminCategories'
-import AdminServices  from './admin/AdminServices'
-import AdminContent   from './admin/AdminContent'
 import AdminBookings  from './admin/AdminBookings'
+import AdminTartalom  from './admin/AdminTartalom'
 import AdminAdvanced  from './admin/AdminAdvanced'
 import AdminBugReport from './admin/AdminBugReport'
 
 const TABS = [
   { key: 'dashboard', label: 'Áttekintés' },
   { key: 'messages',  label: 'Üzenetek' },
-  { key: 'portfolio', label: 'Portfólió' },
-  { key: 'categories', label: 'Kategória-oldalak' },
-  { key: 'services',  label: 'Szolgáltatások' },
-  { key: 'content',   label: 'Tartalom' },
   { key: 'bookings',  label: 'Foglalások' },
+  { key: 'content',   label: 'Tartalom' },
   { key: 'advanced',  label: 'Haladó beállítások' },
   { key: 'bug',       label: 'Hibajegy' },
 ]
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [email, setEmail] = useState('')
   const { isDemo } = useAdminRole()
 
   // Aktivitás-napló: a belépéstől gyűjti a kattintásokat a hibajegyhez.
   useEffect(() => {
     startAdminLog()
     return () => stopAdminLog()
+  }, [])
+
+  // Bejelentkezett felhasználó e-mailje (a fejlécbe)
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data?.user?.email || ''))
   }, [])
 
   const handleLogout = async () => {
@@ -47,7 +47,10 @@ export default function Admin() {
           <div className="admin-title">Admin</div>
           <div className="admin-subtitle">Portfólió kezelőfelület</div>
         </div>
-        <button className="admin-logout-btn" onClick={handleLogout}>Kilépés</button>
+        <div className="admin-header-right">
+          {email && <span className="admin-user-email">{email}</span>}
+          <button className="admin-logout-btn" onClick={handleLogout}>Kilépés</button>
+        </div>
       </div>
 
       {isDemo && (
@@ -73,11 +76,8 @@ export default function Admin() {
       <div className="acms-content">
         {activeTab === 'dashboard' && <AdminDashboard />}
         {activeTab === 'messages'  && <AdminMessages />}
-        {activeTab === 'portfolio' && <AdminPortfolio />}
-        {activeTab === 'categories' && <AdminCategories />}
-        {activeTab === 'services'  && <AdminServices />}
-        {activeTab === 'content'   && <AdminContent />}
         {activeTab === 'bookings'  && <AdminBookings />}
+        {activeTab === 'content'   && <AdminTartalom />}
         {activeTab === 'advanced'  && <AdminAdvanced />}
         {activeTab === 'bug'       && <AdminBugReport />}
       </div>
