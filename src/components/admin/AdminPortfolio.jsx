@@ -13,7 +13,7 @@ const EMPTY_ITEM = {
 const EMPTY_CAT = { slug: '', label_hu: '', label_en: '', sort_order: 0 }
 
 export default function AdminPortfolio() {
-  const { items,      loading,      refetch }                      = usePortfolio()
+  const { items,      loading,      refetch }                      = usePortfolio(true)
   const { categories, loading: catLoading, refetch: refetchCats } = useCategories()
 
   const [pendingCatOrder, setPendingCatOrder] = useState(null)

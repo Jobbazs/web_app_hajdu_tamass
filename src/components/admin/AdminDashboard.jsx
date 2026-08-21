@@ -70,7 +70,7 @@ export default function AdminDashboard() {
   const { appointments, loading: aLoading } = useAppointments('all')
   const { slots, loading: sLoading } = useAllSlots()
   const { clients } = useClientReliability()
-  const { items } = usePortfolio()
+  const { items } = usePortfolio(true)
   const { categories } = useCategories()
 
   const [waitlistWaiting, setWaitlistWaiting] = useState(null)

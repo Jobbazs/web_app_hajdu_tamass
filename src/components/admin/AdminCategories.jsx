@@ -64,7 +64,7 @@ function Picker({ options, value, onChange }) {
 
 export default function AdminCategories() {
   const { categories, loading, refetch } = useCategories()
-  const { items } = usePortfolio()
+  const { items } = usePortfolio(true)
   const [activeId, setActiveId] = useState(null)
   const [lang, setLang] = useState('hu')
   const [form, setForm] = useState(null)

@@ -86,10 +86,10 @@
 }
 
 /* Tab tartalom */
-.acms-content { padding: 2rem; }
+.acms-content { padding: 2rem; max-width: 90vw; margin: 0 auto; }
 
 /* Section fejléc */
-.acms-section { max-width: 960px; }
+.acms-section { max-width: 100%; margin: 0 auto; }
 .acms-section--wide { max-width: none; }   /* pl. portfólió rács – teljes szélesség */
 
 .acms-section-header {
@@ -134,7 +134,7 @@
   transition: opacity 0.2s;
   white-space: nowrap;
 }
-.acms-btn-primary:hover { opacity: 0.85; }
+.acms-btn-primary:hover { filter: brightness(1.12); }
 .acms-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .acms-btn-secondary {
@@ -699,7 +699,7 @@
 
 .acms-port-card:hover { border-color: var(--accent); }
 
-.acms-port-card--hidden { opacity: 0.5; }
+.acms-port-card--hidden { opacity: 1; }
 
 /* A kép a kártya – nagy, négyzetes */
 .acms-port-card-img {
@@ -1237,3 +1237,17 @@
 .acms-switch.on .acms-switch-thumb { transform: translateX(16px); }
 .acms-switch-label { font-size: 0.72rem; letter-spacing: 0.05em; opacity: 0.85; color: #fff; }
 .acms-switch.off .acms-switch-label { opacity: 0.5; }
+/* ── Rejtett portfólió-elem: CSAK a kép szürkül, a gombok teljes fényben ── */
+.acms-port-card--hidden .acms-port-card-img img,
+.acms-port-card--hidden .acms-port-card-ph {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+.acms-port-card--hidden .acms-port-card-title { opacity: 0.5; }
+/* a "Rejtett" jelvény és a gombok NEM halványulnak */
+.acms-port-card--hidden .acms-port-card-hidden-badge,
+.acms-port-card--hidden .acms-port-card-actions,
+.acms-port-card--hidden .acms-port-card-btns { opacity: 1; }
+
+/* Gombok SEHOL ne sötétedjenek/halványuljanak el (rejtett elemnél sem) */
+.acms-port-card .acms-btn-sm { opacity: 1 !important; filter: none !important; }

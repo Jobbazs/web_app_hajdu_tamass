@@ -40,22 +40,26 @@ function useRealtimeRefetch(tables, refetch) {
 }
 
 // ─── Portfólió elemek ────────────────────────────────────────
-export function usePortfolio() {
+export function usePortfolio(includeHidden = false) {
   const [items,   setItems]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
 
   const fetch = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await supabase
+    let query = supabase
       .from('portfolio_items')
       .select('*, portfolio_categories(id, slug, label_hu, label_en)')
-      .eq('visible', true)
       .order('sort_order', { ascending: true })
+    // A publikus oldal CSAK a látható elemeket kéri; az admin (includeHidden=true)
+    // a rejtetteket is, hogy szürkítve megjelenjenek és visszahozhatók legyenek,
+    // és a darabszámok se essenek le elrejtéskor.
+    if (!includeHidden) query = query.eq('visible', true)
+    const { data, error } = await query
     if (error) setError(error)
     else setItems(data || [])
     setLoading(false)
-  }, [])
+  }, [includeHidden])
 
   useEffect(() => { fetch() }, [fetch])
   useRealtimeRefetch(['portfolio_items', 'portfolio_categories'], fetch)
