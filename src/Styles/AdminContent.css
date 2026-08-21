@@ -400,3 +400,14 @@
   color: var(--rust-light); max-width: 260px; margin-top: 0.3rem;
 }
 .acms-popup-dismiss { font-size: 0.7rem !important; opacity: 0.6; max-width: 170px; }
+/* Nagy, jól látható "Mentve" visszajelzés a fejlécben */
+.acms-saved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #3ddc84;
+  white-space: nowrap;
+}

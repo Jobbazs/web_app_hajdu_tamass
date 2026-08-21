@@ -454,7 +454,7 @@ export default function AdminContent({ view = 'sekciok' }) {
       .from('site_content')
       .upsert(keys.map(k => ({ key: k, value: edits[k] })), { onConflict: 'key' })
     if (error) setError('Mentési hiba: ' + error.message)
-    else { setSaved(true); setEdits({}); setLastSnapshot(snapshot); await refetchContent() }
+    else { setSaved(true); setEdits({}); setLastSnapshot(snapshot); await refetchContent(); window.scrollTo({ top: 0, behavior: 'smooth' }) }
     setSaving(false)
   }
 
@@ -611,7 +611,10 @@ export default function AdminContent({ view = 'sekciok' }) {
           <div className="acms-section-sub">Szövegek és egyedi szekciók</div>
         </div>
         {(view === 'sekciok' || view === 'popup') && (
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            {saved && !hasChanges && (
+              <span className="acms-saved-badge">✓ Mentve</span>
+            )}
             {lastSnapshot && (
               <button className="acms-btn-sm" onClick={restorePrev} disabled={saving}
                 title="A legutóbbi mentés előtti állapot visszaállítása">
@@ -632,7 +635,7 @@ export default function AdminContent({ view = 'sekciok' }) {
       {view === 'sekciok' && (
         <>
           {error && <div className="acms-error" style={{ marginBottom: '1rem' }}>{error}</div>}
-          {saved && !hasChanges && <div className="acms-success" style={{ marginBottom: '1rem' }}>✓ Mentve</div>}
+
 
           <div className="acms-fixed-hint">
             Igazítás és betűméret beállítások: minden szöveg alatt megjelenik az igazítás gombsor.
