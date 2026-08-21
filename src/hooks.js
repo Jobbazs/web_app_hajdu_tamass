@@ -55,6 +55,7 @@ export function usePortfolio(includeHidden = false) {
       .from('portfolio_items')
       .select('*, portfolio_categories(id, slug, label_hu, label_en)')
       .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })   // stabil holtverseny-döntő: azonos sort_order-nél se ugráljanak
     // A publikus oldal CSAK a látható elemeket kéri; az admin (includeHidden=true)
     // a rejtetteket is, hogy szürkítve megjelenjenek és visszahozhatók legyenek,
     // és a darabszámok se essenek le elrejtéskor.
