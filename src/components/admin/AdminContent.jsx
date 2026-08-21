@@ -342,6 +342,7 @@ export default function AdminContent({ view = 'sekciok' }) {
   const { content, loading: contentLoading, refetch: refetchContent } = useSiteContent()
   const [edits,  setEdits]  = useState({})
   const [saving, setSaving] = useState(false)
+  const [lastSnapshot, setLastSnapshot] = useState(null)   // mentés előtti állapot (1-lépés visszaállítás)
   const [saved,  setSaved]  = useState(false)
   const [error,  setError]  = useState('')
 
@@ -446,11 +447,28 @@ export default function AdminContent({ view = 'sekciok' }) {
     const keys = Object.keys(edits)
     if (!keys.length) return
     setSaving(true); setError('')
+    // A mentés ELŐTTI értékek eltárolása (egy lépés visszaállításához)
+    const snapshot = {}
+    for (const k of keys) snapshot[k] = content[k] ?? ''
     const { error } = await supabase
       .from('site_content')
       .upsert(keys.map(k => ({ key: k, value: edits[k] })), { onConflict: 'key' })
     if (error) setError('Mentési hiba: ' + error.message)
-    else { setSaved(true); setEdits({}); await refetchContent() }
+    else { setSaved(true); setEdits({}); setLastSnapshot(snapshot); await refetchContent() }
+    setSaving(false)
+  }
+
+  // Előző verzió visszaállítása: a legutóbbi mentés ELŐTTI értékeket írja vissza.
+  const restorePrev = async () => {
+    if (!lastSnapshot) return
+    if (!window.confirm('Visszaállítod a legutóbbi mentés előtti állapotot?')) return
+    const keys = Object.keys(lastSnapshot)
+    setSaving(true); setError('')
+    const { error } = await supabase
+      .from('site_content')
+      .upsert(keys.map(k => ({ key: k, value: lastSnapshot[k] })), { onConflict: 'key' })
+    if (error) setError('Visszaállítási hiba: ' + error.message)
+    else { setEdits({}); setLastSnapshot(null); setSaved(false); await refetchContent() }
     setSaving(false)
   }
 
@@ -592,10 +610,20 @@ export default function AdminContent({ view = 'sekciok' }) {
           <div className="acms-section-title">Oldal tartalom</div>
           <div className="acms-section-sub">Szövegek és egyedi szekciók</div>
         </div>
-        {(view === 'sekciok' || view === 'popup') && hasChanges && (
-          <button className="acms-btn-primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Mentés...' : `Mentés (${Object.keys(edits).length})`}
-          </button>
+        {(view === 'sekciok' || view === 'popup') && (
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {lastSnapshot && (
+              <button className="acms-btn-sm" onClick={restorePrev} disabled={saving}
+                title="A legutóbbi mentés előtti állapot visszaállítása">
+                ↶ Előző verzió visszaállítása
+              </button>
+            )}
+            {hasChanges && (
+              <button className="acms-btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? 'Mentés...' : `Mentés (${Object.keys(edits).length})`}
+              </button>
+            )}
+          </div>
         )}
       </div>
 
