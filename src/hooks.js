@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from './supabaseClient'
 
 // ─────────────────────────────────────────────────────────────
@@ -44,9 +44,13 @@ export function usePortfolio(includeHidden = false) {
   const [items,   setItems]   = useState([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
+  const firstLoad = useRef(true)
 
   const fetch = useCallback(async () => {
-    setLoading(true)
+    // Csak az ELSŐ betöltésnél mutatunk "Betöltés..."-t; a frissítések (mentés,
+    // rejtés, realtime) csendben cserélik az adatot – nincs villogás, a görgetés
+    // sem ugrik a tetejére.
+    if (firstLoad.current) setLoading(true)
     let query = supabase
       .from('portfolio_items')
       .select('*, portfolio_categories(id, slug, label_hu, label_en)')
@@ -59,6 +63,7 @@ export function usePortfolio(includeHidden = false) {
     if (error) setError(error)
     else setItems(data || [])
     setLoading(false)
+    firstLoad.current = false
   }, [includeHidden])
 
   useEffect(() => { fetch() }, [fetch])
@@ -70,15 +75,17 @@ export function usePortfolio(includeHidden = false) {
 export function useCategories() {
   const [categories, setCategories] = useState([])
   const [loading,    setLoading]    = useState(true)
+  const firstLoad = useRef(true)
 
   const fetch = useCallback(async () => {
-    setLoading(true)
+    if (firstLoad.current) setLoading(true)
     const { data } = await supabase
       .from('portfolio_categories')
       .select('*')
       .order('sort_order', { ascending: true })
     setCategories(data || [])
     setLoading(false)
+    firstLoad.current = false
   }, [])
 
   useEffect(() => { fetch() }, [fetch])

@@ -268,6 +268,16 @@ export default function AdminPortfolio() {
     await refetch()
   }
 
+  // Tömeges rejtés / megjelenítés a kijelölt képeknél
+  const bulkSetVisible = async (vis) => {
+    if (selectedIds.size === 0) return
+    const ids = [...selectedIds]
+    const { error } = await supabase.from('portfolio_items').update({ visible: vis }).in('id', ids)
+    if (error) { alert('Hiba: ' + error.message); return }
+    setSelectedIds(new Set())
+    await refetch()
+  }
+
   return (
     <div className="acms-section acms-section--wide">
       {/* Fejléc */}
@@ -376,6 +386,8 @@ export default function AdminPortfolio() {
                 {categories.map(c => <option key={c.id} value={c.id}>{c.label_hu}</option>)}
               </select>
               <button className="acms-btn-primary" disabled={!assignTo || selectedIds.size === 0} onClick={bulkAssign}>Áthelyezés</button>
+              <button className="acms-btn-sm" disabled={selectedIds.size === 0} onClick={() => bulkSetVisible(false)}>Kijelöltek elrejtése</button>
+              <button className="acms-btn-sm" disabled={selectedIds.size === 0} onClick={() => bulkSetVisible(true)}>Kijelöltek megjelenítése</button>
               <button className="acms-btn-danger"  disabled={selectedIds.size === 0} onClick={bulkDelete}>Törlés</button>
             </div>
           )}
