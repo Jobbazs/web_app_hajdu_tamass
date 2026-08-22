@@ -1,6 +1,49 @@
 import { useState, useRef } from 'react'
 import { supabase } from '../../supabaseClient'
 
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024    // Cloudinary ingyenes limit: 10 MB/kép
+const TARGET_BYTES     = 9.3 * 1024 * 1024   // cél: biztonsággal a limit alatt
+
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload  = () => { URL.revokeObjectURL(url); resolve(img) }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('kép betöltési hiba')) }
+    img.src = url
+  })
+}
+
+function canvasToBlob(canvas, quality) {
+  return new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/jpeg', quality))
+}
+
+// Ha a kép túl nagy, addig kicsinyítjük/újratömörítjük (JPEG), amíg a limit alá
+// nem kerül. Előbb a minőséget csökkentjük, aztán a felbontást – így a lehető
+// legjobb minőség marad a méret alatt. Fotókhoz a JPEG a legjobb választás.
+async function compressImage(file) {
+  const img = await loadImage(file)
+  let maxDim  = Math.min(Math.max(img.width, img.height), 4000)  // fotóhoz 4000px bőven elég
+  let quality = 0.85
+  let blob = null
+
+  for (let i = 0; i < 14; i++) {
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
+    const w = Math.max(1, Math.round(img.width * scale))
+    const h = Math.max(1, Math.round(img.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = w; canvas.height = h
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+    blob = await canvasToBlob(canvas, quality)
+    if (blob && blob.size <= TARGET_BYTES) break
+    if (quality > 0.5) quality -= 0.1
+    else maxDim = Math.round(maxDim * 0.85)
+  }
+  if (!blob) return file
+  const name = file.name.replace(/\.[^.]+$/, '') + '.jpg'
+  return new File([blob], name, { type: 'image/jpeg' })
+}
+
 // ALÁÍRT feltöltés Cloudinary-ra.
 // A böngésző nem ismer semmilyen titkot: előbb aláírást kér a 'sign-upload'
 // Edge Functiontől (ami csak bejelentkezett adminnak ad), és azzal tölt fel.
@@ -16,6 +59,7 @@ export default function CloudinaryUpload({
   folder = 'WebAppHajduTamas/portfolio',
 }) {
   const [uploading, setUploading] = useState(false)
+  const [compressing, setCompressing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
   const [dragOver, setDragOver] = useState(false)
@@ -25,6 +69,24 @@ export default function CloudinaryUpload({
     if (!file) return
     if (!file.type.startsWith('image/')) { setError('Csak képfájl tölthető fel.'); return }
     setError(''); setUploading(true); setProgress(0)
+
+    // 0) Ha a kép nagyobb a Cloudinary limitnél, kliens-oldalon lekicsinyítjük
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setCompressing(true)
+      try {
+        file = await compressImage(file)
+      } catch {
+        setCompressing(false); setUploading(false)
+        setError('A kép tömörítése nem sikerült. Próbálj kisebb vagy más képet.')
+        return
+      }
+      setCompressing(false)
+      if (file.size > MAX_UPLOAD_BYTES) {
+        setUploading(false)
+        setError('A kép a tömörítés után is 10 MB felett van. Próbálj kisebb képet.')
+        return
+      }
+    }
 
     // 1) Aláírás kérése a szervertől (csak bejelentkezett adminnak ad)
     let sig
@@ -101,8 +163,14 @@ export default function CloudinaryUpload({
         <input ref={inputRef} type="file" accept="image/*" hidden onChange={onPick} />
         {uploading ? (
           <div className="cld-upload-progress">
-            <div className="cld-upload-bar"><div style={{ width: `${progress}%` }} /></div>
-            <span>Feltöltés… {progress}%</span>
+            {compressing ? (
+              <span>Kép tömörítése…</span>
+            ) : (
+              <>
+                <div className="cld-upload-bar"><div style={{ width: `${progress}%` }} /></div>
+                <span>Feltöltés… {progress}%</span>
+              </>
+            )}
           </div>
         ) : (
           <span className="cld-upload-label">
