@@ -53,6 +53,7 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
   const [form, setForm] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [lastSnapshot, setLastSnapshot] = useState(null)  // egy lépés visszaállítás
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -97,10 +98,26 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
       body_align: form.body_align, body_size: form.body_size,
       visible: form.visible,
     }
+    const prevRecord = sections.find((s) => s.id === editingId)
     const { error: err } = await supabase.from('category_sections').update(payload).eq('id', editingId)
     setSaving(false)
     if (err) { setError('Mentési hiba: ' + err.message); return }
+    if (prevRecord) {
+      const prev = {}
+      for (const k of Object.keys(payload)) prev[k] = prevRecord[k]
+      setLastSnapshot({ id: editingId, prev })
+    }
     setEditingId(null)
+    load()
+  }
+
+  // Előző verzió visszaállítása: a legutóbbi mentés előtti szekció-értékek.
+  const restorePrev = async () => {
+    if (!lastSnapshot) return
+    if (!window.confirm('Visszaállítod a szekció mentés előtti állapotát?')) return
+    const { error: err } = await supabase.from('category_sections').update(lastSnapshot.prev).eq('id', lastSnapshot.id)
+    if (err) { setError('Visszaállítási hiba: ' + err.message); return }
+    setLastSnapshot(null)
     load()
   }
 
@@ -155,6 +172,10 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
       <div className="acms-secs-head">
         <h3 className="acms-secs-title">Szekciók</h3>
         <button className="acms-btn-primary acms-btn-sm" onClick={addSection}>+ Új szekció</button>
+        {lastSnapshot && !editingId && (
+          <button className="acms-btn-sm" onClick={restorePrev}
+            title="A legutóbbi mentés előtti állapot visszaállítása">↶ Előző verzió visszaállítása</button>
+        )}
       </div>
       <p className="acms-hint">
         Ha nincs szekció, az aloldal a teljes képgridet mutatja. Szekciókkal váltakozó

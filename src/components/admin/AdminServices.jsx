@@ -37,6 +37,7 @@ export default function AdminServices() {
   const [form,     setForm]     = useState(EMPTY_FORM)
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState('')
+  const [lastAction, setLastAction] = useState(null)  // egy lépés visszaállítás (mentés után)
 
   const openNew = () => {
     setEditing(null)
@@ -108,14 +109,55 @@ export default function AdminServices() {
       extra_fields: form.extra_fields,
     }
 
-    const { error } = editing
-      ? await supabase.from('services').update(payload).eq('id', editing)
-      : await supabase.from('services').insert(payload)
+    // Undo-hoz: frissítésnél a régi értékek kellenek (a lista aktuális rekordja)
+    const prevRecord = editing ? services.find(s => s.id === editing) : null
+
+    let error, newId = null
+    if (editing) {
+      const res = await supabase.from('services').update(payload).eq('id', editing)
+      error = res.error
+    } else {
+      const res = await supabase.from('services').insert(payload).select('id').single()
+      error = res.error
+      newId = res.data?.id
+    }
 
     if (error) { setError('Hiba: ' + error.message); setSaving(false); return }
+
+    // Egy lépés visszaállítás eltárolása
+    if (editing && prevRecord) {
+      setLastAction({
+        type: 'update', id: editing,
+        prev: {
+          number: prevRecord.number, name_hu: prevRecord.name_hu, name_en: prevRecord.name_en,
+          desc_hu: prevRecord.desc_hu, desc_en: prevRecord.desc_en,
+          sort_order: prevRecord.sort_order, extra_fields: prevRecord.extra_fields,
+        },
+      })
+    } else if (newId) {
+      setLastAction({ type: 'insert', id: newId })
+    }
+
     await refetch()
     setShowForm(false)
     setSaving(false)
+  }
+
+  // Előző verzió visszaállítása: az utolsó mentést vonja vissza (frissítésnél a
+  // régi értékek visszaírása, új rekordnál a létrehozott elem törlése).
+  const restorePrev = async () => {
+    if (!lastAction) return
+    const msg = lastAction.type === 'insert'
+      ? 'Visszavonod az imént létrehozott szolgáltatást (törlés)?'
+      : 'Visszaállítod a szolgáltatás mentés előtti értékeit?'
+    if (!window.confirm(msg)) return
+    if (lastAction.type === 'insert') {
+      await supabase.from('services').delete().eq('id', lastAction.id)
+    } else {
+      await supabase.from('services').update(lastAction.prev).eq('id', lastAction.id)
+    }
+    setLastAction(null)
+    await refetch()
   }
 
   const handleDelete = async (id, name) => {
@@ -131,7 +173,13 @@ export default function AdminServices() {
           <div className="acms-section-title">Szolgáltatások</div>
           <div className="acms-section-sub">{services.length} szolgáltatás</div>
         </div>
-        <button className="acms-btn-primary" onClick={openNew}>+ Új szolgáltatás</button>
+        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          {lastAction && !showForm && (
+            <button className="acms-btn-sm" onClick={restorePrev}
+              title="Az utolsó mentés visszavonása">↶ Előző verzió visszaállítása</button>
+          )}
+          <button className="acms-btn-primary" onClick={openNew}>+ Új szolgáltatás</button>
+        </div>
       </div>
 
       {loading ? (

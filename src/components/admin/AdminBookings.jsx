@@ -34,6 +34,7 @@ export default function AdminBookings() {
   const [slotForm,  setSlotForm]  = useState({})
   const [slotSaving, setSlotSaving] = useState(false)
   const [slotError,  setSlotError]  = useState('')
+  const [lastSlotAction, setLastSlotAction] = useState(null)  // egy lépés visszaállítás (időpont)
   const [showNewSlot, setShowNewSlot] = useState(false)
   const [editReliability, setEditReliability] = useState(null)
   const [reliabilityNote, setReliabilityNote] = useState('')
@@ -223,12 +224,49 @@ export default function AdminBookings() {
       recurrence_rule: slotForm.is_recurring ? slotForm.recurrence_rule : null,
       recurrence_end:  slotForm.is_recurring && slotForm.recurrence_end ? slotForm.recurrence_end : null,
     }
-    const { error } = editSlot === 'new'
-      ? await supabase.from('appointment_slots').insert(payload)
-      : await supabase.from('appointment_slots').update(payload).eq('id', editSlot)
+    const prevSlot = editSlot !== 'new' ? slots.find((s) => s.id === editSlot) : null
+    let error, newId = null
+    if (editSlot === 'new') {
+      const res = await supabase.from('appointment_slots').insert(payload).select('id').single()
+      error = res.error; newId = res.data?.id
+    } else {
+      const res = await supabase.from('appointment_slots').update(payload).eq('id', editSlot)
+      error = res.error
+    }
     if (error) { setSlotError('Hiba: ' + error.message); setSlotSaving(false); return }
+    // Egy lépés visszaállítás – csak a slot beállításait érinti, a foglalásokat NEM
+    if (editSlot !== 'new' && prevSlot) {
+      setLastSlotAction({
+        type: 'update', id: editSlot,
+        prev: {
+          title: prevSlot.title, description: prevSlot.description, service_type: prevSlot.service_type,
+          slot_date: prevSlot.slot_date, start_time: prevSlot.start_time, end_time: prevSlot.end_time,
+          capacity: prevSlot.capacity, visible: prevSlot.visible, is_recurring: prevSlot.is_recurring,
+          recurrence_rule: prevSlot.recurrence_rule, recurrence_end: prevSlot.recurrence_end,
+        },
+      })
+    } else if (newId) {
+      setLastSlotAction({ type: 'insert', id: newId })
+    }
     await refetchSlots()
     setShowNewSlot(false); setSlotSaving(false)
+  }
+
+  // Előző verzió visszaállítása (időpont): frissítésnél a régi beállítások,
+  // új időpontnál a létrehozott slot törlése. A foglalásokat/státuszokat nem érinti.
+  const restoreSlot = async () => {
+    if (!lastSlotAction) return
+    const msg = lastSlotAction.type === 'insert'
+      ? 'Visszavonod az imént létrehozott időpontot (törlés)?'
+      : 'Visszaállítod az időpont mentés előtti beállításait?'
+    if (!window.confirm(msg)) return
+    if (lastSlotAction.type === 'insert') {
+      await supabase.from('appointment_slots').delete().eq('id', lastSlotAction.id)
+    } else {
+      await supabase.from('appointment_slots').update(lastSlotAction.prev).eq('id', lastSlotAction.id)
+    }
+    setLastSlotAction(null)
+    await refetchSlots()
   }
 
   const deleteSlot = async (id) => {
@@ -277,7 +315,13 @@ export default function AdminBookings() {
           <div className="acms-section-sub">Időpontok és megbízhatósági lista</div>
         </div>
         {subTab === 'slots' && (
-          <button className="acms-btn-primary" onClick={openNewSlot}>+ Új időpont</button>
+          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {lastSlotAction && !showNewSlot && (
+              <button className="acms-btn-sm" onClick={restoreSlot}
+                title="Az utolsó időpont-mentés visszavonása">↶ Előző verzió visszaállítása</button>
+            )}
+            <button className="acms-btn-primary" onClick={openNewSlot}>+ Új időpont</button>
+          </div>
         )}
         {subTab === 'reliability' && (
           <button className="acms-btn-secondary" onClick={() => setShowManual(v => !v)}>

@@ -71,6 +71,7 @@ export default function AdminCategories() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [lastSnapshot, setLastSnapshot] = useState(null)  // egy lépés visszaállítás
 
   // első kategória kiválasztása betöltéskor
   useEffect(() => {
@@ -117,6 +118,10 @@ export default function AdminCategories() {
         .map((s) => s.trim())
         .filter(Boolean),
     }
+    // Undo-hoz: a mentés ELŐTTI értékek a payload kulcsaira
+    const prev = {}
+    for (const k of Object.keys(payload)) prev[k] = activeCat[k]
+
     const { error: err } = await supabase
       .from('portfolio_categories')
       .update(payload)
@@ -127,6 +132,23 @@ export default function AdminCategories() {
       return
     }
     setSaved(true)
+    setLastSnapshot({ id: activeCat.id, prev })
+    refetch()
+  }
+
+  // Előző verzió visszaállítása: a legutóbbi mentés előtti értékeket írja vissza.
+  const restorePrev = async () => {
+    if (!lastSnapshot) return
+    if (!window.confirm('Visszaállítod a kategória mentés előtti értékeit?')) return
+    setSaving(true); setError('')
+    const { error: err } = await supabase
+      .from('portfolio_categories')
+      .update(lastSnapshot.prev)
+      .eq('id', lastSnapshot.id)
+    setSaving(false)
+    if (err) { setError('Visszaállítási hiba: ' + err.message); return }
+    setLastSnapshot(null)
+    setSaved(false)
     refetch()
   }
 
@@ -245,6 +267,12 @@ export default function AdminCategories() {
             <button className="acms-btn-primary" onClick={handleSave} disabled={saving}>
               {saving ? 'Mentés…' : 'Mentés'}
             </button>
+            {lastSnapshot && lastSnapshot.id === activeCat.id && (
+              <button className="acms-btn-sm" onClick={restorePrev} disabled={saving}
+                title="A legutóbbi mentés előtti állapot visszaállítása">
+                ↶ Előző verzió visszaállítása
+              </button>
+            )}
             {saved && <span className="acms-success">✓ Mentve</span>}
             <a className="acms-cat-view" href={`/portfolio/${activeCat.slug}`} target="_blank" rel="noreferrer">
               Aloldal megnyitása ↗

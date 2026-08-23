@@ -3,8 +3,8 @@ import { supabase } from '../../supabaseClient'
 import { useCategories } from '../../hooks'
 
 // A portfólió-áttekintő csempéinek borítóképe kategóriánként.
-// Tárolás: site_content `portfolio_cover_<slug>` kulcs (mint korábban), de a
-// lista mostantól az ÉLŐ kategóriákból generálódik (nem hardcode-olt).
+// Tárolás: site_content `portfolio_cover_<slug>` kulcs. A lista az ÉLŐ
+// kategóriákból generálódik. Van egy lépés visszaállítás (mentés előtti állapot).
 function cldThumb(url, w = 300) {
   if (!url || !url.includes('/upload/')) return url
   return url.replace('/upload/', `/upload/w_${w},c_fill,q_auto,f_auto/`)
@@ -12,10 +12,12 @@ function cldThumb(url, w = 300) {
 
 export default function AdminCovers() {
   const { categories } = useCategories()
-  const [covers,  setCovers]  = useState({})   // { slug: url }
-  const [saving,  setSaving]  = useState(false)
-  const [saved,   setSaved]   = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [covers,   setCovers]   = useState({})   // { slug: url } – szerkesztett
+  const [original, setOriginal] = useState({})   // utolsó mentett (DB) állapot
+  const [lastSnapshot, setLastSnapshot] = useState(null)  // mentés előtti állapot (undo)
+  const [saving,   setSaving]   = useState(false)
+  const [saved,    setSaved]    = useState(false)
+  const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
     (async () => {
@@ -26,6 +28,7 @@ export default function AdminCovers() {
       const map = {}
       for (const r of data || []) map[r.key.replace('portfolio_cover_', '')] = r.value
       setCovers(map)
+      setOriginal(map)
       setLoading(false)
     })()
   }, [])
@@ -35,15 +38,38 @@ export default function AdminCovers() {
     setSaved(false)
   }
 
-  const save = async () => {
-    setSaving(true); setSaved(false)
+  const upsertCovers = (map) => {
     const rows = categories.map(c => ({
       key:   `portfolio_cover_${c.slug}`,
-      value: covers[c.slug] || '',
+      value: map[c.slug] || '',
     }))
-    const { error } = await supabase.from('site_content').upsert(rows, { onConflict: 'key' })
+    return supabase.from('site_content').upsert(rows, { onConflict: 'key' })
+  }
+
+  const save = async () => {
+    setSaving(true); setSaved(false)
+    const snapshot = { ...original }   // mentés ELŐTTI állapot
+    const { error } = await upsertCovers(covers)
     setSaving(false)
-    if (!error) setSaved(true)
+    if (!error) {
+      setSaved(true)
+      setLastSnapshot(snapshot)
+      setOriginal({ ...covers })
+    }
+  }
+
+  const restorePrev = async () => {
+    if (!lastSnapshot) return
+    if (!window.confirm('Visszaállítod a legutóbbi mentés előtti borítókat?')) return
+    setSaving(true)
+    const { error } = await upsertCovers(lastSnapshot)
+    setSaving(false)
+    if (!error) {
+      setCovers({ ...lastSnapshot })
+      setOriginal({ ...lastSnapshot })
+      setLastSnapshot(null)
+      setSaved(false)
+    }
   }
 
   if (loading) return null
@@ -77,10 +103,18 @@ export default function AdminCovers() {
         )
       })}
 
-      <button className="acms-btn-primary" onClick={save} disabled={saving}>
-        {saving ? 'Mentés...' : 'Borítók mentése'}
-      </button>
-      {saved && <span className="acms-hint" style={{ marginLeft: '1rem' }}>Elmentve.</span>}
+      <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <button className="acms-btn-primary" onClick={save} disabled={saving}>
+          {saving ? 'Mentés...' : 'Borítók mentése'}
+        </button>
+        {lastSnapshot && (
+          <button className="acms-btn-sm" onClick={restorePrev} disabled={saving}
+            title="A legutóbbi mentés előtti borítók visszaállítása">
+            ↶ Előző verzió visszaállítása
+          </button>
+        )}
+        {saved && <span className="acms-saved-badge">✓ Mentve</span>}
+      </div>
     </div>
   )
 }
