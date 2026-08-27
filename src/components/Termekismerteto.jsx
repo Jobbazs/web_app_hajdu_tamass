@@ -23,6 +23,8 @@ const UGYFEL = [
   ['Automatikus e-mail értesítések', 'a foglalásokról, kézzel nem kell semmit küldeni'],
   ['Kapcsolati űrlap', 'beépített spam-védelemmel — nem kapsz szemétüzeneteket'],
   ['Kétnyelvű felület', 'magyar / angol, egy kattintással váltható'],
+  ['Zavaró sütibanner nélkül', 'a rendszer hozzájárulás-köteles süti nélkül működik — a látogatót semmi nem szakítja félbe'],
+  ['Jogi oldalak készen', 'impresszum és adatkezelési tájékoztató, kitöltött szöveggel'],
 ]
 
 const ADMIN = [
@@ -31,13 +33,24 @@ const ADMIN = [
   ['Szöveg- és tartalomszerkesztés', 'a feliratok, szekciók és a nyitókép szavai'],
   ['Szekciók sorrendje', 'húzd-és-ejtsd (drag-and-drop) módon átrendezhető'],
   ['Portfólió kezelés', 'képfeltöltés, kategóriákba rendezés, sorrend drag-and-droppal'],
+
+  ['Portfólió kezelés', 'képfeltöltés, kategóriákba rendezés, sorrend drag-and-droppal'],
+  ['Portfólió borítóképek', 'az áttekintő csempék borítóképe kategóriánként, egy lépés visszavonással'],
   ['Kategóriák kezelése', 'kategóriák és a hozzájuk tartozó szekciók'],
   ['Szolgáltatások kezelése', 'hozzáadás, szerkesztés, sorrend'],
   ['Egyedi szekciók', 'szabadon bővíthető, saját tartalomblokkok'],
   ['Foglaláskezelés', 'időpontok létrehozása, foglalások áttekintése, ügyfél-megbízhatóság követése'],
   ['Üzenetek', 'a kapcsolati űrlapból érkező üzenetek egy helyen'],
+  ['Visszajelző ablak szövege', 'az űrlap elküldése után megjelenő köszönő üzenet — magyarul és angolul'],
   ['Biztonságos képfeltöltés', 'közvetlenül a felhőbe'],
-  ['Haladó beállítások', 'publikálás, frissítés és finomhangolás'],
+  ['Hibajegy', 'hibabejelentés egy kattintással a felületről, automatikus értesítéssel és státuszkövetéssel (Bejelentve / Folyamatban / Lezárva)'],
+  ['Haladó beállítások', 'publikálás a keresők felé, árva képfájlok kilistázása és takarítása'],
+  ['Áttekinthető menürendszer', 'hat fő fül, a tartalomkezelés külön almenükkel — nem kell keresgélni'],
+  
+  ['Biztonságos admin bejelentkezés', 'e-mailes belépés, jogkörhöz kötött hozzáféréssel'],
+  ['Felhasználó- és jogkezelés', 'több kezelő, három jogkörrel: superadmin (teljes jog + jogosztás), admin (mindent szerkeszthet), demó (csak megtekintés)'],
+  ['Demó mód', 'bemutatóhoz vagy betanításhoz: a felület végigjárható, de semmi nem menthető'],
+  ['Vezérlőpult', 'foglalási statisztikák, 12 havi grafikon, no-show arány, időpont-kitöltöttség, választható évvel'],
 ]
 
 const HATTER = [
@@ -46,14 +59,20 @@ const HATTER = [
   ['Biztonság', 'védett admin felület, aláírt képfeltöltés, spam-szűrés az űrlapokon'],
   ['Megbízható e-mail kézbesítés', 'a rendszer levelei nem a spam mappában landolnak'],
   ['Automatizmus', 'a várólista lejáratát a rendszer magától kezeli'],
+
   ['Kétnyelvűség beépítve', 'a rendszer része, nem utólagos ráaggatás'],
+  ['Sütimentes, GDPR-barát felépítés', 'nincs hozzájárulás-köteles süti, a látogatottság-mérés névtelen'],
+  ['Adatbázis-szintű jogosultságkezelés', 'a jogkörök nem csak a felületen érvényesülnek, hanem az adatbázisban is'],
+  ['Hibafigyelés a háttérben', 'a rendszer jelzi a hibát, mielőtt panasz érkezne rá'],
 ]
 
 const EGYEDI = [
   ['Teljesen a tiéd', 'nincs platform-fogság, nincs kényszerű havidíj egy bérelt rendszerre'],
   ['Bármi testreszabható', 'a dizájn és a funkciók a te igényeidre szabva'],
+
   ['Bővíthető', 'ahogy nő a vállalkozásod, úgy nőhet vele az oldal is'],
-]
+  ['Arculatváltás egy lépésben', 'a színvilág és a betűtípus központi beállításból cserélhető'],
+  ['Csapatban is használható', 'a munkatársnak külön belépés adható, korlátozott jogkörrel'],]
 
 function FeatureGrid({ items }) {
   return (
