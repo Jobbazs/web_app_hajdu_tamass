@@ -17,6 +17,7 @@ export default function Login() {
 
     if (error) {
       setError('Hibás email vagy jelszó.')
+      setPassword('')   // hibás adatoknál a jelszó törlődik, hogy tisztán újraírható legyen
     }
     setLoading(false)
   }
@@ -38,6 +39,7 @@ export default function Login() {
               placeholder="admin@email.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
+              onFocus={e => { const el = e.target; requestAnimationFrame(() => el.setSelectionRange(el.value.length, el.value.length)) }}
               autoComplete="email"
             />
           </div>
