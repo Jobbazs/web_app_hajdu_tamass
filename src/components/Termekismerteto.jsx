@@ -150,6 +150,9 @@ export default function Termekismerteto() {
 
           <footer className="ti-footer">
             <p className="ti-outro">Kérdésed van, vagy konkrét ajánlatot szeretnél a saját vállalkozásodra? Keress bizalommal.</p>
+            <p className="ti-outro-dev">Fejlesztő: Grega Balázs</p>
+            <p className="ti-outro-dev">Email cím: balazsgregadev@gmail.com</p>
+            
             <a className="ti-download" href="/Termekismerteto.docx" download>Letöltés Word-dokumentumként</a>
           </footer>
         </article>
