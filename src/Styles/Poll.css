@@ -177,3 +177,38 @@
 @media (max-width: 950px) and (orientation: landscape) {
   .poll-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ── CMS: szavazás lenyíló (harmonika) lista ── */
+.poll-acc-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.poll-acc-item { border: 1px solid rgba(128, 128, 128, 0.25); border-radius: 6px; overflow: hidden; }
+.poll-acc-head {
+  display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;
+  padding: 0.7rem 0.9rem; cursor: pointer; user-select: none;
+}
+.poll-acc-head:hover { background: rgba(128, 128, 128, 0.08); }
+.poll-acc-name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; flex-wrap: wrap; }
+.poll-acc-badge {
+  font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.06em;
+  text-transform: uppercase; padding: 0.15rem 0.45rem; border-radius: 999px;
+  background: #2e7d32; color: #fff;
+}
+.poll-acc-badge--closed { background: rgba(128, 128, 128, 0.5); }
+.poll-acc-tri { transition: transform 0.18s ease; opacity: 0.7; font-size: 1rem; flex-shrink: 0; }
+.poll-acc-tri.open { transform: rotate(90deg); }
+.poll-acc-body { padding: 0.2rem 0.9rem 0.9rem; border-top: 1px solid rgba(128, 128, 128, 0.2); }
+
+/* ── Nézet-kapcsolók (darab/% + lista/diagram egy sorban) ── */
+.poll-toggles { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin-bottom: 1.5rem; }
+.poll-toggles .poll-viewtoggle { margin: 0; }
+
+/* ── Kördiagram nézet ── */
+.poll-pie-wrap { display: flex; gap: 1.5rem; align-items: center; justify-content: center; flex-wrap: wrap; }
+.poll-pie { color: inherit; max-width: 100%; height: auto; flex-shrink: 0; }
+.poll-pie-empty { text-align: center; opacity: 0.6; padding: 2rem; font-family: 'Space Mono', monospace; }
+.poll-legend { display: flex; flex-direction: column; gap: 0.55rem; min-width: 200px; }
+.poll-legend-row { display: flex; align-items: center; gap: 0.6rem; }
+.poll-legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+.poll-legend-name { flex: 1; min-width: 0; }
+.poll-legend-val { font-family: 'Space Mono', monospace; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+.poll-legend-vote { display: inline-flex; gap: 0.3rem; flex-shrink: 0; }
+.poll-legend-vote .poll-vbtn { width: 30px; height: 30px; }

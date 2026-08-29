@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import '../../Styles/Poll.css'
+import PollPie, { PIE_COLORS } from '../PollPie'
 
 // Statisztika / összehasonlítás: max 4 szavazás egyszerre, táblánként külön
 // darab/százalék nézet, reszponzív (fektetve 2, állítva 1), PNG export.
@@ -30,10 +31,11 @@ export default function AdminPollStats() {
     if (!p) return
     const { data: opts } = await supabase.from('poll_options')
       .select('*').eq('poll_id', id).eq('approved', true).order('sort_order', { ascending: true })
-    setSelected(s => [...s, { poll: p, options: opts || [], view: p.default_view || 'percent' }])
+    setSelected(s => [...s, { poll: p, options: opts || [], view: p.default_view || 'percent', mode: 'list' }])
   }
   const removePoll = (id) => setSelected(s => s.filter(x => x.poll.id !== id))
   const setView = (id, v) => setSelected(s => s.map(x => (x.poll.id === id ? { ...x, view: v } : x)))
+  const setMode = (id, m) => setSelected(s => s.map(x => (x.poll.id === id ? { ...x, mode: m } : x)))
 
   // PNG export – kézi canvas-rajz (nincs külső függőség)
   const exportPNG = () => {
@@ -109,11 +111,14 @@ export default function AdminPollStats() {
         <div className="admin-empty">Nincs kiválasztott szavazás.</div>
       ) : (
         <div className="poll-stats-grid" ref={gridRef}>
-          {selected.map(({ poll, options, view }) => {
+          {selected.map(({ poll, options, view, mode }) => {
             const cols = (poll.columns || []).map(c => c.name_hu || '')
-            const totalNet = options.reduce((s, o) => s + Math.max(0, o.up_votes - o.down_votes), 0)
-            const sorted = poll.has_votes
-              ? [...options].sort((a, b) => (b.up_votes - b.down_votes) - (a.up_votes - a.down_votes)) : options
+            const isSimple = (poll.vote_style || 'updown') === 'simple'
+            const scoreOf = (o) => (isSimple ? o.up_votes : o.up_votes - o.down_votes)
+            const totalScore = options.reduce((s, o) => s + Math.max(0, scoreOf(o)), 0)
+            const sorted = poll.has_votes ? [...options].sort((a, b) => scoreOf(b) - scoreOf(a)) : options
+            const rowLabel = (o) => cellsFor(o.cells, poll.columns).map(c => c.hu || c.en).filter(Boolean).join(' – ') || '—'
+            const pieSlices = sorted.map((o, i) => ({ label: rowLabel(o), value: Math.max(0, scoreOf(o)), color: PIE_COLORS[i % PIE_COLORS.length] }))
             return (
               <div key={poll.id} className="poll-stats-card">
                 <div className="poll-stats-head">
@@ -121,11 +126,34 @@ export default function AdminPollStats() {
                   <button className="poll-stats-x" onClick={() => removePoll(poll.id)} aria-label="Eltávolítás">×</button>
                 </div>
                 {poll.has_votes && (
-                  <div className="poll-viewtoggle poll-stats-toggle">
-                    <button className={view === 'count' ? 'active' : ''} onClick={() => setView(poll.id, 'count')}>Darab</button>
-                    <button className={view === 'percent' ? 'active' : ''} onClick={() => setView(poll.id, 'percent')}>%</button>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
+                    <div className="poll-viewtoggle poll-stats-toggle">
+                      <button className={view === 'count' ? 'active' : ''} onClick={() => setView(poll.id, 'count')}>Darab</button>
+                      <button className={view === 'percent' ? 'active' : ''} onClick={() => setView(poll.id, 'percent')}>%</button>
+                    </div>
+                    <div className="poll-viewtoggle poll-stats-toggle">
+                      <button className={(mode || 'list') === 'list' ? 'active' : ''} onClick={() => setMode(poll.id, 'list')}>Lista</button>
+                      <button className={mode === 'pie' ? 'active' : ''} onClick={() => setMode(poll.id, 'pie')}>Diagram</button>
+                    </div>
                   </div>
                 )}
+                {mode === 'pie' && poll.has_votes ? (
+                  <div className="poll-pie-wrap">
+                    <PollPie slices={pieSlices} view={view} size={180} />
+                    <div className="poll-legend">
+                      {sorted.map((o, i) => {
+                        const pct = totalScore > 0 ? Math.round((Math.max(0, scoreOf(o)) / totalScore) * 100) : 0
+                        return (
+                          <div className="poll-legend-row" key={o.id}>
+                            <span className="poll-legend-swatch" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                            <span className="poll-legend-name">{rowLabel(o)}</span>
+                            <span className="poll-legend-val">{view === 'percent' ? `${pct}%` : (isSimple ? `▲${o.up_votes}` : `▲${o.up_votes} ▼${o.down_votes}`)}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : (
                 <div className="poll-table-wrap">
                   <table className="poll-table">
                     <thead>
@@ -136,15 +164,13 @@ export default function AdminPollStats() {
                     </thead>
                     <tbody>
                       {sorted.map(o => {
-                        const cells = cellsFor(o.cells, poll.columns)
-                        const net = o.up_votes - o.down_votes
-                        const pct = totalNet > 0 ? Math.round((Math.max(0, net) / totalNet) * 100) : 0
+                        const pct = totalScore > 0 ? Math.round((Math.max(0, scoreOf(o)) / totalScore) * 100) : 0
                         return (
                           <tr key={o.id}>
-                            {cells.map((cell, i) => <td key={i}>{cell.hu}</td>)}
+                            {cellsFor(o.cells, poll.columns).map((cell, i) => <td key={i}>{cell.hu}</td>)}
                             {poll.has_votes && (
                               <td className="poll-vote-col">
-                                <span className="poll-score">{view === 'percent' ? `${pct}%` : <>▲{o.up_votes} ▼{o.down_votes}</>}</span>
+                                <span className="poll-score">{view === 'percent' ? `${pct}%` : (isSimple ? <>▲{o.up_votes}</> : <>▲{o.up_votes} ▼{o.down_votes}</>)}</span>
                               </td>
                             )}
                           </tr>
@@ -153,6 +179,7 @@ export default function AdminPollStats() {
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             )
           })}

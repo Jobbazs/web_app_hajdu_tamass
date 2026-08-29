@@ -1401,3 +1401,228 @@ create policy "bug_tickets read" on public.bug_tickets for select
 -- Storage:  attachments (public bucket)
 -- Cron:     delete-old-appointments, delete-old-waitlist, delete-old-slots
 -- ============================================================================
+
+
+-- ============================================================================
+-- 17. SZAVAZÁS RENDSZER (polls) — táblák + szavazás-RPC + moderálás + teszt mód
+-- ============================================================================
+-- Cookieless dedup: a szavazó azonosítója böngészőben tárolt anonim UUID.
+-- Publikus: csak jóváhagyott (approved) opciók; a szavazatokat a cast_vote RPC írja.
+-- suggestions típus: látogatói javaslatok (approved=false) → CMS moderálás.
+-- test_mode: IDEIGLENES teszt (korlátlan szavazás egy böngészőből) — élesben KI.
+
+create table if not exists public.polls (
+  id           uuid primary key default gen_random_uuid(),
+  title_hu     text not null default '',
+  title_en     text not null default '',
+  columns      jsonb not null default '[]'::jsonb,   -- [{name_hu, name_en}]
+  has_votes    boolean not null default true,        -- van-e "Szavazat" oszlop
+  type         text not null default 'fixed'
+               check (type in ('fixed', 'suggestions')),
+  status       text not null default 'open'
+               check (status in ('open', 'closed')),
+  closes_at    timestamptz,                          -- opcionális időzítő (lezárás)
+  active       boolean not null default false,       -- a főoldalon megjelenő szavazás
+  default_view text not null default 'percent'
+               check (default_view in ('percent', 'count')),
+  test_mode    boolean not null default false,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+-- ── Opciók (a tábla sorai) ──────────────────────────────────────────────────
+-- meglévő táblákhoz (korábbi séma-verzió) a később bevezetett oszlop:
+alter table public.polls add column if not exists test_mode boolean not null default false;
+
+create table if not exists public.poll_options (
+  id          uuid primary key default gen_random_uuid(),
+  poll_id     uuid not null references public.polls(id) on delete cascade,
+  cells       jsonb not null default '[]'::jsonb,    -- [{hu, en}] oszloponként
+  up_votes    int not null default 0,
+  down_votes  int not null default 0,
+  approved    boolean not null default true,         -- false = moderálásra vár (2. szakasz)
+  suggested   boolean not null default false,        -- látogatói javaslat volt-e (2. szakasz)
+  sort_order  int not null default 0,
+  created_at  timestamptz not null default now()
+);
+create index if not exists idx_poll_options_poll on public.poll_options (poll_id, sort_order);
+
+-- ── Szavazatok (dedup: opciónként + szavazónként egy) ───────────────────────
+create table if not exists public.poll_votes (
+  id         uuid primary key default gen_random_uuid(),
+  option_id  uuid not null references public.poll_options(id) on delete cascade,
+  voter_id   text not null,                          -- böngészőben tárolt anonim UUID
+  direction  text not null check (direction in ('up', 'down')),
+  created_at timestamptz not null default now(),
+  unique (option_id, voter_id)
+);
+
+-- ── updated_at trigger a polls-ra ───────────────────────────────────────────
+create or replace function public.touch_polls_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at := now(); return new; end $$;
+drop trigger if exists trg_polls_touch on public.polls;
+create trigger trg_polls_touch before update on public.polls
+  for each row execute function public.touch_polls_updated_at();
+
+-- ── Csak EGY aktív szavazás lehet (új aktív → a többi inaktív) ──────────────
+create or replace function public.polls_single_active()
+returns trigger language plpgsql as $$
+begin
+  if new.active then
+    update public.polls set active = false where id <> new.id and active = true;
+  end if;
+  return new;
+end $$;
+drop trigger if exists trg_polls_single_active on public.polls;
+create trigger trg_polls_single_active after insert or update of active on public.polls
+  for each row when (new.active) execute function public.polls_single_active();
+
+-- ── RLS ─────────────────────────────────────────────────────────────────────
+alter table public.polls        enable row level security;
+alter table public.poll_options enable row level security;
+alter table public.poll_votes   enable row level security;
+
+drop policy if exists "Public read polls" on public.polls;
+drop policy if exists "Admin all polls"   on public.polls;
+create policy "Public read polls" on public.polls for select using (true);
+create policy "Admin all polls" on public.polls for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
+
+drop policy if exists "Public read poll_options" on public.poll_options;
+drop policy if exists "Admin read poll_options"  on public.poll_options;
+drop policy if exists "Admin all poll_options"   on public.poll_options;
+-- Publikus: csak jóváhagyott opciók látszanak
+create policy "Public read poll_options" on public.poll_options for select using (approved = true);
+-- Admin: mindet látja (moderáláshoz), és írhat (nem demo)
+create policy "Admin read poll_options" on public.poll_options for select using (auth.role() = 'authenticated');
+create policy "Admin all poll_options" on public.poll_options for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
+
+-- poll_votes: nincs publikus közvetlen hozzáférés; kizárólag a cast_vote RPC ír.
+drop policy if exists "Admin read poll_votes" on public.poll_votes;
+create policy "Admin read poll_votes" on public.poll_votes for select using (auth.role() = 'authenticated');
+
+-- ── Szavazás RPC (dedup + toggle + váltás; lezárt szavazást elutasít) ───────
+
+
+-- ── Szavazás RPC (dedup + toggle/váltás; teszt módban korlátlan) ──
+create or replace function public.cast_vote(p_option uuid, p_voter text, p_dir text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_poll   public.polls;
+  v_opt    public.poll_options;
+  v_exist  public.poll_votes;
+begin
+  if p_dir not in ('up', 'down') or p_voter is null or length(p_voter) < 8 then
+    return jsonb_build_object('status', 'error');
+  end if;
+
+  select o.* into v_opt from public.poll_options o where o.id = p_option and o.approved = true;
+  if not found then return jsonb_build_object('status', 'error'); end if;
+
+  select p.* into v_poll from public.polls p where p.id = v_opt.poll_id;
+  if v_poll.status = 'closed' or (v_poll.closes_at is not null and v_poll.closes_at < now()) then
+    return jsonb_build_object('status', 'closed');
+  end if;
+
+  -- ── TESZT MÓD: nincs dedup, minden hívás növel ──
+  if v_poll.test_mode then
+    if p_dir = 'up' then
+      update public.poll_options set up_votes = up_votes + 1 where id = p_option;
+    else
+      update public.poll_options set down_votes = down_votes + 1 where id = p_option;
+    end if;
+    select o.* into v_opt from public.poll_options o where o.id = p_option;
+    return jsonb_build_object('status', 'ok', 'up', v_opt.up_votes, 'down', v_opt.down_votes);
+  end if;
+
+  -- ── Normál mód: dedup + toggle/váltás ──
+  select v.* into v_exist from public.poll_votes v
+    where v.option_id = p_option and v.voter_id = p_voter;
+
+  if not found then
+    insert into public.poll_votes (option_id, voter_id, direction) values (p_option, p_voter, p_dir);
+    if p_dir = 'up' then
+      update public.poll_options set up_votes = up_votes + 1 where id = p_option;
+    else
+      update public.poll_options set down_votes = down_votes + 1 where id = p_option;
+    end if;
+  elsif v_exist.direction = p_dir then
+    delete from public.poll_votes where id = v_exist.id;
+    if p_dir = 'up' then
+      update public.poll_options set up_votes = greatest(0, up_votes - 1) where id = p_option;
+    else
+      update public.poll_options set down_votes = greatest(0, down_votes - 1) where id = p_option;
+    end if;
+  else
+    update public.poll_votes set direction = p_dir where id = v_exist.id;
+    if p_dir = 'up' then
+      update public.poll_options set up_votes = up_votes + 1, down_votes = greatest(0, down_votes - 1) where id = p_option;
+    else
+      update public.poll_options set down_votes = down_votes + 1, up_votes = greatest(0, up_votes - 1) where id = p_option;
+    end if;
+  end if;
+
+  select o.* into v_opt from public.poll_options o where o.id = p_option;
+  return jsonb_build_object('status', 'ok', 'up', v_opt.up_votes, 'down', v_opt.down_votes);
+end;
+$$;
+grant execute on function public.cast_vote(uuid, text, text) to anon, authenticated;
+
+-- ── Látogatói javaslat RPC (moderálásra, approved=false) ──
+create or replace function public.suggest_option(p_poll uuid, p_cells jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_poll public.polls;
+begin
+  select * into v_poll from public.polls where id = p_poll;
+  if not found then return jsonb_build_object('status', 'error'); end if;
+  if v_poll.type <> 'suggestions' then return jsonb_build_object('status', 'error'); end if;
+  if v_poll.status = 'closed' or (v_poll.closes_at is not null and v_poll.closes_at < now()) then
+    return jsonb_build_object('status', 'closed');
+  end if;
+  if p_cells is null or jsonb_typeof(p_cells) <> 'array' or jsonb_array_length(p_cells) = 0 then
+    return jsonb_build_object('status', 'error');
+  end if;
+
+  insert into public.poll_options (poll_id, cells, approved, suggested, sort_order)
+    values (p_poll, p_cells, false, true, 9999);
+
+  return jsonb_build_object('status', 'ok');
+end;
+$$;
+grant execute on function public.suggest_option(uuid, jsonb) to anon, authenticated;
+
+-- ── Realtime (élő szavazat-frissítés) ───────────────────────────────────────
+do $$
+declare t text;
+begin
+  foreach t in array array['polls','poll_options'] loop
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname='supabase_realtime' and schemaname='public' and tablename=t
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+  end loop;
+end $$;
+
+
+-- ============================================================================
+-- SZAVAZÁS – szavazás-típus + lista-rendezés kapcsolók
+-- A poll-schema.sql (vagy a konszolidált supabase-schema.sql) UTÁN. Idempotens.
+-- ============================================================================
+-- vote_style: 'simple' (egyszerű, csak felfelé) vagy 'updown' (fel/le)
+alter table public.polls add column if not exists vote_style text not null default 'updown';
+-- live_sort: a publikus lista a szavazatok szerint frissüljön-e (élő rangsor)
+alter table public.polls add column if not exists live_sort boolean not null default true;

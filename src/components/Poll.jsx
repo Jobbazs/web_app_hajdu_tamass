@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useLang } from '../LangContext'
 import '../Styles/Poll.css'
+import PollPie, { PIE_COLORS } from './PollPie'
 
 // Cookieless szavazó-azonosító (böngészőnként egy anonim UUID)
 function getVoterId() {
@@ -48,6 +49,7 @@ export default function Poll() {
   const [poll, setPoll]       = useState(null)
   const [options, setOptions] = useState([])
   const [view, setView]       = useState('percent')   // percent | count
+  const [mode, setMode]       = useState(() => { try { return localStorage.getItem('poll_mode') || 'list' } catch { return 'list' } })   // list | pie
   const [myVotes, setMyVotes] = useState({})
   const [voterId]             = useState(getVoterId)
   const [sug, setSug]         = useState([])   // javaslat cellái (aktuális nyelv)
@@ -103,13 +105,20 @@ export default function Poll() {
   const closed = poll.status === 'closed' || (poll.closes_at && new Date(poll.closes_at).getTime() <= now)
   const title = lang === 'hu' ? poll.title_hu : (poll.title_en || poll.title_hu)
   const columns = (poll.columns || []).map(c => (lang === 'hu' ? c.name_hu : (c.name_en || c.name_hu)))
-  const totalNet = options.reduce((s, o) => s + Math.max(0, o.up_votes - o.down_votes), 0)
-  // Lezárt szavazásnál eredmény-rangsor (nettó szerint csökkenő)
-  const displayOptions = closed && poll.has_votes
-    ? [...options].sort((a, b) => (b.up_votes - b.down_votes) - (a.up_votes - a.down_votes))
+  const isSimple = (poll.vote_style || 'updown') === 'simple'
+  const liveSort = poll.live_sort !== false
+  const scoreOf = (o) => (isSimple ? o.up_votes : o.up_votes - o.down_votes)
+  const totalScore = options.reduce((s, o) => s + Math.max(0, scoreOf(o)), 0)
+  // Rendezés: fel/le szavazásnál alapból élő rangsor; egyszerűnél alapból nem
+  // (a live_sort dönt); lezárt szavazásnál mindig rangsor.
+  const displayOptions = (liveSort || closed) && poll.has_votes
+    ? [...options].sort((a, b) => scoreOf(b) - scoreOf(a))
     : options
 
   const setViewPref = (v) => { setView(v); try { localStorage.setItem('poll_view', v) } catch { /* privát mód */ } }
+  const setModePref = (m) => { setMode(m); try { localStorage.setItem('poll_mode', m) } catch { /* privát mód */ } }
+  const rowLabel = (o) => cellsFor(o.cells, poll.columns).map(c => (lang === 'hu' ? c.hu : (c.en || c.hu))).filter(Boolean).join(' – ') || '—'
+  const pieSlices = displayOptions.map((o, i) => ({ label: rowLabel(o), value: Math.max(0, scoreOf(o)), color: PIE_COLORS[i % PIE_COLORS.length] }))
 
   const vote = async (opt, dir) => {
     if (closed || !voterId) return
@@ -153,16 +162,52 @@ export default function Poll() {
         )}
 
         {poll.has_votes && (
-          <div className="poll-viewtoggle" role="group" aria-label="Megjelenítés">
-            <button className={view === 'count' ? 'active' : ''} onClick={() => setViewPref('count')}>
-              {lang === 'hu' ? 'Darabszám' : 'Count'}
-            </button>
-            <button className={view === 'percent' ? 'active' : ''} onClick={() => setViewPref('percent')}>
-              {lang === 'hu' ? 'Százalék' : 'Percent'}
-            </button>
+          <div className="poll-toggles">
+            <div className="poll-viewtoggle" role="group" aria-label="Megjelenítés">
+              <button className={view === 'count' ? 'active' : ''} onClick={() => setViewPref('count')}>
+                {lang === 'hu' ? 'Darabszám' : 'Count'}
+              </button>
+              <button className={view === 'percent' ? 'active' : ''} onClick={() => setViewPref('percent')}>
+                {lang === 'hu' ? 'Százalék' : 'Percent'}
+              </button>
+            </div>
+            <div className="poll-viewtoggle" role="group" aria-label="Nézet">
+              <button className={mode === 'list' ? 'active' : ''} onClick={() => setModePref('list')}>
+                {lang === 'hu' ? 'Lista' : 'List'}
+              </button>
+              <button className={mode === 'pie' ? 'active' : ''} onClick={() => setModePref('pie')}>
+                {lang === 'hu' ? 'Kördiagram' : 'Pie chart'}
+              </button>
+            </div>
           </div>
         )}
 
+        {mode === 'pie' && poll.has_votes ? (
+          <div className="poll-pie-wrap">
+            <PollPie slices={pieSlices} view={view} />
+            <div className="poll-legend">
+              {displayOptions.map((o, i) => {
+                const pct = totalScore > 0 ? Math.round((Math.max(0, scoreOf(o)) / totalScore) * 100) : 0
+                const mine = myVotes[o.id]
+                return (
+                  <div className="poll-legend-row" key={o.id}>
+                    <span className="poll-legend-swatch" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    <span className="poll-legend-name">{rowLabel(o)}</span>
+                    <span className="poll-legend-val">
+                      {view === 'percent' ? `${pct}%` : (isSimple ? `▲${o.up_votes}` : `▲${o.up_votes} ▼${o.down_votes}`)}
+                    </span>
+                    {!closed && (
+                      <span className="poll-legend-vote">
+                        <button className={`poll-vbtn ${mine === 'up' ? 'up' : ''}`} onClick={() => vote(o, 'up')} aria-label={lang === 'hu' ? 'Fel' : 'Up'}>▲</button>
+                        {!isSimple && <button className={`poll-vbtn ${mine === 'down' ? 'down' : ''}`} onClick={() => vote(o, 'down')} aria-label={lang === 'hu' ? 'Le' : 'Down'}>▼</button>}
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ) : (
         <div className="poll-table-wrap">
           <table className="poll-table">
             <thead>
@@ -176,8 +221,7 @@ export default function Poll() {
             <tbody>
               {displayOptions.map(o => {
                 const cells = cellsFor(o.cells, poll.columns)
-                const net = o.up_votes - o.down_votes
-                const pct = totalNet > 0 ? Math.round((Math.max(0, net) / totalNet) * 100) : 0
+                const pct = totalScore > 0 ? Math.round((Math.max(0, scoreOf(o)) / totalScore) * 100) : 0
                 const mine = myVotes[o.id]
                 return (
                   <tr key={o.id}>
@@ -187,12 +231,12 @@ export default function Poll() {
                         <div className="poll-vote">
                           {!closed && (
                             <button className={`poll-vbtn ${mine === 'up' ? 'up' : ''}`}
-                              onClick={() => vote(o, 'up')} aria-label={lang === 'hu' ? 'Fel' : 'Up'}>▲</button>
+                              onClick={() => vote(o, 'up')} aria-label={lang === 'hu' ? (isSimple ? 'Szavazok' : 'Fel') : 'Up'}>▲</button>
                           )}
                           <span className="poll-score">
-                            {view === 'percent' ? `${pct}%` : <>▲{o.up_votes} ▼{o.down_votes}</>}
+                            {view === 'percent' ? `${pct}%` : (isSimple ? <>▲{o.up_votes}</> : <>▲{o.up_votes} ▼{o.down_votes}</>)}
                           </span>
-                          {!closed && (
+                          {!closed && !isSimple && (
                             <button className={`poll-vbtn ${mine === 'down' ? 'down' : ''}`}
                               onClick={() => vote(o, 'down')} aria-label={lang === 'hu' ? 'Le' : 'Down'}>▼</button>
                           )}
@@ -205,6 +249,7 @@ export default function Poll() {
             </tbody>
           </table>
         </div>
+        )}
 
         {poll.type === 'suggestions' && !closed && (
           <div className="poll-suggest">

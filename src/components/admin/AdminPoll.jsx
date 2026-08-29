@@ -10,7 +10,7 @@ const emptyPoll = () => ({
   id: null, title_hu: '', title_en: '',
   columns: [{ name_hu: '', name_en: '' }],
   has_votes: true, type: 'fixed', status: 'open', active: false,
-  closes_at: '', default_view: 'percent', test_mode: false,
+  closes_at: '', default_view: 'percent', test_mode: false, vote_style: 'updown', live_sort: true, vote_style: 'updown', live_sort: true,
 })
 
 function toLocalInput(iso) {
@@ -66,7 +66,7 @@ export default function AdminPoll() {
     setPoll({
       id: p.id, title_hu: p.title_hu, title_en: p.title_en, columns: cols,
       has_votes: p.has_votes, type: p.type, status: p.status, active: p.active,
-      closes_at: toLocalInput(p.closes_at), default_view: p.default_view, test_mode: p.test_mode,
+      closes_at: toLocalInput(p.closes_at), default_view: p.default_view, test_mode: p.test_mode, vote_style: p.vote_style || 'updown', live_sort: p.live_sort !== false,
     })
     const all = opts || []
     setRows(all.filter(o => o.approved).map(o => ({ id: o.id, cells: normalizeCells(o.cells, cols), up: o.up_votes, down: o.down_votes })))
@@ -134,6 +134,8 @@ export default function AdminPoll() {
   }
 
   // ── Mentés (poll + opciók CRUD; a szavazatszámokat nem írja felül) ──
+  const closeEditor = () => { setSelId(null); setPoll(null); setRows([]); setPending([]); setSnapshot(null); setSaved(false) }
+
   const save = async () => {
     setSaving(true); setMsg('')
     // undo-hoz a mentés előtti beállítások (a sorok szövege is)
@@ -142,7 +144,7 @@ export default function AdminPoll() {
       title_hu: poll.title_hu, title_en: poll.title_en, columns: poll.columns,
       has_votes: poll.has_votes, type: poll.type, status: poll.status, active: poll.active,
       closes_at: poll.closes_at ? new Date(poll.closes_at).toISOString() : null,
-      default_view: poll.default_view, test_mode: poll.test_mode,
+      default_view: poll.default_view, test_mode: poll.test_mode, vote_style: poll.vote_style, live_sort: poll.live_sort,
     }
     let pollId = poll.id
     if (pollId) {
@@ -164,10 +166,9 @@ export default function AdminPoll() {
         await supabase.from('poll_options').insert({ poll_id: pollId, cells: r.cells, sort_order: i })
       }
     }
-    setSaving(false); setSaved(true); setSnapshot(snap); setRemoved([])
+    setSaving(false); setRemoved([])
     await loadList()
-    await openPoll(pollId)   // frissített id-k betöltése
-    setSaved(true); setSnapshot(snap)
+    closeEditor()   // mentésre becsukódik
   }
 
   // ── Előző verzió: a poll BEÁLLÍTÁSAIT + a sorok SZÖVEGÉT állítja vissza ──
@@ -220,29 +221,7 @@ export default function AdminPoll() {
   }
 
   // ── RENDER ──
-  return (
-    <div className="acms-section">
-      <div className="acms-content-group">
-        <div className="acms-sect-header-row">
-          <div className="acms-content-group-label">Szavazások</div>
-          <button className="acms-btn-primary" onClick={() => openPoll('new')}>+ Új szavazás</button>
-        </div>
-        {loadingList ? <div className="admin-empty">Betöltés…</div> : (
-          polls.length === 0 ? <div className="admin-empty">Még nincs szavazás.</div> : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {polls.map(p => (
-                <button key={p.id}
-                  className={`acms-subtab ${selId === p.id ? 'active' : ''}`}
-                  onClick={() => openPoll(p.id)}>
-                  {p.title_hu || '(cím nélkül)'}{p.active ? ' • aktív' : ''}{p.status === 'closed' ? ' • lezárt' : ''}
-                </button>
-              ))}
-            </div>
-          )
-        )}
-      </div>
-
-      {poll && (
+  const editorBlock = poll ? (
         <>
           {/* Alapbeállítások */}
           <div className="acms-content-group">
@@ -261,8 +240,24 @@ export default function AdminPoll() {
 
             <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.6rem' }}>
               <input type="checkbox" checked={poll.has_votes} onChange={e => setField('has_votes', e.target.checked)} />
-              <span className="acms-switch-label">„Szavazat" oszlop (fel/le szavazás)</span>
+              <span className="acms-switch-label">„Szavazat" oszlop (szavazás bekapcsolása)</span>
             </label>
+            {poll.has_votes && (
+              <>
+                <div className="acms-form-group">
+                  <label>Szavazás típusa</label>
+                  <select className="acms-input" value={poll.vote_style || 'updown'} style={{ maxWidth: 320 }}
+                    onChange={e => { const v = e.target.value; setPoll(p => ({ ...p, vote_style: v, live_sort: v === 'updown' })); setSaved(false) }}>
+                    <option value="updown">Fel/le szavazás (▲ / ▼)</option>
+                    <option value="simple">Egyszerű szavazás (csak ▲)</option>
+                  </select>
+                </div>
+                <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.6rem' }}>
+                  <input type="checkbox" checked={poll.live_sort !== false} onChange={e => setField('live_sort', e.target.checked)} />
+                  <span className="acms-switch-label">A lista a szavazatok szerint frissüljön (élő rangsor)</span>
+                </label>
+              </>
+            )}
             <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.6rem' }}>
               <input type="checkbox" checked={poll.active} onChange={e => setField('active', e.target.checked)} />
               <span className="acms-switch-label">Aktív (megjelenik a főoldalon, a Szekció sorrendben)</span>
@@ -409,7 +404,37 @@ export default function AdminPoll() {
             )}
           </div>
         </>
-      )}
+  ) : null
+
+  return (
+    <div className="acms-section">
+      <div className="acms-content-group">
+        <div className="acms-sect-header-row">
+          <div className="acms-content-group-label">Szavazások</div>
+          <button className="acms-btn-primary" onClick={() => openPoll('new')}>+ Új szavazás</button>
+        </div>
+        {selId === 'new' && <div className="poll-acc-body">{editorBlock}</div>}
+
+        {loadingList ? <div className="admin-empty">Betöltés…</div> : (
+          polls.length === 0 ? <div className="admin-empty">Még nincs szavazás.</div> : (
+            <div className="poll-acc-list">
+              {polls.map(p => (
+                <div key={p.id} className="poll-acc-item">
+                  <div className="poll-acc-head" onClick={() => (selId === p.id ? closeEditor() : openPoll(p.id))}>
+                    <span className="poll-acc-name">
+                      {p.title_hu || '(cím nélkül)'}
+                      {p.active && <span className="poll-acc-badge">aktív</span>}
+                      {p.status === 'closed' && <span className="poll-acc-badge poll-acc-badge--closed">lezárt</span>}
+                    </span>
+                    <span className={`poll-acc-tri ${selId === p.id ? 'open' : ''}`} aria-hidden="true">▸</span>
+                  </div>
+                  {selId === p.id && <div className="poll-acc-body">{editorBlock}</div>}
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </div>
 
       {/* Statisztika / összehasonlítás – a Szavazás menü alján, mindig elérhető */}
       <AdminPollStats />
