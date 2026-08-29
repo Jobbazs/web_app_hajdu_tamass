@@ -1,89 +1,97 @@
 import { useEffect, useState } from 'react'
 import { useLang } from '../LangContext'
-import { useSiteContent } from '../hooks'
+import { supabase } from '../supabaseClient'
 import '../Styles/ThankYou.css'
 
-// Promó/hirdető felugró ablak. Kinézetre a ThankYou popupot követi (ty-* CSS).
-//
-// Megjelenés:
-//  • "Első látogatás" mód  → csak a legelső főoldal-megnyitáskor (böngészőnként
-//    egyszer, verziónként; localStorage-ban jegyezve → cookieless).
-//  • "Aloldal" mód         → MINDEN alkalommal, amikor a látogató a beállított
-//    oldalra ÉRKEZIK (F5 vagy odanavigálás). Bezárás után csak az adott
-//    nézetre tűnik el; ha újra odanavigálnak, ismét feljön. (Nincs tartós jelzés.)
+// Több felugró ablak. Mindegyiknek saját elhelyezése (első látogatás / aloldalak).
+// Egy oldalon a legelső illeszkedő, engedélyezett popup jelenik meg (Kiemelt előre).
+// "első látogatás": böngészőnként egyszer (verziónként); "aloldal": minden odaérkezéskor.
 const PRIVATE_PREFIXES = ['/admin', '/confirm', '/cancel', '/termekismerteto', '/login']
+const X_STYLE = {
+  position: 'absolute', top: '0.5rem', right: '0.7rem', background: 'transparent',
+  border: 'none', color: 'inherit', fontSize: '1.7rem', lineHeight: 1, cursor: 'pointer',
+  opacity: 0.55, padding: '0.2rem 0.4rem',
+}
 
-function safeArr(s) { try { return JSON.parse(s || '[]') } catch { return [] } }
+function pageMatches(pop, path) {
+  if (pop.trigger === 'first_visit') return path === '/'
+  const pages = Array.isArray(pop.pages) ? pop.pages : []
+  return pages.some(pg => path === pg || path === pg + '/')
+}
 
 export default function SitePopup() {
   const { lang } = useLang()
-  const { content } = useSiteContent()
-  const [path, setPath] = useState(typeof window !== 'undefined' ? window.location.pathname : '/')
-  const [show, setShow]     = useState(false)
-  const [active, setActive] = useState(false)
+  const [popups, setPopups]       = useState([])
+  const [path, setPath]           = useState(typeof window !== 'undefined' ? window.location.pathname : '/')
+  const [dismissed, setDismissed] = useState({})
+  const [active, setActive]       = useState(false)
 
-  // Útvonalváltás követése (back/forward is) – hogy aloldal-módban újra feljöhessen
+  useEffect(() => {
+    supabase.from('site_popups').select('*').eq('enabled', true)
+      .order('featured', { ascending: false }).order('sort_order', { ascending: true })
+      .then(({ data }) => setPopups(data || []))
+  }, [])
+
   useEffect(() => {
     const handler = () => setPath(window.location.pathname)
     window.addEventListener('popstate', handler)
     return () => window.removeEventListener('popstate', handler)
   }, [])
 
-  const enabled = content.promo_popup_enabled === 'true'
-  const trigger = content.promo_popup_trigger || 'first_visit'
-  const version = content.promo_popup_ver || '0'
-  const fvKey   = `promo_popup_fv_seen_${version}`   // CSAK az "első látogatás" módhoz
+  // Új oldalra érkezéskor az "erre a nézetre elrejtve" állapot törlődik → az
+  // aloldal-popup ismét megjelenhet (az első-látogatás popupot a tartós jel védi).
+  useEffect(() => { setDismissed({}) }, [path])
 
-  useEffect(() => {
-    if (!enabled) { setShow(false); return }
-    if (PRIVATE_PREFIXES.some(p => path.startsWith(p))) { setShow(false); return }
-
-    let match = false
-    if (trigger === 'first_visit') {
-      let seen = false
-      try { seen = localStorage.getItem(fvKey) === '1' } catch { /* privát mód */ }
-      match = path === '/' && !seen
-    } else if (trigger === 'subpage') {
-      const pages = safeArr(content.promo_popup_pages)
-      match = pages.some(pg => path === pg || path === pg + '/')   // minden odaérkezéskor
+  // Melyik popup jelenjen meg?
+  let current = null
+  if (!PRIVATE_PREFIXES.some(p => path.startsWith(p))) {
+    for (const pop of popups) {
+      if (dismissed[pop.id]) continue
+      if (!pageMatches(pop, path)) continue
+      if (pop.trigger === 'first_visit') {
+        let seen = false
+        try { seen = localStorage.getItem(`popup_fv_${pop.id}_${pop.version}`) === '1' } catch { /* privát mód */ }
+        if (seen) continue
+      }
+      current = pop
+      break
     }
-    setShow(match)
-  }, [enabled, trigger, version, path, content.promo_popup_pages, fvKey])
-
-  useEffect(() => {
-    if (show) { const t = setTimeout(() => setActive(true), 20); return () => clearTimeout(t) }
-    setActive(false)
-  }, [show])
-
-  useEffect(() => {
-    if (!show) return
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [show])
-
-  const close = () => {
-    // Első látogatás módban jegyezzük, hogy látta (többé ne jöjjön).
-    // Aloldal módban NEM jegyezzük → a következő odaérkezéskor ismét feljön.
-    if (trigger === 'first_visit') {
-      try { localStorage.setItem(fvKey, '1') } catch { /* privát mód */ }
-    }
-    setActive(false)
-    setTimeout(() => setShow(false), 250)
   }
 
-  if (!show) return null
+  useEffect(() => {
+    if (current) { const t = setTimeout(() => setActive(true), 20); return () => clearTimeout(t) }
+    setActive(false)
+  }, [current?.id])
 
-  const g = (base) => content[`${base}_${lang}`] || content[`${base}_hu`] || ''
-  const eyebrow  = g('promo_popup_eyebrow')
-  const title1   = g('promo_popup_title1')
-  const title2   = g('promo_popup_title2')
-  const body     = g('promo_popup_body')
-  const btnLabel = g('promo_popup_button')
-  const btnLink  = content.promo_popup_link || ''
+  useEffect(() => {
+    if (!current) return
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [current?.id])
+
+  if (!current) return null
+
+  const close = () => {
+    if (current.trigger === 'first_visit') {
+      try { localStorage.setItem(`popup_fv_${current.id}_${current.version}`, '1') } catch { /* privát mód */ }
+    }
+    setActive(false)
+    const id = current.id
+    setTimeout(() => setDismissed(d => ({ ...d, [id]: true })), 250)
+  }
+
+  const g = (base) => current[`${base}_${lang}`] || current[`${base}_hu`] || ''
+  const eyebrow  = g('eyebrow')
+  const title1   = g('title1')
+  const title2   = g('title2')
+  const body     = g('body')
+  const btnLabel = g('button')
+  const btnLink  = current.link || ''
 
   return (
     <div className={`ty-backdrop ${active ? 'ty-active' : ''}`} onClick={close} role="dialog" aria-modal="true">
-      <div className={`ty-box ${active ? 'ty-box-active' : ''}`} onClick={e => e.stopPropagation()}>
+      <div className={`ty-box ${active ? 'ty-box-active' : ''}`} onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
+        <button onClick={close} aria-label={lang === 'hu' ? 'Bezárás' : 'Close'} style={X_STYLE}>×</button>
         <div className="ty-corner ty-corner--tl" />
         <div className="ty-corner ty-corner--tr" />
         <div className="ty-corner ty-corner--bl" />
@@ -98,9 +106,6 @@ export default function SitePopup() {
                style={{ textDecoration: 'none', display: 'inline-block' }}>{btnLabel}</a>
           : <button className="ty-close-btn" onClick={close}>{btnLabel}</button>
         )}
-        <button className="ty-dismiss" onClick={close} aria-label="Bezárás">
-          {lang === 'hu' ? 'Bezárás' : 'Close'}
-        </button>
       </div>
     </div>
   )

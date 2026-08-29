@@ -1,152 +1,196 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
-import { useSiteContent, useCategories } from '../../hooks'
+import { useCategories } from '../../hooks'
+import '../../Styles/Poll.css'
 
-// Promó felugró ablak szerkesztője. Tartalom (mint a ThankYou popup) + ELHELYEZÉS:
-// első látogatáskor a főoldalon, vagy kiválasztott publikus aloldalakon.
-// A tartalmat a site_content promo_popup_* kulcsaiban tárolja.
-function safeArr(s) { try { return JSON.parse(s || '[]') } catch { return [] } }
-
+// Több felugró ablak kezelése lenyíló (táblázatos) listában. Mindegyik: név +
+// Kiemelt, elhelyezés (első látogatás / aloldalak), tartalom HU/EN. Mentésre becsukódik.
+const emptyPopup = () => ({
+  id: null, name: '', enabled: false, featured: false,
+  trigger: 'first_visit', pages: [],
+  eyebrow_hu: '', eyebrow_en: '', title1_hu: '', title1_en: '',
+  title2_hu: '', title2_en: '', body_hu: '', body_en: '',
+  button_hu: '', button_en: '', link: '',
+})
 const FIELDS = ['eyebrow', 'title1', 'title2', 'body', 'button']
 
 export default function AdminPromoPopup() {
-  const { content, refetch } = useSiteContent()
   const { categories } = useCategories()
-  const [cfg, setCfg]       = useState(null)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved]   = useState(false)
+  const [popups, setPopups]   = useState([])
+  const [loadingList, setLL]  = useState(true)
+  const [selId, setSelId]     = useState(null)
+  const [pop, setPop]         = useState(null)
+  const [saving, setSaving]   = useState(false)
+  const [confirmDel, setConfirmDel] = useState(false)
 
-  useEffect(() => {
-    if (cfg !== null) return
-    const base = {
-      enabled: content.promo_popup_enabled === 'true',
-      trigger: content.promo_popup_trigger || 'first_visit',
-      pages:   safeArr(content.promo_popup_pages),
-      link:    content.promo_popup_link || '',
-    }
-    for (const k of FIELDS) {
-      base[`${k}_hu`] = content[`promo_popup_${k}_hu`] || ''
-      base[`${k}_en`] = content[`promo_popup_${k}_en`] || ''
-    }
-    setCfg(base)
-  }, [content, cfg])
+  const loadList = async () => {
+    const { data } = await supabase.from('site_popups')
+      .select('id, name, enabled, featured')
+      .order('sort_order', { ascending: true }).order('created_at', { ascending: true })
+    setPopups(data || []); setLL(false)
+  }
+  useEffect(() => { loadList() }, [])
 
-  if (!cfg) return null
+  const openPopup = async (id) => {
+    setConfirmDel(false)
+    if (id === 'new') { setSelId('new'); setPop(emptyPopup()); return }
+    const { data: p } = await supabase.from('site_popups').select('*').eq('id', id).single()
+    if (!p) return
+    setSelId(id); setPop({ ...p, pages: Array.isArray(p.pages) ? p.pages : [] })
+  }
+  const closeEditor = () => { setSelId(null); setPop(null); setConfirmDel(false) }
+  const setField = (k, v) => setPop(p => ({ ...p, [k]: v }))
+  const togglePage = (path) => setPop(p => ({
+    ...p, pages: p.pages.includes(path) ? p.pages.filter(x => x !== path) : [...p.pages, path],
+  }))
 
-  // Csak PUBLIKUS, főoldalról elérhető aloldalak (termékismertető/admin kizárva)
   const publicPages = [
-    { path: '/',           label: 'Főoldal' },
-    { path: '/portfolio',  label: 'Portfólió áttekintő' },
+    { path: '/', label: 'Főoldal' },
+    { path: '/portfolio', label: 'Portfólió áttekintő' },
     ...categories.map(c => ({ path: `/portfolio/${c.slug}`, label: `Portfólió – ${c.label_hu || c.slug}` })),
     { path: '/adatkezeles', label: 'Adatkezelési tájékoztató' },
-    { path: '/impresszum',  label: 'Impresszum' },
+    { path: '/impresszum', label: 'Impresszum' },
   ]
 
-  const set = (k, v) => { setCfg(p => ({ ...p, [k]: v })); setSaved(false) }
-  const togglePage = (path) => {
-    setCfg(p => ({ ...p, pages: p.pages.includes(path) ? p.pages.filter(x => x !== path) : [...p.pages, path] }))
-    setSaved(false)
-  }
-
   const save = async () => {
-    setSaving(true); setSaved(false)
-    const rows = [
-      { key: 'promo_popup_enabled', value: cfg.enabled ? 'true' : 'false' },
-      { key: 'promo_popup_trigger', value: cfg.trigger },
-      { key: 'promo_popup_pages',   value: JSON.stringify(cfg.pages) },
-      { key: 'promo_popup_link',    value: cfg.link || '' },
-      { key: 'promo_popup_ver',     value: String(Date.now()) },  // verzió-bump → mindenki újra látja
-    ]
-    for (const k of FIELDS) {
-      rows.push({ key: `promo_popup_${k}_hu`, value: cfg[`${k}_hu`] || '' })
-      rows.push({ key: `promo_popup_${k}_en`, value: cfg[`${k}_en`] || '' })
+    setSaving(true)
+    const payload = {
+      name: pop.name, enabled: pop.enabled, featured: pop.featured,
+      trigger: pop.trigger, pages: pop.pages, link: pop.link, version: Date.now(),
     }
-    const { error } = await supabase.from('site_content').upsert(rows, { onConflict: 'key' })
+    for (const k of FIELDS) { payload[`${k}_hu`] = pop[`${k}_hu`] || ''; payload[`${k}_en`] = pop[`${k}_en`] || '' }
+    let err
+    if (pop.id) { const r = await supabase.from('site_popups').update(payload).eq('id', pop.id); err = r.error }
+    else { const r = await supabase.from('site_popups').insert(payload).select('id').single(); err = r.error }
     setSaving(false)
-    if (!error) { setSaved(true); refetch() }
+    if (!err) { await loadList(); closeEditor() }   // mentésre becsukódik
   }
 
-  return (
-    <div className="acms-section">
-      {/* Engedélyezés + elhelyezés */}
-      <div className="acms-content-group">
-        <div className="acms-content-group-label">Felugró ablak – beállítás</div>
+  const deletePopup = async () => {
+    if (!pop.id) { closeEditor(); return }
+    await supabase.from('site_popups').delete().eq('id', pop.id)
+    await loadList(); closeEditor()
+  }
 
-        <label className="acms-switch-row" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
-          <input type="checkbox" checked={cfg.enabled} onChange={e => set('enabled', e.target.checked)} />
-          <span className="acms-switch-label">Felugró ablak bekapcsolva</span>
-        </label>
-
-        <div className="acms-form-group">
-          <label>Mikor jelenjen meg?</label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <input type="radio" name="promo-trigger" checked={cfg.trigger === 'first_visit'}
-                onChange={() => set('trigger', 'first_visit')} />
-              <span>Az oldal első megnyitásakor (főoldal)</span>
-            </label>
-            <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <input type="radio" name="promo-trigger" checked={cfg.trigger === 'subpage'}
-                onChange={() => set('trigger', 'subpage')} />
-              <span>Kiválasztott aloldal(ak) megnyitásakor</span>
-            </label>
-          </div>
-        </div>
-
-        {cfg.trigger === 'subpage' && (
-          <div className="acms-form-group">
-            <label>Mely aloldalakon jelenjen meg?</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              {publicPages.map(pg => (
-                <label key={pg.path} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <input type="checkbox" checked={cfg.pages.includes(pg.path)} onChange={() => togglePage(pg.path)} />
-                  <span>{pg.label} <span style={{ opacity: 0.5 }}>({pg.path})</span></span>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="acms-form-group">
-          <label>Gomb linkje (opcionális – ha üres, a gomb csak bezár)</label>
-          <input type="text" className="acms-input" value={cfg.link}
-            onChange={e => set('link', e.target.value)} placeholder="https://... vagy /portfolio" />
+  const editorBlock = pop ? (
+    <div className="poll-acc-body">
+      <div className="acms-form-group">
+        <label>Felugró ablak neve (admin)</label>
+        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <input className="acms-input" style={{ flex: 1, minWidth: 180 }} value={pop.name}
+            onChange={e => setField('name', e.target.value)} placeholder="Pl. Nyári akció" />
+          <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', whiteSpace: 'nowrap' }}>
+            <input type="checkbox" checked={pop.featured} onChange={e => setField('featured', e.target.checked)} />
+            <span className="acms-switch-label">Kiemelt</span>
+          </label>
         </div>
       </div>
 
-      {/* Tartalom – HU/EN, popup-előnézet */}
-      <div className="acms-content-group">
-        <div className="acms-content-group-label">Felugró ablak – szöveg</div>
-        {[{ lng: 'Magyar', sfx: 'hu' }, { lng: 'English', sfx: 'en' }].map(({ lng, sfx }) => (
-          <div key={sfx} className="acms-popup-editor">
-            <div className="acms-popup-lang">{lng}</div>
-            <div className="acms-popup-box">
-              <input className="acms-popup-eyebrow" value={cfg[`eyebrow_${sfx}`]}
-                onChange={e => set(`eyebrow_${sfx}`, e.target.value)} placeholder="kis felirat a cím fölött" />
-              <input className="acms-popup-title" value={cfg[`title1_${sfx}`]}
-                onChange={e => set(`title1_${sfx}`, e.target.value)} placeholder="Cím – 1. sor" />
-              <input className="acms-popup-title acms-popup-title--accent" value={cfg[`title2_${sfx}`]}
-                onChange={e => set(`title2_${sfx}`, e.target.value)} placeholder="Cím – 2. sor (kiemelt)" />
-              <div className="acms-popup-field">
-                <span className="acms-popup-flabel">Szöveg</span>
-                <textarea className="acms-popup-body" rows={2} value={cfg[`body_${sfx}`]}
-                  onChange={e => set(`body_${sfx}`, e.target.value)} />
-              </div>
-              <input className="acms-popup-btn" value={cfg[`button_${sfx}`]}
-                onChange={e => set(`button_${sfx}`, e.target.value)} placeholder="Gomb felirat" />
-            </div>
-          </div>
-        ))}
+      <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
+        <input type="checkbox" checked={pop.enabled} onChange={e => setField('enabled', e.target.checked)} />
+        <span className="acms-switch-label">Bekapcsolva (megjelenik a látogatóknak)</span>
+      </label>
 
-        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button className="acms-btn-primary" onClick={save} disabled={saving}>
-            {saving ? 'Mentés...' : 'Mentés'}
-          </button>
-          {saved && <span className="acms-saved-badge">✓ Mentve</span>}
+      <div className="acms-form-group">
+        <label>Mikor jelenjen meg?</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input type="radio" name={`trg-${pop.id || 'new'}`} checked={pop.trigger === 'first_visit'} onChange={() => setField('trigger', 'first_visit')} />
+            <span>Az oldal első megnyitásakor (főoldal)</span>
+          </label>
+          <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input type="radio" name={`trg-${pop.id || 'new'}`} checked={pop.trigger === 'subpage'} onChange={() => setField('trigger', 'subpage')} />
+            <span>Kiválasztott aloldal(ak) megnyitásakor</span>
+          </label>
         </div>
-        <div className="acms-hint" style={{ marginTop: '0.8rem' }}>
-          Mentés után a felugró ablak <strong>újra megjelenik</strong> minden látogatónak (akkor is, ha korábban már bezárták).
+      </div>
+      {pop.trigger === 'subpage' && (
+        <div className="acms-form-group">
+          <label>Mely aloldalakon?</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            {publicPages.map(pg => (
+              <label key={pg.path} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input type="checkbox" checked={pop.pages.includes(pg.path)} onChange={() => togglePage(pg.path)} />
+                <span>{pg.label} <span style={{ opacity: 0.5 }}>({pg.path})</span></span>
+              </label>
+            ))}
+          </div>
         </div>
+      )}
+
+      <div className="acms-form-group">
+        <label>Gomb linkje (opcionális – ha üres, a gomb csak bezár)</label>
+        <input className="acms-input" value={pop.link} onChange={e => setField('link', e.target.value)} placeholder="https://... vagy /portfolio" />
+      </div>
+
+      {[{ lng: 'Magyar', s: 'hu' }, { lng: 'English', s: 'en' }].map(({ lng, s }) => (
+        <div key={s} className="acms-popup-editor">
+          <div className="acms-popup-lang">{lng}</div>
+          <div className="acms-popup-box">
+            <input className="acms-popup-eyebrow" value={pop[`eyebrow_${s}`]} onChange={e => setField(`eyebrow_${s}`, e.target.value)} placeholder="kis felirat a cím fölött" />
+            <input className="acms-popup-title" value={pop[`title1_${s}`]} onChange={e => setField(`title1_${s}`, e.target.value)} placeholder="Cím – 1. sor" />
+            <input className="acms-popup-title acms-popup-title--accent" value={pop[`title2_${s}`]} onChange={e => setField(`title2_${s}`, e.target.value)} placeholder="Cím – 2. sor (kiemelt)" />
+            <div className="acms-popup-field">
+              <span className="acms-popup-flabel">Szöveg</span>
+              <textarea className="acms-popup-body" rows={2} value={pop[`body_${s}`]} onChange={e => setField(`body_${s}`, e.target.value)} />
+            </div>
+            <input className="acms-popup-btn" value={pop[`button_${s}`]} onChange={e => setField(`button_${s}`, e.target.value)} placeholder="Gomb felirat" />
+          </div>
+        </div>
+      ))}
+
+      <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <button className="acms-btn-primary" onClick={save} disabled={saving}>{saving ? 'Mentés…' : 'Mentés'}</button>
+        {pop.id && <button className="acms-btn-danger" onClick={() => setConfirmDel(true)}>Törlés</button>}
+        <button className="acms-btn-sm" onClick={closeEditor}>Mégse</button>
+      </div>
+      <div className="acms-hint" style={{ marginTop: '0.8rem' }}>
+        Megjelenik, ha az adott oldalra navigálsz, vagy frissíted (F5).
+      </div>
+
+      {confirmDel && (
+        <div style={{ marginTop: '1rem', border: '1px solid var(--rust-light)', borderRadius: 4, padding: '1rem' }}>
+          <p style={{ marginTop: 0 }}>Biztosan törlöd ezt a felugró ablakot?</p>
+          <div style={{ display: 'flex', gap: '0.6rem' }}>
+            <button className="acms-btn-danger" onClick={deletePopup}>Törlés véglegesen</button>
+            <button className="acms-btn-sm" onClick={() => setConfirmDel(false)}>Mégse</button>
+          </div>
+        </div>
+      )}
+    </div>
+  ) : null
+
+  return (
+    <div className="acms-section">
+      <div className="acms-content-group">
+        <div className="acms-sect-header-row">
+          <div className="acms-content-group-label">Felugró ablakok</div>
+          <button className="acms-btn-primary" onClick={() => openPopup('new')}>+ Új felugró ablak</button>
+        </div>
+
+        {selId === 'new' && editorBlock}
+
+        {loadingList ? <div className="admin-empty">Betöltés…</div> : (
+          popups.length === 0 ? <div className="admin-empty">Még nincs felugró ablak.</div> : (
+            <div className="poll-acc-list">
+              {popups.map(p => (
+                <div key={p.id} className="poll-acc-item">
+                  <div className="poll-acc-head" onClick={() => (selId === p.id ? closeEditor() : openPopup(p.id))}>
+                    <span className="poll-acc-name">
+                      {p.name || '(név nélkül)'}
+                      {p.enabled
+                        ? <span className="poll-acc-badge">aktív</span>
+                        : <span className="poll-acc-badge poll-acc-badge--closed">rejtett</span>}
+                      {p.featured && <span className="poll-acc-badge" style={{ background: '#E0A800', color: '#1a1510' }}>kiemelt</span>}
+                    </span>
+                    <span className={`poll-acc-tri ${selId === p.id ? 'open' : ''}`} aria-hidden="true">▸</span>
+                  </div>
+                  {selId === p.id && editorBlock}
+                </div>
+              ))}
+            </div>
+          )
+        )}
       </div>
     </div>
   )
