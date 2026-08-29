@@ -1,0 +1,179 @@
+.poll-section { padding: 4rem 1.5rem; }
+.poll-inner { max-width: 900px; margin: 0 auto; }
+.poll-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  letter-spacing: 0.02em;
+  margin: 0 0 1.5rem;
+  text-align: center;
+}
+.poll-viewtoggle {
+  display: inline-flex;
+  border: 1px solid var(--rust, #B5231E);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  width: fit-content;
+}
+.poll-viewtoggle button {
+  background: transparent;
+  color: inherit;
+  border: none;
+  padding: 0.45rem 1.1rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.poll-viewtoggle button.active { background: var(--rust, #B5231E); color: #fff; }
+
+.poll-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.poll-table { width: 100%; border-collapse: collapse; min-width: 320px; }
+.poll-table th, .poll-table td {
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+  white-space: nowrap;
+}
+.poll-table th {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.poll-vote-col { text-align: center; width: 1%; }
+.poll-vote { display: inline-flex; align-items: center; gap: 0.5rem; }
+.poll-vbtn {
+  background: transparent;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 4px;
+  color: inherit;
+  width: 34px; height: 34px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+}
+.poll-vbtn:hover { border-color: var(--rust, #B5231E); }
+.poll-vbtn.up   { background: #2e7d32; border-color: #2e7d32; color: #fff; }
+.poll-vbtn.down { background: var(--rust, #B5231E); border-color: var(--rust, #B5231E); color: #fff; }
+.poll-score {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  min-width: 60px;
+  text-align: center;
+  font-weight: 700;
+}
+.poll-closed {
+  text-align: center;
+  margin-top: 1rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* ── Látogatói javaslat (2. típus) ── */
+.poll-suggest {
+  margin-top: 1.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.25);
+}
+.poll-suggest-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 0.6rem;
+}
+.poll-suggest-fields { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.poll-suggest-input {
+  flex: 1;
+  min-width: 140px;
+  background: rgba(128, 128, 128, 0.08);
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 4px;
+  color: inherit;
+  padding: 0.5rem 0.7rem;
+  font-family: inherit;
+}
+.poll-suggest-input:focus { outline: none; border-color: var(--rust, #B5231E); }
+.poll-suggest-btn {
+  background: var(--rust, #B5231E);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1.2rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.poll-suggest-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.poll-suggest-msg { margin-top: 0.6rem; font-size: 0.82rem; opacity: 0.85; }
+
+/* ── Visszaszámláló ── */
+.poll-countdown {
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  margin: -0.5rem 0 1.3rem;
+  opacity: 0.9;
+}
+.poll-countdown strong {
+  color: var(--rust, #B5231E);
+  font-size: 1rem;
+  margin-left: 0.3rem;
+}
+
+/* ── Statisztika / összehasonlítás (CMS) ── */
+.poll-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+.poll-stats-card {
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 6px;
+  padding: 1rem;
+  min-width: 0;
+}
+.poll-stats-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.poll-stats-head span {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+}
+.poll-stats-x {
+  background: transparent;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 4px;
+  color: inherit;
+  width: 28px; height: 28px;
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.poll-stats-x:hover { border-color: var(--rust, #B5231E); color: var(--rust, #B5231E); }
+.poll-stats-toggle { margin: 0 0 0.8rem; }
+.poll-stats-card .poll-table th,
+.poll-stats-card .poll-table td { padding: 0.45rem 0.6rem; }
+
+/* Mobil: állítva 1 tábla (többi alatta), fektetve 2 tábla */
+@media (max-width: 820px) and (orientation: portrait) {
+  .poll-stats-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 950px) and (orientation: landscape) {
+  .poll-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

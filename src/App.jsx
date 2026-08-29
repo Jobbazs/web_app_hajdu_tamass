@@ -13,6 +13,8 @@ import Footer         from './components/Footer'
 import Booking        from './components/Booking'
 import PortfolioHub   from './components/PortfolioHub'
 import CategoryPage   from './components/CategoryPage'
+import Poll           from './components/Poll'
+import SitePopup      from './components/SitePopup'
 
 import './Styles/global.css'
 
@@ -20,12 +22,30 @@ import './Styles/global.css'
 // A legnagyobb nyereség: az admin (8 panel + @dnd-kit) így NEM része a
 // főoldali csomagnak. A publikus aloldalak (Hub, CategoryPage) szándékosan
 // eager-ek, mert prerenderelt tartalmuk van – ott a lazy villanást okozna.
-const Admin           = lazy(() => import('./components/Admin'))
-const Login           = lazy(() => import('./components/Login'))
-const Confirm         = lazy(() => import('./components/Confirm'))
-const Termekismerteto = lazy(() => import('./components/Termekismerteto'))
-const Adatkezeles     = lazy(() => import('./components/Adatkezeles'))
-const Impresszum      = lazy(() => import('./components/Impresszum'))
+// Ha egy dinamikus import elbukik (általában ELAVULT CHUNK egy új deploy után),
+// egyszer újratöltjük az oldalt – így a böngésző a friss index.html-t és az új
+// chunk-neveket kapja. Időalapú védelem a végtelen újratöltés ellen (10 mp).
+function lazyWithReload(factory) {
+  return lazy(() =>
+    factory().catch((err) => {
+      const now = Date.now()
+      const last = Number(sessionStorage.getItem('chunkReloadAt') || 0)
+      if (now - last > 10000) {
+        sessionStorage.setItem('chunkReloadAt', String(now))
+        window.location.reload()
+        return new Promise(() => {})
+      }
+      throw err
+    })
+  )
+}
+
+const Admin           = lazyWithReload(() => import('./components/Admin'))
+const Login           = lazyWithReload(() => import('./components/Login'))
+const Confirm         = lazyWithReload(() => import('./components/Confirm'))
+const Termekismerteto = lazyWithReload(() => import('./components/Termekismerteto'))
+const Adatkezeles     = lazyWithReload(() => import('./components/Adatkezeles'))
+const Impresszum      = lazyWithReload(() => import('./components/Impresszum'))
 
 // Szekció komponens térkép
 const SECTION_COMPONENTS = {
@@ -35,6 +55,7 @@ const SECTION_COMPONENTS = {
   booking:   <Booking />,
   custom:    <CustomSections />,
   contact:   <Contact />,
+  poll:      <Poll />,
 }
 
 // Nem publikus termékismertető aloldal útvonala.
@@ -49,6 +70,7 @@ const DEFAULT_ORDER = [
   { key: 'services',  visible: true },
   { key: 'booking',   visible: true },
   { key: 'custom',    visible: true },
+  { key: 'poll',      visible: true },
   { key: 'contact',   visible: true },
 ]
 
@@ -154,13 +176,21 @@ function AppInner() {
       <Navbar />
       <main>
         <Hero />
-        {sectOrder
-          .filter(s => s.visible)
-          .map(s => (
+        {(() => {
+          let list = sectOrder.filter(s => s.visible)
+          // Aktív szavazásnál a Poll szekció akkor is megjelenik, ha a mentett
+          // sorrend még nem tartalmazza (a Poll magától null, ha nincs aktív szavazás).
+          if (!list.some(s => s.key === 'poll')) {
+            const ci = list.findIndex(s => s.key === 'contact')
+            const entry = { key: 'poll', visible: true }
+            list = ci >= 0 ? [...list.slice(0, ci), entry, ...list.slice(ci)] : [...list, entry]
+          }
+          return list.map(s => (
             <div key={s.key}>
               {SECTION_COMPONENTS[s.key] || null}
             </div>
-          ))}
+          ))
+        })()}
       </main>
       <Footer />
     </>
@@ -171,6 +201,7 @@ export default function App() {
   return (
     <LangProvider>
       <AppInner />
+      <SitePopup />
     </LangProvider>
   )
 }
