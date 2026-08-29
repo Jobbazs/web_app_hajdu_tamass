@@ -181,7 +181,7 @@ function AppInner() {
           let list = sectOrder.filter(s => s.visible)
           // Aktív szavazásnál a Poll szekció akkor is megjelenik, ha a mentett
           // sorrend még nem tartalmazza (a Poll magától null, ha nincs aktív szavazás).
-          if (!list.some(s => s.key === 'poll')) {
+          if (!sectOrder.some(s => s.key === 'poll')) {
             const ci = list.findIndex(s => s.key === 'contact')
             const entry = { key: 'poll', visible: true }
             list = ci >= 0 ? [...list.slice(0, ci), entry, ...list.slice(ci)] : [...list, entry]

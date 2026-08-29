@@ -361,6 +361,7 @@ export default function AdminContent({ view = 'sekciok' }) {
     services:  'Szolgáltatások',
     booking:   'Időpontfoglalás',
     custom:    'Egyedi szekciók',
+    poll:      'Szavazás',
     contact:   'Kapcsolat',
   }
 
@@ -376,16 +377,30 @@ export default function AdminContent({ view = 'sekciok' }) {
   const [sectionOrder, setSectionOrder] = useState(null)   // null = betöltés alatt
   const [sectSavingO,  setSectSavingO]  = useState(false)
   const [dragIdx,      setDragIdx]      = useState(null)
+  const [hasActivePoll, setHasActivePoll] = useState(false)
+
+  // Van-e aktív szavazás? (ettől függ, hogy a „Szavazás" megjelenik-e a sorrendben)
+  useEffect(() => {
+    supabase.from('polls').select('id').eq('active', true).limit(1)
+      .then(({ data }) => setHasActivePoll((data || []).length > 0))
+  }, [])
 
   // Betöltés site_content-ből
   useEffect(() => {
     const raw = content['sections_order']
-    if (raw) {
-      try { setSectionOrder(JSON.parse(raw)) } catch { setSectionOrder(DEFAULT_SECTIONS) }
-    } else {
-      setSectionOrder(DEFAULT_SECTIONS)
+    let base = DEFAULT_SECTIONS
+    if (raw) { try { base = JSON.parse(raw) } catch { base = DEFAULT_SECTIONS } }
+    // Aktív szavazásnál a „Szavazás" bekerül a listába (a Kapcsolat elé), ha még
+    // nincs benne; ha nincs aktív szavazás, nem mutatjuk a sorrend-szerkesztőben.
+    if (hasActivePoll && !base.some(s => s.key === 'poll')) {
+      const ci = base.findIndex(s => s.key === 'contact')
+      const entry = { key: 'poll', visible: true }
+      base = ci >= 0 ? [...base.slice(0, ci), entry, ...base.slice(ci)] : [...base, entry]
+    } else if (!hasActivePoll) {
+      base = base.filter(s => s.key !== 'poll')
     }
-  }, [content])
+    setSectionOrder(base)
+  }, [content, hasActivePoll])
 
   const saveSectionsOrder = async (newOrder) => {
     setSectSavingO(true)
