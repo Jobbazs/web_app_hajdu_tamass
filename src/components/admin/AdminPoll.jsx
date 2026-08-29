@@ -10,7 +10,7 @@ const emptyPoll = () => ({
   id: null, title_hu: '', title_en: '',
   columns: [{ name_hu: '', name_en: '' }],
   has_votes: true, type: 'fixed', status: 'open', active: false,
-  closes_at: '', default_view: 'percent', test_mode: false, vote_style: 'updown', live_sort: true, vote_style: 'updown', live_sort: true,
+  closes_at: '', starts_at: '', default_view: 'percent', test_mode: false, vote_style: 'updown', live_sort: true, warn_before_min: 0,
 })
 
 function toLocalInput(iso) {
@@ -66,7 +66,7 @@ export default function AdminPoll() {
     setPoll({
       id: p.id, title_hu: p.title_hu, title_en: p.title_en, columns: cols,
       has_votes: p.has_votes, type: p.type, status: p.status, active: p.active,
-      closes_at: toLocalInput(p.closes_at), default_view: p.default_view, test_mode: p.test_mode, vote_style: p.vote_style || 'updown', live_sort: p.live_sort !== false,
+      closes_at: toLocalInput(p.closes_at), starts_at: toLocalInput(p.starts_at), default_view: p.default_view, test_mode: p.test_mode, vote_style: p.vote_style || 'updown', live_sort: p.live_sort !== false, warn_before_min: p.warn_before_min || 0,
     })
     const all = opts || []
     setRows(all.filter(o => o.approved).map(o => ({ id: o.id, cells: normalizeCells(o.cells, cols), up: o.up_votes, down: o.down_votes })))
@@ -144,7 +144,9 @@ export default function AdminPoll() {
       title_hu: poll.title_hu, title_en: poll.title_en, columns: poll.columns,
       has_votes: poll.has_votes, type: poll.type, status: poll.status, active: poll.active,
       closes_at: poll.closes_at ? new Date(poll.closes_at).toISOString() : null,
+      starts_at: poll.starts_at ? new Date(poll.starts_at).toISOString() : null,
       default_view: poll.default_view, test_mode: poll.test_mode, vote_style: poll.vote_style, live_sort: poll.live_sort,
+      warn_before_min: Number(poll.warn_before_min) || 0,
     }
     let pollId = poll.id
     if (pollId) {
@@ -276,9 +278,22 @@ export default function AdminPoll() {
             </div>
 
             <div className="acms-form-group">
+              <label>Kezdés időpontja (opcionális – ekkortól jelenik meg a szavazás)</label>
+              <input type="datetime-local" className="acms-input" value={poll.starts_at}
+                onChange={e => setField('starts_at', e.target.value)} style={{ maxWidth: 320 }} />
+            </div>
+
+            <div className="acms-form-group">
               <label>Lezárás időpontja (opcionális – ekkor zárul a szavazás)</label>
               <input type="datetime-local" className="acms-input" value={poll.closes_at}
                 onChange={e => setField('closes_at', e.target.value)} style={{ maxWidth: 320 }} />
+            </div>
+
+            <div className="acms-form-group">
+              <label>Figyelmeztető popup a lezárás előtt (perc, 0 = nincs)</label>
+              <input type="number" min="0" className="acms-input" value={poll.warn_before_min}
+                onChange={e => setField('warn_before_min', e.target.value)} style={{ maxWidth: 200 }} />
+              <div className="acms-hint">Ennyi perccel a lezárás előtt egy figyelmeztető ablak jelenik meg (cím + top 3 + „Szavazok").</div>
             </div>
 
             <div className="acms-form-group">

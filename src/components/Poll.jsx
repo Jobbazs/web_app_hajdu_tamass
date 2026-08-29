@@ -72,13 +72,12 @@ export default function Poll() {
   // Élő visszaszámláló: másodpercenként frissül, és a lezárás pillanatában
   // (oldalújratöltés nélkül) átvált eredmény-nézetbe.
   useEffect(() => {
-    if (!poll?.closes_at || poll.status === 'closed') return
-    const closeMs = new Date(poll.closes_at).getTime()
+    if (poll?.status === 'closed') return
+    const startMs = poll?.starts_at ? new Date(poll.starts_at).getTime() : 0
+    const needTick = poll?.closes_at || (startMs && Date.now() < startMs)
+    if (!needTick) return
     setNow(Date.now())
-    const t = setInterval(() => {
-      setNow(Date.now())
-      if (Date.now() >= closeMs) clearInterval(t)
-    }, 1000)
+    const t = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(t)
   }, [poll?.closes_at, poll?.status])
 
@@ -101,6 +100,7 @@ export default function Poll() {
   }, [poll?.id])
 
   if (!poll) return null
+  if (poll.starts_at && new Date(poll.starts_at).getTime() > now) return null  // még nem indult
 
   const closed = poll.status === 'closed' || (poll.closes_at && new Date(poll.closes_at).getTime() <= now)
   const title = lang === 'hu' ? poll.title_hu : (poll.title_en || poll.title_hu)
@@ -150,7 +150,7 @@ export default function Poll() {
   }
 
   return (
-    <section className="poll-section">
+    <section id="szavazas" className="poll-section">
       <div className="poll-inner">
         {title && <h2 className="poll-title">{title}</h2>}
 

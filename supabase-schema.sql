@@ -1426,6 +1426,10 @@ create table if not exists public.polls (
   default_view text not null default 'percent'
                check (default_view in ('percent', 'count')),
   test_mode    boolean not null default false,
+  vote_style   text not null default 'updown',
+  live_sort    boolean not null default true,
+  starts_at    timestamptz,
+  warn_before_min int not null default 0,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
@@ -1433,6 +1437,10 @@ create table if not exists public.polls (
 -- ── Opciók (a tábla sorai) ──────────────────────────────────────────────────
 -- meglévő táblákhoz (korábbi séma-verzió) a később bevezetett oszlop:
 alter table public.polls add column if not exists test_mode boolean not null default false;
+alter table public.polls add column if not exists vote_style text not null default 'updown';
+alter table public.polls add column if not exists live_sort boolean not null default true;
+alter table public.polls add column if not exists starts_at timestamptz;
+alter table public.polls add column if not exists warn_before_min int not null default 0;
 
 create table if not exists public.poll_options (
   id          uuid primary key default gen_random_uuid(),
@@ -1619,10 +1627,41 @@ end $$;
 
 
 -- ============================================================================
--- SZAVAZÁS – szavazás-típus + lista-rendezés kapcsolók
--- A poll-schema.sql (vagy a konszolidált supabase-schema.sql) UTÁN. Idempotens.
+-- 18. FELUGRÓ ABLAKOK (több, egyenként elhelyezve) — site_popups
 -- ============================================================================
--- vote_style: 'simple' (egyszerű, csak felfelé) vagy 'updown' (fel/le)
-alter table public.polls add column if not exists vote_style text not null default 'updown';
--- live_sort: a publikus lista a szavazatok szerint frissüljön-e (élő rangsor)
-alter table public.polls add column if not exists live_sort boolean not null default true;
+-- Kiváltja a korábbi site_content promo_popup_* kulcsokat.
+
+create table if not exists public.site_popups (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null default '',          -- admin-oldali név (a listában)
+  enabled     boolean not null default false,    -- aktív / rejtett
+  featured    boolean not null default false,    -- Kiemelt
+  trigger     text not null default 'first_visit' check (trigger in ('first_visit', 'subpage')),
+  pages       jsonb not null default '[]'::jsonb, -- pl. ['/portfolio', '/impresszum']
+  eyebrow_hu  text not null default '', eyebrow_en text not null default '',
+  title1_hu   text not null default '', title1_en  text not null default '',
+  title2_hu   text not null default '', title2_en  text not null default '',
+  body_hu     text not null default '', body_en    text not null default '',
+  button_hu   text not null default '', button_en  text not null default '',
+  link        text not null default '',
+  version     bigint not null default 0,          -- verzió; mentéskor bumpol → újra megjelenik
+  sort_order  int not null default 0,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create or replace function public.touch_site_popups_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at := now(); return new; end $$;
+drop trigger if exists trg_site_popups_touch on public.site_popups;
+create trigger trg_site_popups_touch before update on public.site_popups
+  for each row execute function public.touch_site_popups_updated_at();
+
+alter table public.site_popups enable row level security;
+drop policy if exists "Public read site_popups" on public.site_popups;
+drop policy if exists "Admin all site_popups"   on public.site_popups;
+-- Publikus: csak az engedélyezett popupokat kéri le
+create policy "Public read site_popups" on public.site_popups for select using (enabled = true);
+create policy "Admin all site_popups" on public.site_popups for all
+  using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
+  with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');

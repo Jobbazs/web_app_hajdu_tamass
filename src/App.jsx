@@ -15,6 +15,7 @@ import PortfolioHub   from './components/PortfolioHub'
 import CategoryPage   from './components/CategoryPage'
 import Poll           from './components/Poll'
 import SitePopup      from './components/SitePopup'
+import PollWarning    from './components/PollWarning'
 
 import './Styles/global.css'
 
@@ -202,6 +203,7 @@ export default function App() {
     <LangProvider>
       <AppInner />
       <SitePopup />
+      <PollWarning />
     </LangProvider>
   )
 }
