@@ -22,35 +22,39 @@ const UGYFEL = [
   ['Foglalás megerősítése / lemondása', 'e-mailben, egyetlen linkkel'],
   ['Automatikus e-mail értesítések', 'a foglalásokról, kézzel nem kell semmit küldeni'],
   ['Kapcsolati űrlap', 'beépített spam-védelemmel — nem kapsz szemétüzeneteket'],
+  ['Szavazás / közvélemény-kutatás', 'a látogatók fel/le vagy egyszerű szavazással véleményezhetnek, élő eredménnyel — regisztráció nélkül'],
+  ['Eredmény lista vagy kördiagram nézetben', 'a látogató válthat: darabszám vagy százalék, lista vagy kördiagram, saját magyarázattal (legend)'],
+  ['Szavazás-extrák', 'a látogatók új opciót is javasolhatnak; visszaszámláló a lezárásig, és figyelmeztető ablak, ha hamarosan zárul'],
+  ['Felugró ablak (akciók, hírek)', 'testreszabható felugró üzenet, akár oldalanként külön — bejelentésekhez, akciókhoz'],
   ['Kétnyelvű felület', 'magyar / angol, egy kattintással váltható'],
   ['Zavaró sütibanner nélkül', 'a rendszer hozzájárulás-köteles süti nélkül működik — a látogatót semmi nem szakítja félbe'],
   ['Jogi oldalak készen', 'impresszum és adatkezelési tájékoztató, kitöltött szöveggel'],
 ]
 
 const ADMIN = [
-  ['Biztonságos admin bejelentkezés', ''],
-  ['Vezérlőpult', 'foglalási statisztikák, 12 havi grafikon, választható évvel'],
-  ['Szöveg- és tartalomszerkesztés', 'a feliratok, szekciók és a nyitókép szavai'],
-  ['Szekciók sorrendje', 'húzd-és-ejtsd (drag-and-drop) módon átrendezhető'],
-  ['Portfólió kezelés', 'képfeltöltés, kategóriákba rendezés, sorrend drag-and-droppal'],
-
-  ['Portfólió kezelés', 'képfeltöltés, kategóriákba rendezés, sorrend drag-and-droppal'],
-  ['Portfólió borítóképek', 'az áttekintő csempék borítóképe kategóriánként, egy lépés visszavonással'],
-  ['Kategóriák kezelése', 'kategóriák és a hozzájuk tartozó szekciók'],
-  ['Szolgáltatások kezelése', 'hozzáadás, szerkesztés, sorrend'],
-  ['Egyedi szekciók', 'szabadon bővíthető, saját tartalomblokkok'],
-  ['Foglaláskezelés', 'időpontok létrehozása, foglalások áttekintése, ügyfél-megbízhatóság követése'],
-  ['Üzenetek', 'a kapcsolati űrlapból érkező üzenetek egy helyen'],
-  ['Visszajelző ablak szövege', 'az űrlap elküldése után megjelenő köszönő üzenet — magyarul és angolul'],
-  ['Biztonságos képfeltöltés', 'közvetlenül a felhőbe'],
-  ['Hibajegy', 'hibabejelentés egy kattintással a felületről, automatikus értesítéssel és státuszkövetéssel (Bejelentve / Folyamatban / Lezárva)'],
-  ['Haladó beállítások', 'publikálás a keresők felé, árva képfájlok kilistázása és takarítása'],
-  ['Áttekinthető menürendszer', 'hat fő fül, a tartalomkezelés külön almenükkel — nem kell keresgélni'],
-  
   ['Biztonságos admin bejelentkezés', 'e-mailes belépés, jogkörhöz kötött hozzáféréssel'],
   ['Felhasználó- és jogkezelés', 'több kezelő, három jogkörrel: superadmin (teljes jog + jogosztás), admin (mindent szerkeszthet), demó (csak megtekintés)'],
   ['Demó mód', 'bemutatóhoz vagy betanításhoz: a felület végigjárható, de semmi nem menthető'],
   ['Vezérlőpult', 'foglalási statisztikák, 12 havi grafikon, no-show arány, időpont-kitöltöttség, választható évvel'],
+  ['Szöveg- és tartalomszerkesztés', 'a feliratok, szekciók és a nyitókép szavai, egy lépés visszavonással'],
+  ['Szekciók sorrendje', 'húzd-és-ejtsd (drag-and-drop) módon átrendezhető'],
+  ['Portfólió kezelés', 'képfeltöltés, kategóriákba rendezés, sorrend drag-and-droppal, tömeges elrejtés/megjelenítés'],
+  ['Portfólió borítóképek', 'az áttekintő csempék borítóképe kategóriánként, egy lépés visszavonással'],
+  ['Kategóriák kezelése', 'kategóriák és a hozzájuk tartozó szekciók'],
+  ['Szolgáltatások kezelése', 'hozzáadás, szerkesztés, sorrend'],
+  ['Egyedi szekciók', 'szabadon bővíthető, saját tartalomblokkok'],
+  ['Szavazás-kezelő', 'saját szavazások: kétnyelvű oszlopok és sorok, fel-le vagy egyszerű szavazás, választható élő rangsor'],
+  ['Szavazás időzítése', 'kezdési és lezárási időpont, opcionális figyelmeztető ablak a zárás előtt (cím + top 3 + „Szavazok")'],
+  ['Szavazás-javaslatok moderálása', 'a látogatói opció-javaslatok jóváhagyása, szerkesztése (fordítása) vagy elvetése'],
+  ['Szavazás-statisztika', 'korábbi szavazások eredménye, akár 4 összehasonlítása egyszerre, letöltés CSV / JSON / PNG formátumban'],
+  ['Felugró ablakok kezelése', 'több felugró ablak egyenként elhelyezve (főoldal vagy adott aloldalak), kétnyelvű tartalommal, „Kiemelt" jelöléssel'],
+  ['Foglaláskezelés', 'időpontok létrehozása, foglalások áttekintése, ügyfél-megbízhatóság követése'],
+  ['Üzenetek', 'a kapcsolati űrlapból érkező üzenetek egy helyen'],
+  ['Visszajelző ablak szövege', 'az űrlap elküldése után megjelenő köszönő üzenet — magyarul és angolul'],
+  ['Biztonságos képfeltöltés', 'közvetlenül a felhőbe, a nagy képek automatikus tömörítésével'],
+  ['Hibajegy', 'hibabejelentés egy kattintással a felületről, automatikus értesítéssel és státuszkövetéssel (Bejelentve / Folyamatban / Lezárva)'],
+  ['Haladó beállítások', 'publikálás a keresők felé, árva képfájlok kilistázása és takarítása'],
+  ['Áttekinthető menürendszer', 'hat fő fül, a tartalomkezelés külön almenükkel — nem kell keresgélni'],
 ]
 
 const HATTER = [
@@ -58,8 +62,9 @@ const HATTER = [
   ['Gyors betöltés', 'modern technológia, optimalizált képek'],
   ['Biztonság', 'védett admin felület, aláírt képfeltöltés, spam-szűrés az űrlapokon'],
   ['Megbízható e-mail kézbesítés', 'a rendszer levelei nem a spam mappában landolnak'],
-  ['Automatizmus', 'a várólista lejáratát a rendszer magától kezeli'],
-
+  ['Automatizmus', 'a várólista lejáratát és a szavazás-lezárásokat a rendszer magától kezeli'],
+  ['Élő frissülés (realtime)', 'a szavazatok azonnal frissülnek minden néző képernyőjén, oldalújratöltés nélkül'],
+  ['Sütimentes szavazás', 'a szavazás fiók és süti nélkül működik, névtelen azonosítóval — a GDPR-barát felépítés része'],
   ['Kétnyelvűség beépítve', 'a rendszer része, nem utólagos ráaggatás'],
   ['Sütimentes, GDPR-barát felépítés', 'nincs hozzájárulás-köteles süti, a látogatottság-mérés névtelen'],
   ['Adatbázis-szintű jogosultságkezelés', 'a jogkörök nem csak a felületen érvényesülnek, hanem az adatbázisban is'],
@@ -69,10 +74,10 @@ const HATTER = [
 const EGYEDI = [
   ['Teljesen a tiéd', 'nincs platform-fogság, nincs kényszerű havidíj egy bérelt rendszerre'],
   ['Bármi testreszabható', 'a dizájn és a funkciók a te igényeidre szabva'],
-
   ['Bővíthető', 'ahogy nő a vállalkozásod, úgy nőhet vele az oldal is'],
   ['Arculatváltás egy lépésben', 'a színvilág és a betűtípus központi beállításból cserélhető'],
-  ['Csapatban is használható', 'a munkatársnak külön belépés adható, korlátozott jogkörrel'],]
+  ['Csapatban is használható', 'a munkatársnak külön belépés adható, korlátozott jogkörrel'],
+]
 
 function FeatureGrid({ items }) {
   return (
@@ -149,17 +154,16 @@ export default function Termekismerteto() {
           </section>
 
           <footer className="ti-footer">
-           
             <p className="ti-outro">Kérdésed van, vagy konkrét ajánlatot szeretnél a saját vállalkozásodra? Keress bizalommal.
 <br />
           Fejlesztő: Grega Balázs
           <br />Email cím: balazsgregadev@gmail.com
             </p>
-            
+
             <a className="ti-download" href="/Termekismerteto.docx" download>Letöltés Word-dokumentumként</a>
-          
+
           </footer>
-      
+
         </article>
       </main>
       <Footer />
