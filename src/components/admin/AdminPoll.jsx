@@ -40,7 +40,7 @@ export default function AdminPoll() {
   const [selId, setSelId]         = useState(null)
   const [poll, setPoll]           = useState(null)
   const [rows, setRows]           = useState([])
-  const [pending, setPending]     = useState([])   // jóváhagyásra váró javaslatok
+  const [allPending, setAllPending] = useState([])   // jóváhagyásra váró javaslatok (globális)
   const [removed, setRemoved]     = useState([])
   const [saving, setSaving]       = useState(false)
   const [saved, setSaved]         = useState(false)
@@ -53,11 +53,11 @@ export default function AdminPoll() {
       .select('id, title_hu, status, active').order('created_at', { ascending: false })
     setPolls(data || []); setLL(false)
   }
-  useEffect(() => { loadList() }, [])
+  useEffect(() => { loadList(); loadPending() }, [])
 
   const openPoll = async (id) => {
     setMsg(''); setSaved(false); setSnapshot(null); setRemoved([]); setConfirmDel(false)
-    if (id === 'new') { setSelId('new'); setPoll(emptyPoll()); setRows([]); setPending([]); return }
+    if (id === 'new') { setSelId('new'); setPoll(emptyPoll()); setRows([]); return }
     const { data: p } = await supabase.from('polls').select('*').eq('id', id).single()
     const { data: opts } = await supabase.from('poll_options').select('*').eq('poll_id', id).order('sort_order')
     if (!p) return
@@ -70,22 +70,33 @@ export default function AdminPoll() {
     })
     const all = opts || []
     setRows(all.filter(o => o.approved).map(o => ({ id: o.id, cells: normalizeCells(o.cells, cols), up: o.up_votes, down: o.down_votes })))
-    setPending(all.filter(o => !o.approved).map(o => ({ id: o.id, cells: normalizeCells(o.cells, cols) })))
   }
 
-  // ── Moderálás (jóváhagyásra váró javaslatok) ──
-  const setPendCell = (ri, ci, key, v) => {
-    setPending(ps => ps.map((r, x) => x === ri
-      ? { ...r, cells: r.cells.map((c, y) => y === ci ? { ...c, [key]: v } : c) } : r))
+  // ── Moderálás (jóváhagyásra váró javaslatok – globálisan, szavazásonként jelölve) ──
+  const loadPending = async () => {
+    const { data } = await supabase.from('poll_options')
+      .select('id, cells, poll_id, polls(title_hu, columns)')
+      .eq('approved', false).order('created_at', { ascending: true })
+    setAllPending((data || []).map(o => ({
+      id: o.id, poll_id: o.poll_id,
+      pollTitle: o.polls?.title_hu || '(cím nélkül)',
+      columns: Array.isArray(o.polls?.columns) ? o.polls.columns : [],
+      cells: normalizeCells(o.cells, o.polls?.columns),
+    })))
+  }
+  const setPendCell = (id, ci, key, v) => {
+    setAllPending(ps => ps.map(r => (r.id === id
+      ? { ...r, cells: r.cells.map((cc, y) => y === ci ? { ...cc, [key]: v } : cc) } : r)))
   }
   const approvePending = async (row) => {
-    await supabase.from('poll_options').update({ cells: row.cells, approved: true, sort_order: rows.length }).eq('id', row.id)
-    await openPoll(poll.id)
+    await supabase.from('poll_options').update({ cells: row.cells, approved: true }).eq('id', row.id)
+    await loadPending()
+    if (poll?.id === row.poll_id) await openPoll(row.poll_id)
   }
   const rejectPending = async (row) => {
     if (!window.confirm('Elveted ezt a javaslatot (törlés)?')) return
     await supabase.from('poll_options').delete().eq('id', row.id)
-    await openPoll(poll.id)
+    await loadPending()
   }
 
   const setField = (k, v) => { setPoll(p => ({ ...p, [k]: v })); setSaved(false) }
@@ -134,7 +145,7 @@ export default function AdminPoll() {
   }
 
   // ── Mentés (poll + opciók CRUD; a szavazatszámokat nem írja felül) ──
-  const closeEditor = () => { setSelId(null); setPoll(null); setRows([]); setPending([]); setSnapshot(null); setSaved(false) }
+  const closeEditor = () => { setSelId(null); setPoll(null); setRows([]); setSnapshot(null); setSaved(false) }
 
   const closePoll = async () => {
     const next = poll.status === 'closed' ? 'open' : 'closed'
@@ -249,10 +260,13 @@ export default function AdminPoll() {
                 placeholder="e.g. Driver of the year" />
             </div>
 
-            <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.6rem' }}>
-              <input type="checkbox" checked={poll.has_votes} onChange={e => setField('has_votes', e.target.checked)} />
-              <span className="acms-switch-label">„Szavazat" oszlop (szavazás bekapcsolása)</span>
-            </label>
+            <div className="acms-toggle-line">
+              <label className="acms-toggle">
+                <input type="checkbox" checked={poll.has_votes} onChange={e => setField('has_votes', e.target.checked)} />
+                <span className="acms-toggle-slider" />
+              </label>
+              <span className="acms-switch-label">Szavazás</span>
+            </div>
             {poll.has_votes && (
               <>
                 <div className="acms-form-group">
@@ -263,20 +277,34 @@ export default function AdminPoll() {
                     <option value="simple">Egyszerű szavazás (csak ▲)</option>
                   </select>
                 </div>
-                <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.6rem' }}>
-                  <input type="checkbox" checked={poll.live_sort !== false} onChange={e => setField('live_sort', e.target.checked)} />
+                <div className="acms-toggle-line">
+                  <label className="acms-toggle">
+                    <input type="checkbox" checked={poll.live_sort !== false} onChange={e => setField('live_sort', e.target.checked)} />
+                    <span className="acms-toggle-slider" />
+                  </label>
                   <span className="acms-switch-label">A lista a szavazatok szerint frissüljön (élő rangsor)</span>
-                </label>
+                </div>
               </>
             )}
-            <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.6rem' }}>
-              <input type="checkbox" checked={poll.active} onChange={e => setField('active', e.target.checked)} />
-              <span className="acms-switch-label">Aktív (megjelenik a főoldalon, a Szekció sorrendben)</span>
-            </label>
-            <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.6rem' }}>
-              <input type="checkbox" checked={!!poll.test_mode} onChange={e => setField('test_mode', e.target.checked)} />
-              <span className="acms-switch-label" style={{ color: '#e0a800' }}>🧪 Teszt mód – KORLÁTLAN szavazás (egy böngészőből végtelen; élesben kapcsold KI!)</span>
-            </label>
+            <div className="acms-form-group">
+              <label>Megjelenés a főoldalon</label>
+              <div className="acms-toggle-wrap">
+                <span className={`acms-toggle-word ${!poll.active ? 'active' : ''}`}>Rejtett</span>
+                <label className="acms-toggle">
+                  <input type="checkbox" checked={poll.active} onChange={e => setField('active', e.target.checked)} />
+                  <span className="acms-toggle-slider" />
+                </label>
+                <span className={`acms-toggle-word ${poll.active ? 'active' : ''}`}>Látható</span>
+              </div>
+            </div>
+            <div className="acms-toggle-line">
+              <label className="acms-toggle">
+                <input type="checkbox" checked={!!poll.test_mode} onChange={e => setField('test_mode', e.target.checked)} />
+                <span className="acms-toggle-slider" />
+              </label>
+              <span className="acms-switch-label" style={{ color: '#e0a800' }}>Teszt mód</span>
+            </div>
+            {poll.test_mode && <div className="acms-hint" style={{ color: '#e0a800' }}>Korlátlan szavazás egy böngészőből — élesben kapcsold ki!</div>}
 
             <div className="acms-form-group">
               <label>Típus</label>
@@ -345,10 +373,7 @@ export default function AdminPoll() {
 
           {/* Sorok */}
           <div className="acms-content-group">
-            <div className="acms-sect-header-row">
-              <div className="acms-content-group-label">Sorok (opciók)</div>
-              <button className="acms-btn-sm" onClick={addRow}>+ Sor</button>
-            </div>
+            <div className="acms-content-group-label">Sorok (opciók)</div>
             {rows.length === 0 && <div className="admin-empty">Még nincs sor.</div>}
             {rows.map((r, ri) => (
               <div key={ri} style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '0.7rem', marginBottom: '0.7rem' }}>
@@ -372,33 +397,8 @@ export default function AdminPoll() {
                 ))}
               </div>
             ))}
+            <button className="acms-btn-sm" onClick={addRow} style={{ marginTop: '0.3rem' }}>+ Sor</button>
           </div>
-
-          {/* Moderálás – jóváhagyásra váró javaslatok */}
-          {(poll.type === 'suggestions' || pending.length > 0) && (
-            <div className="acms-content-group">
-              <div className="acms-content-group-label">Jóváhagyásra váró javaslatok ({pending.length})</div>
-              {pending.length === 0 ? (
-                <div className="admin-empty">Nincs jóváhagyásra váró javaslat.</div>
-              ) : pending.map((r, ri) => (
-                <div key={r.id} style={{ border: '1px solid var(--rust-light)', borderRadius: 4, padding: '0.7rem', marginBottom: '0.7rem' }}>
-                  {poll.columns.map((c, ci) => (
-                    <div key={ci} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
-                      <input className="acms-input" style={{ flex: 1, minWidth: 140 }} value={r.cells[ci]?.hu || ''}
-                        onChange={e => setPendCell(ri, ci, 'hu', e.target.value)} placeholder={`${c.name_hu || `Oszlop ${ci + 1}`} – HU`} />
-                      <input className="acms-input" style={{ flex: 1, minWidth: 140 }} value={r.cells[ci]?.en || ''}
-                        onChange={e => setPendCell(ri, ci, 'en', e.target.value)} placeholder={`${c.name_en || `Column ${ci + 1}`} – EN`} />
-                    </div>
-                  ))}
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
-                    <button className="acms-btn-primary" onClick={() => approvePending(r)}>Jóváhagyás</button>
-                    <button className="acms-btn-danger" onClick={() => rejectPending(r)}>Elvetés</button>
-                  </div>
-                  <div className="acms-hint" style={{ marginTop: '0.3rem' }}>Javíthatod/lefordíthatod jóváhagyás előtt.</div>
-                </div>
-              ))}
-            </div>
-          )}
 
           {/* Műveletek */}
           <div className="acms-content-group">
@@ -463,6 +463,30 @@ export default function AdminPoll() {
           )
         )}
       </div>
+
+      {allPending.length > 0 && (
+        <div className="acms-content-group">
+          <div className="acms-content-group-label">Jóváhagyásra váró javaslatok ({allPending.length})</div>
+          {allPending.map(r => (
+            <div key={r.id} style={{ border: '1px solid var(--rust-light)', borderRadius: 4, padding: '0.7rem', marginBottom: '0.7rem' }}>
+              <div className="acms-hint" style={{ marginBottom: '0.5rem' }}>Szavazás: <strong>{r.pollTitle}</strong></div>
+              {(r.columns.length ? r.columns : [{}]).map((cc, ci) => (
+                <div key={ci} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                  <input className="acms-input" style={{ flex: 1, minWidth: 140 }} value={r.cells[ci]?.hu || ''}
+                    onChange={e => setPendCell(r.id, ci, 'hu', e.target.value)} placeholder={`${cc.name_hu || `Oszlop ${ci + 1}`} – HU`} />
+                  <input className="acms-input" style={{ flex: 1, minWidth: 140 }} value={r.cells[ci]?.en || ''}
+                    onChange={e => setPendCell(r.id, ci, 'en', e.target.value)} placeholder={`${cc.name_en || `Column ${ci + 1}`} – EN`} />
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
+                <button className="acms-btn-primary" onClick={() => approvePending(r)}>Jóváhagyás</button>
+                <button className="acms-btn-danger" onClick={() => rejectPending(r)}>Elvetés</button>
+              </div>
+              <div className="acms-hint" style={{ marginTop: '0.3rem' }}>Javíthatod/lefordíthatod jóváhagyás előtt.</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Statisztika / összehasonlítás – a Szavazás menü alján, mindig elérhető */}
       <AdminPollStats />

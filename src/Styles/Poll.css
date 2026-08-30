@@ -257,4 +257,4 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 .acms-toggle input:checked + .acms-toggle-slider { background: #34c759; }
-.acms-toggle input:checked + .acms-toggle-slider::before { transform: translateX(18px); }
+.acms-toggle input:checked + .acms-toggle-slider::before { transform: translateX(18px); }.acms-toggle-line { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
