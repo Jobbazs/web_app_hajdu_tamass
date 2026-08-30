@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { OWNER } from '../data'
 import { useLang } from '../LangContext'
 import { useSiteContent } from '../hooks'
+import { supabase } from '../supabaseClient'
 import '../Styles/Navbar.css'
 
 /* ── Social ikonok (inline SVG, currentColor) ───────────────────
@@ -42,6 +43,7 @@ export default function Navbar({ subpage = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const { lang, t, toggleLang } = useLang()
   const { content } = useSiteContent()
+  const [hasActivePoll, setHasActivePoll] = useState(false)
 
   // Social linkek – site_content-ből (JSON), fallback az OWNER-re.
   // A CMS változatlanul a footer_socials kulcsot tölti fel.
@@ -70,6 +72,16 @@ export default function Navbar({ subpage = false }) {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
+
+  // Van-e aktív, már elindult szavazás? (ettől függ a Navbar „Szavazás" gomb)
+  useEffect(() => {
+    supabase.from('polls').select('starts_at').eq('active', true).limit(1).maybeSingle()
+      .then(({ data }) => {
+        if (!data) { setHasActivePoll(false); return }
+        const started = !data.starts_at || new Date(data.starts_at).getTime() <= Date.now()
+        setHasActivePoll(started)
+      })
+  }, [])
 
   const scrollTo = (id) => {
     // Ha a keresett szekció a JELENLEGI oldalon is létezik (a Kapcsolat pl. az
@@ -110,7 +122,17 @@ export default function Navbar({ subpage = false }) {
       }
     }
   } catch {}
-  const visibleLinks = links.filter(l => !hiddenSections.has(l.id))
+  // Aktív + a főoldalon látható (a sorrendben nem elrejtett) szavazásnál
+  // a Navbarba is bekerül egy „Szavazás" gomb (a Kapcsolat elé).
+  const pollVisible = hasActivePoll && !hiddenSections.has('poll')
+  const baseLinks = links.filter(l => !hiddenSections.has(l.id))
+  const visibleLinks = pollVisible
+    ? (() => {
+        const ci = baseLinks.findIndex(l => l.id === 'contact')
+        const pl = { id: 'szavazas', label: lang === 'hu' ? 'Szavazás' : 'Poll' }
+        return ci >= 0 ? [...baseLinks.slice(0, ci), pl, ...baseLinks.slice(ci)] : [...baseLinks, pl]
+      })()
+    : baseLinks
 
   return (
     <>
