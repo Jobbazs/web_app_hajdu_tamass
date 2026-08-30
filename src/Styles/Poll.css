@@ -152,7 +152,7 @@
 }
 .poll-stats-head span {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.3rem;
+  font-size: 1.37rem;
   letter-spacing: 0.02em;
 }
 .poll-stats-x {
@@ -188,7 +188,7 @@
 .poll-acc-head:hover { background: rgba(128, 128, 128, 0.08); }
 .poll-acc-name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; flex-wrap: wrap; }
 .poll-acc-badge {
-  font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.06em;
+  font-family: 'Space Mono', monospace; font-size: 0.92rem; letter-spacing: 0.06em;
   text-transform: uppercase; padding: 0.15rem 0.45rem; border-radius: 999px;
   background: #2e7d32; color: #fff;
 }
@@ -233,10 +233,10 @@
 /* ── Popup lista: elhelyezés-összefoglaló + on-off kapcsoló ── */
 .poll-acc-place {
   font-family: 'Space Mono', monospace;
-  font-size: 0.95rem;
+  font-size: 1.14rem;
   opacity: 0.6;
   margin-left: 0.2rem;
   font-weight: 400;
 }
 .poll-switch { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; flex-shrink: 0; }
-.poll-switch-lbl { font-size: 0.95rem; opacity: 0.75; white-space: nowrap; }
+.poll-switch-lbl { font-size: 1.14rem; opacity: 0.75; white-space: nowrap; }

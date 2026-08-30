@@ -136,6 +136,15 @@ export default function AdminPoll() {
   // ── Mentés (poll + opciók CRUD; a szavazatszámokat nem írja felül) ──
   const closeEditor = () => { setSelId(null); setPoll(null); setRows([]); setPending([]); setSnapshot(null); setSaved(false) }
 
+  const closePoll = async () => {
+    const next = poll.status === 'closed' ? 'open' : 'closed'
+    if (poll.id) {
+      await supabase.from('polls').update({ status: next }).eq('id', poll.id)
+      await loadList()
+    }
+    setPoll(p => ({ ...p, status: next }))
+  }
+
   const save = async () => {
     setSaving(true); setMsg('')
     // undo-hoz a mentés előtti beállítások (a sorok szövege is)
@@ -305,11 +314,15 @@ export default function AdminPoll() {
             </div>
 
             <div className="acms-form-group">
-              <label>Állapot</label>
-              <select className="acms-input" value={poll.status} onChange={e => setField('status', e.target.value)} style={{ maxWidth: 220 }}>
-                <option value="open">Nyitva</option>
-                <option value="closed">Lezárva</option>
-              </select>
+              <label>Állapot: {poll.status === 'closed' ? 'Lezárva' : 'Nyitott'}</label>
+              <button
+                className={poll.status === 'closed' ? 'acms-btn-sm' : 'acms-btn-danger'}
+                onClick={closePoll} disabled={saving} style={{ maxWidth: 260 }}>
+                {poll.status === 'closed' ? 'Szavazás újranyitása' : 'Szavazás lezárása'}
+              </button>
+              <div className="acms-hint">
+                Az új szavazás alapból <strong>nyitott</strong> (a beállítás után élő). A lezárási időpontnál automatikusan lezárul; ezzel a gombbal kézzel is lezárhatod.
+              </div>
             </div>
           </div>
 
