@@ -5,14 +5,14 @@
 
 .admin-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   letter-spacing: 0.1em;
   color: var(--text-primary);
 }
 
 .admin-subtitle {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.91rem;
+  font-size: 0.85rem;
   letter-spacing: 0.2em;
   color: var(--text-muted);
   margin-top: 0.3rem;
@@ -22,7 +22,7 @@
 
 .admin-logout-btn {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.93rem;
+  font-size: 0.86rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   background: none;
@@ -41,7 +41,7 @@
 
 .admin-empty {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.98rem;
+  font-size: 0.9rem;
   letter-spacing: 0.2em;
   color: var(--text-muted);
   text-align: center;
@@ -65,7 +65,7 @@
 
 .acms-tab {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -103,14 +103,14 @@
 
 .acms-section-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   letter-spacing: 0.08em;
   color: var(--text-primary);
 }
 
 .acms-section-sub {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.91rem;
+  font-size: 0.85rem;
   letter-spacing: 0.15em;
   color: var(--text-muted);
   margin-top: 0.2rem;
@@ -122,7 +122,7 @@
 
 .acms-btn-primary {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.93rem;
+  font-size: 0.86rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--bg-primary);
@@ -139,7 +139,7 @@
 
 .acms-btn-secondary {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.93rem;
+  font-size: 0.86rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -154,7 +154,7 @@
 
 .acms-btn-sm {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -168,6 +168,20 @@
 }
 .acms-btn-sm:hover { border-color: var(--accent); color: var(--accent); }
 
+.acms-btn-danger {
+  font-family: 'Space Mono', 'Share Tech Mono', monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e05050;
+  background: none;
+  border: 1px solid rgba(200, 50, 50, 0.4);
+  padding: 0.3rem 0.7rem;
+  min-height: 32px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
 .acms-btn-danger:hover {
   border-color: rgba(200, 50, 50, 0.5) !important;
   color: #e05050 !important;
@@ -181,7 +195,7 @@
 
 .acms-tag {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 0.15rem 0.5rem;
@@ -212,7 +226,7 @@
 
 .acms-form-group label {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -232,7 +246,7 @@
   gap: 0.6rem;
   cursor: pointer;
   text-transform: none;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
 }
 
 .acms-form-group--check input[type="checkbox"] {
@@ -253,7 +267,7 @@
   color: var(--text-primary);
   padding: 0.7rem 0.9rem;
   font-family: 'Crimson Pro', 'Rajdhani', serif;
-  font-size: 1.18rem;
+  font-size: 1.05rem;
   outline: none;
   width: 100%;
   transition: border-color 0.2s;
@@ -264,7 +278,7 @@
 
 .acms-hint {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   letter-spacing: 0.1em;
   color: var(--text-muted);
 }
@@ -289,7 +303,7 @@
 
 .acms-error {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.93rem;
+  font-size: 0.86rem;
   letter-spacing: 0.1em;
   color: #e05050;
   padding: 0.6rem 0;
@@ -297,7 +311,7 @@
 
 .acms-success {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.93rem;
+  font-size: 0.86rem;
   letter-spacing: 0.15em;
   color: var(--accent);
 }
@@ -352,7 +366,7 @@
   padding: 1rem 1.4rem;
   border-bottom: 1px solid var(--border-subtle);
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.37rem;
+  font-size: 1.2rem;
   letter-spacing: 0.1em;
   color: var(--text-primary);
   flex-shrink: 0;
@@ -360,7 +374,7 @@
 
 .acms-modal-close {
   background: none; border: none;
-  color: var(--text-muted); font-size: 1.18rem;
+  color: var(--text-muted); font-size: 1.05rem;
   cursor: pointer; padding: 0.3rem;
   transition: color 0.2s;
 }
@@ -383,7 +397,7 @@
 
 .acms-status-badge {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   padding: 0.25rem 0.6rem;
@@ -414,7 +428,7 @@
 
 .acms-align-btn {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   letter-spacing: 0.08em;
   padding: 0.35rem 0.7rem;
   min-height: 32px;
@@ -446,7 +460,7 @@
   .acms-content { padding: 1rem; }
   /* Fő fülek: több sorba tördelnek, nincs vízszintes húzogatás */
   .acms-tabs { flex-wrap: wrap; overflow-x: visible; padding: 0 1rem; row-gap: 2px; }
-  .acms-tab { padding: 0.5rem 0.7rem; font-size: 0.89rem; letter-spacing: 0.1em; }
+  .acms-tab { padding: 0.5rem 0.7rem; font-size: 0.83rem; letter-spacing: 0.1em; }
   .acms-form-row { grid-template-columns: 1fr; }
   
   .acms-list-actions {
@@ -482,15 +496,15 @@
 
 .acms-booking-name {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.3rem; letter-spacing: 0.06em; color: var(--text-primary);
+  font-size: 1.15rem; letter-spacing: 0.06em; color: var(--text-primary);
 }
 .acms-booking-contact {
-  font-family: 'Space Mono', monospace; font-size: 0.93rem;
+  font-family: 'Space Mono', monospace; font-size: 0.86rem;
   letter-spacing: 0.1em; color: var(--text-muted);
 }
 
 .acms-booking-message {
-  font-size: 1.11rem; color: var(--text-secondary);
+  font-size: 1rem; color: var(--text-secondary);
   border-left: 2px solid var(--border-mid);
   padding-left: 0.8rem; margin: 0.6rem 0;
   line-height: 1.6;
@@ -512,13 +526,13 @@
 .acms-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1.08rem;
+  font-size: 0.98rem;
 }
 .acms-table th {
   text-align: left;
   padding: 0.6rem 0.8rem;
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -535,13 +549,13 @@
 
 .acms-cell-strong {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.21rem;
+  font-size: 1.08rem;
   letter-spacing: 0.05em;
   color: var(--text-primary);
 }
 .acms-cell-sub {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.91rem;
+  font-size: 0.85rem;
   letter-spacing: 0.08em;
   color: var(--text-muted);
   margin-top: 0.15rem;
@@ -553,7 +567,7 @@
   padding: 0.15rem 0.55rem;
   border: 1px solid currentColor;
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -563,7 +577,7 @@
   background: none; border: none;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 1.04rem;
+  font-size: 0.95rem;
   padding: 0.1rem 0.3rem;
   line-height: 1;
   transition: color 0.2s;
@@ -588,7 +602,7 @@
 .acms-detail-grid > div { display: flex; flex-direction: column; gap: 0.15rem; }
 .acms-detail-k {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -606,7 +620,7 @@
   display: flex; gap: 0.4rem;
   margin-top: 0.25rem; max-width: 520px;
 }
-.acms-detail-cancel-row .acms-input { flex: 1; font-size: 0.99rem; }
+.acms-detail-cancel-row .acms-input { flex: 1; font-size: 0.91rem; }
 
 @media (max-width: 767px) {
   .acms-booking-toolbar { flex-direction: column; align-items: stretch; }
@@ -626,16 +640,16 @@
   align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;
 }
 .acms-slot-date {
-  font-family: 'Space Mono', monospace; font-size: 0.95rem;
+  font-family: 'Space Mono', monospace; font-size: 0.88rem;
   letter-spacing: 0.12em; color: var(--accent); margin-bottom: 0.2rem;
 }
 .acms-slot-title {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.37rem; letter-spacing: 0.06em; color: var(--text-primary);
+  font-size: 1.2rem; letter-spacing: 0.06em; color: var(--text-primary);
 }
 .acms-slot-capacity {
   display: flex; flex-direction: column; align-items: flex-end;
-  font-family: 'Space Mono', monospace; font-size: 0.99rem;
+  font-family: 'Space Mono', monospace; font-size: 0.91rem;
   color: var(--text-muted); flex-shrink: 0;
 }
 
@@ -650,12 +664,12 @@
   align-items: flex-start; gap: 1rem; margin-bottom: 0.6rem;
 }
 .acms-reliability-level {
-  font-family: 'Space Mono', monospace; font-size: 0.95rem;
+  font-family: 'Space Mono', monospace; font-size: 0.88rem;
   letter-spacing: 0.12em; font-weight: bold; flex-shrink: 0;
 }
 .acms-reliability-stats {
   display: flex; gap: 1.2rem; flex-wrap: wrap;
-  font-family: 'Space Mono', monospace; font-size: 0.91rem;
+  font-family: 'Space Mono', monospace; font-size: 0.85rem;
   letter-spacing: 0.1em; color: var(--text-muted);
   margin-bottom: 0.6rem;
 }
@@ -677,7 +691,7 @@
 .acms-port-cat-filter {
   max-width: 260px;
   min-height: 38px;
-  font-size: 1.08rem;
+  font-size: 0.98rem;
 }
 
 /* 8 oszlop desktopon, arányos csökkentés */
@@ -724,14 +738,14 @@
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 1.5rem;
+  font-size: 1.3rem;
 }
 
 .acms-port-card-hidden-badge {
   position: absolute;
   top: 4px; right: 4px;
   font-family: 'Space Mono', monospace;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   background: rgba(0,0,0,0.7);
@@ -755,7 +769,7 @@
 .acms-port-card:hover .acms-port-card-actions { opacity: 1; }
 
 .acms-port-card-title {
-  font-size: 0.93rem;
+  font-size: 0.86rem;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
@@ -770,7 +784,7 @@
 }
 
 .acms-port-card-btns .acms-btn-sm {
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   padding: 0.25rem 0.3rem;
   min-height: 22px;
   text-align: center;
@@ -817,14 +831,14 @@
 }
 
 .acms-order-handle {
-  font-size: 1.24rem;
+  font-size: 1.1rem;
   color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .acms-order-label {
   font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-primary);
@@ -833,7 +847,7 @@
 
 .acms-order-badge {
   font-family: 'Space Mono', monospace;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   letter-spacing: 0.12em;
   color: var(--text-muted);
   border: 1px solid var(--border-subtle);
@@ -842,7 +856,7 @@
 
 /* ── Haladó beállítások – publikálás ── */
 .adv-doc {
-  font-size: 1.14rem;
+  font-size: 1.02rem;
   color: var(--text-secondary);
   line-height: 1.75;
   margin-bottom: 1.5rem;
@@ -865,17 +879,17 @@
 
 .adv-doc-col-title {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
-  font-size: 0.91rem; letter-spacing: 0.15em; text-transform: uppercase;
+  font-size: 0.85rem; letter-spacing: 0.15em; text-transform: uppercase;
   margin-bottom: 0.6rem;
 }
 .adv-doc-col-title--yes { color: var(--accent); }
 .adv-doc-col-title--no { color: var(--text-muted); }
 
 .adv-doc-col ul { margin: 0; padding-left: 1.1rem; }
-.adv-doc-col li { font-size: 1.1rem; line-height: 1.7; }
+.adv-doc-col li { font-size: 0.99rem; line-height: 1.7; }
 
 .adv-doc-note {
-  font-size: 1.08rem;
+  font-size: 0.98rem;
   color: var(--text-muted);
   border-left: 2px solid var(--border-mid);
   padding-left: 0.9rem;
@@ -899,22 +913,22 @@
 /* ============================================================
    KATEGÓRIA-OLDALAK SZERKESZTŐ (AdminCategories)
    ============================================================ */
-.acms-loading { padding: 3rem 1rem; text-align: center; color: #8a7a68; font-size: 1.08rem; letter-spacing: 0.1em; }
+.acms-loading { padding: 3rem 1rem; text-align: center; color: #8a7a68; font-size: 0.98rem; letter-spacing: 0.1em; }
 
 .acms-cat-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.2rem; }
-.acms-h2 { font-size: 1.27rem; color: #fff; margin: 0 0 0.35rem; letter-spacing: 0.03em; }
+.acms-h2 { font-size: 1.12rem; color: #fff; margin: 0 0 0.35rem; letter-spacing: 0.03em; }
 .acms-cat-head code { background: #2a2520; padding: 0.05rem 0.3rem; border-radius: 3px; color: var(--rust-light); font-size: 0.82em; }
 
-.acms-label { display: block; font-size: 0.98rem; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.4rem; }
+.acms-label { display: block; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.4rem; }
 
 /* HU/EN kapcsoló */
 .acms-lang-toggle { display: inline-flex; border: 1px solid #3a332a; border-radius: 5px; overflow: hidden; flex-shrink: 0; }
-.acms-lang-toggle button { background: transparent; border: none; color: #8a7a68; padding: 0.4rem 0.9rem; font-size: 0.99rem; font-weight: bold; letter-spacing: 0.1em; cursor: pointer; }
+.acms-lang-toggle button { background: transparent; border: none; color: #8a7a68; padding: 0.4rem 0.9rem; font-size: 0.91rem; font-weight: bold; letter-spacing: 0.1em; cursor: pointer; }
 .acms-lang-toggle button.active { background: var(--rust-light); color: #fff; }
 
 /* Kategória-választó tabok */
 .acms-cat-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid #2a2520; padding-bottom: 1rem; }
-.acms-cat-tab { background: #201a14; border: 1px solid #2a2520; color: #C8B89A; padding: 0.45rem 0.9rem; border-radius: 5px; font-size: 1.04rem; cursor: pointer; transition: all 0.15s; }
+.acms-cat-tab { background: #201a14; border: 1px solid #2a2520; color: #C8B89A; padding: 0.45rem 0.9rem; border-radius: 5px; font-size: 0.95rem; cursor: pointer; transition: all 0.15s; }
 .acms-cat-tab:hover { border-color: #8B6A4A; }
 .acms-cat-tab.active { background: var(--rust-light); border-color: var(--rust-light); color: #fff; font-weight: bold; }
 
@@ -923,12 +937,12 @@
 .acms-preset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
 
 .acms-cat-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
-.acms-cat-view { color: #8B6A4A; text-decoration: none; font-size: 1.03rem; margin-left: auto; }
+.acms-cat-view { color: #8B6A4A; text-decoration: none; font-size: 0.94rem; margin-left: auto; }
 .acms-cat-view:hover { color: var(--rust-light); }
 
 /* Élő előnézet */
 .acms-cat-preview { position: sticky; top: 1rem; }
-.acms-cat-preview-label { font-size: 0.97rem; letter-spacing: 0.15em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.5rem; }
+.acms-cat-preview-label { font-size: 0.89rem; letter-spacing: 0.15em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.5rem; }
 .acms-cat-preview-box { background: #1a1510; border: 1px solid #2a2520; border-radius: 6px; padding: 1.5rem; min-height: 200px; }
 .acms-cat-preview-cover { width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 1.2rem; display: block; }
 
@@ -942,9 +956,9 @@
    ============================================================ */
 .acms-secs { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #2a2520; }
 .acms-secs-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.acms-secs-title { font-size: 1.18rem; color: #fff; margin: 0; letter-spacing: 0.03em; }
-.acms-btn-sm { padding: 0.4rem 0.8rem !important; font-size: 1.03rem !important; }
-.acms-secs-empty { color: #8a7a68; font-size: 1.08rem; padding: 1.2rem 0; }
+.acms-secs-title { font-size: 1.05rem; color: #fff; margin: 0; letter-spacing: 0.03em; }
+.acms-btn-sm { padding: 0.4rem 0.8rem !important; font-size: 0.94rem !important; }
+.acms-secs-empty { color: #8a7a68; font-size: 0.98rem; padding: 1.2rem 0; }
 
 .acms-secs-list { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
 .acms-sec-row {
@@ -954,14 +968,14 @@
 .acms-sec-row.is-hidden { opacity: 0.5; }
 
 .acms-sec-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
-.acms-sec-type { font-size: 0.93rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rust-light); }
-.acms-sec-name { color: #fff; font-size: 1.11rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.acms-sec-meta { font-size: 0.97rem; color: #8a7a68; }
+.acms-sec-type { font-size: 0.86rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rust-light); }
+.acms-sec-name { color: #fff; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.acms-sec-meta { font-size: 0.89rem; color: #8a7a68; }
 .acms-sec-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 
 .acms-chip {
   background: transparent; border: 1px solid #3a332a; color: #C8B89A;
-  padding: 0.35rem 0.7rem; border-radius: 5px; font-size: 0.99rem; cursor: pointer; transition: all 0.15s;
+  padding: 0.35rem 0.7rem; border-radius: 5px; font-size: 0.91rem; cursor: pointer; transition: all 0.15s;
 }
 .acms-chip:hover { border-color: #8B6A4A; color: #fff; }
 .acms-chip--danger:hover { border-color: #c0392b; color: #e74c3c; }
@@ -984,7 +998,7 @@
 .acms-img-cell.selected { border-color: var(--rust-light); }
 .acms-img-badge {
   position: absolute; top: 3px; right: 3px; background: var(--rust-light); color: #fff;
-  font-size: 0.95rem; font-weight: bold; min-width: 17px; height: 17px; border-radius: 9px;
+  font-size: 0.88rem; font-weight: bold; min-width: 17px; height: 17px; border-radius: 9px;
   display: flex; align-items: center; justify-content: center; padding: 0 4px;
 }
 
@@ -1008,9 +1022,9 @@
   background: #201a14; border: 1px solid #2a2520; border-radius: 8px;
   padding: 1.1rem 1.2rem;
 }
-.dash-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: #fff; line-height: 1; }
-.dash-stat-label { font-size: 0.99rem; letter-spacing: 0.08em; text-transform: uppercase; color: #C8B89A; margin-top: 0.4rem; }
-.dash-stat-sub { font-size: 0.95rem; color: #8a7a68; margin-top: 0.2rem; }
+.dash-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: #fff; line-height: 1; }
+.dash-stat-label { font-size: 0.91rem; letter-spacing: 0.08em; text-transform: uppercase; color: #C8B89A; margin-top: 0.4rem; }
+.dash-stat-sub { font-size: 0.88rem; color: #8a7a68; margin-top: 0.2rem; }
 
 .dash-grid {
   display: grid;
@@ -1022,19 +1036,19 @@
 }
 .dash-card--wide { grid-column: 1 / -1; }
 .dash-card-title {
-  font-size: 1.01rem; letter-spacing: 0.1em; text-transform: uppercase;
+  font-size: 0.92rem; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--rust-light); margin-bottom: 1rem; font-weight: bold;
 }
-.dash-empty { color: #8a7a68; font-size: 1.06rem; padding: 0.5rem 0; }
+.dash-empty { color: #8a7a68; font-size: 0.96rem; padding: 0.5rem 0; }
 
 .dash-bar-row { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.55rem; }
 .dash-bar-label {
-  flex: 0 0 40%; max-width: 40%; font-size: 1.01rem; color: #C8B89A;
+  flex: 0 0 40%; max-width: 40%; font-size: 0.92rem; color: #C8B89A;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .dash-bar-track { flex: 1; height: 10px; background: #2a2520; border-radius: 5px; overflow: hidden; }
 .dash-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; min-width: 2px; }
-.dash-bar-val { flex: 0 0 auto; font-family: 'Space Mono', monospace; font-size: 0.99rem; color: #fff; min-width: 34px; text-align: right; }
+.dash-bar-val { flex: 0 0 auto; font-family: 'Space Mono', monospace; font-size: 0.91rem; color: #fff; min-width: 34px; text-align: right; }
 
 @media (max-width: 720px) {
   .dash-grid { grid-template-columns: 1fr; }
@@ -1054,7 +1068,7 @@
   display: flex; align-items: center; justify-content: center;
   width: 30px; padding: 0;
   background: transparent; border: none;
-  color: #6b5f50; font-size: 1.24rem; line-height: 1;
+  color: #6b5f50; font-size: 1.1rem; line-height: 1;
   cursor: grab; touch-action: none;   /* fontos: mobilon a húzás elkapja */
   border-radius: 6px; transition: color 0.15s, background 0.15s;
 }
@@ -1077,16 +1091,16 @@
 .cld-upload.is-uploading { cursor: default; border-style: solid; }
 .cld-upload--compact { padding: 0.7rem 0.9rem; }
 
-.cld-upload-label { font-size: 1.04rem; line-height: 1.3; }
-.cld-upload-label small { display: block; font-size: 0.95rem; opacity: 0.7; margin-top: 0.2rem; }
+.cld-upload-label { font-size: 0.95rem; line-height: 1.3; }
+.cld-upload-label small { display: block; font-size: 0.88rem; opacity: 0.7; margin-top: 0.2rem; }
 
 .cld-upload-progress { width: 100%; display: flex; flex-direction: column; gap: 0.4rem; }
-.cld-upload-progress span { font-size: 0.99rem; color: #C8B89A; }
+.cld-upload-progress span { font-size: 0.91rem; color: #C8B89A; }
 .cld-upload-bar { width: 100%; height: 8px; background: #2a2520; border-radius: 4px; overflow: hidden; }
 .cld-upload-bar > div { height: 100%; background: var(--rust-light); border-radius: 4px; transition: width 0.2s; }
 
 .cld-upload-error {
-  margin-top: 0.4rem; font-size: 0.99rem; color: #e07a5f;
+  margin-top: 0.4rem; font-size: 0.91rem; color: #e07a5f;
   background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.3);
   border-radius: 5px; padding: 0.4rem 0.6rem;
 }
@@ -1107,7 +1121,7 @@
 .dash-card-head .dash-card-title { margin-bottom: 0; }
 .dash-year-select {
   background: #201a14; border: 1px solid #3a332a; color: #C8B89A;
-  border-radius: 5px; padding: 0.25rem 0.55rem; font-size: 1.03rem; cursor: pointer;
+  border-radius: 5px; padding: 0.25rem 0.55rem; font-size: 0.94rem; cursor: pointer;
 }
 .dash-months { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.6rem; }
 .dash-months-col { min-width: 0; }
@@ -1117,7 +1131,7 @@
   display: inline-flex; align-items: center; justify-content: center;
   width: 15px; height: 15px; margin-left: 0.4rem;
   border-radius: 50%; border: 1px solid #6b5f50;
-  color: #8a7a68; font-size: 0.91rem; font-family: Georgia, 'Times New Roman', serif; font-style: italic;
+  color: #8a7a68; font-size: 0.85rem; font-family: Georgia, 'Times New Roman', serif; font-style: italic;
   cursor: pointer; position: relative; vertical-align: middle; line-height: 1;
   text-transform: none; letter-spacing: 0;
 }
@@ -1127,7 +1141,7 @@
   width: max-content; max-width: 200px;
   background: #2a2520; color: #C8B89A; border: 1px solid #4a4038;
   padding: 0.55rem 0.7rem; border-radius: 6px;
-  font-size: 0.97rem; line-height: 1.45; font-weight: normal;
+  font-size: 0.89rem; line-height: 1.45; font-weight: normal;
   text-transform: none; letter-spacing: normal; font-style: normal;
   white-space: normal; text-align: left;
   z-index: 100; box-shadow: 0 6px 20px rgba(0,0,0,0.55);
@@ -1163,7 +1177,7 @@
 .acms-del-option .acms-hint { margin: 0; line-height: 1.45; }
 
 /* ── Kijelölés: csúszka (mind ki/be) + elválasztó ── */
-.acms-switch { display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; user-select: none; font-size: 1.08rem; }
+.acms-switch { display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; user-select: none; font-size: 0.98rem; }
 .acms-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
 .acms-switch-track { position: relative; flex: none; width: 34px; height: 18px; border-radius: 999px; background: rgba(255,255,255,.18); transition: background .2s; }
 .acms-switch-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #eee; transition: transform .2s; }
@@ -1177,7 +1191,7 @@
   text-align: center;
   padding: 0.7rem 1rem;
   font-family: 'Space Mono', monospace;
-  font-size: 1.04rem;
+  font-size: 0.95rem;
   letter-spacing: 0.05em;
   font-weight: 700;
 }
@@ -1212,7 +1226,7 @@
 }
 .admin-user-email {
   font-family: 'Space Mono', monospace;
-  font-size: 0.99rem;
+  font-size: 0.91rem;
   letter-spacing: 0.03em;
   opacity: 0.7;
   white-space: nowrap;
@@ -1235,7 +1249,7 @@
   background: #fff; transition: transform 0.2s;
 }
 .acms-switch.on .acms-switch-thumb { transform: translateX(16px); }
-.acms-switch-label { font-size: 0.99rem; letter-spacing: 0.05em; opacity: 0.85; color: #fff; }
+.acms-switch-label { font-size: 0.91rem; letter-spacing: 0.05em; opacity: 0.85; color: #fff; }
 .acms-switch.off .acms-switch-label { opacity: 0.5; }
 /* ── Rejtett portfólió-elem: CSAK a kép szürkül, a gombok teljes fényben ── */
 .acms-port-card--hidden .acms-port-card-img img,

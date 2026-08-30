@@ -87,20 +87,10 @@ export default function AdminPromoPopup() {
     <div className="poll-acc-body">
       <div className="acms-form-group">
         <label>Felugró ablak neve (admin)</label>
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <input className="acms-input" style={{ flex: 1, minWidth: 180 }} value={pop.name}
-            onChange={e => setField('name', e.target.value)} placeholder="Pl. Nyári akció" />
-          <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', whiteSpace: 'nowrap' }}>
-            <input type="checkbox" checked={pop.featured} onChange={e => setField('featured', e.target.checked)} />
-            <span className="acms-switch-label">Kiemelt</span>
-          </label>
-        </div>
+        <input className="acms-input" value={pop.name}
+          onChange={e => setField('name', e.target.value)} placeholder="Pl. Nyári akció" />
+        <div className="acms-hint">A láthatóságot a listában, a sor végén lévő kapcsolóval állítod.</div>
       </div>
-
-      <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
-        <input type="checkbox" checked={pop.enabled} onChange={e => setField('enabled', e.target.checked)} />
-        <span className="acms-switch-label">Bekapcsolva (megjelenik a látogatóknak)</span>
-      </label>
 
       <div className="acms-form-group">
         <label>Mikor jelenjen meg?</label>
@@ -191,12 +181,15 @@ export default function AdminPromoPopup() {
                       onClick={() => (selId === p.id ? closeEditor() : openPopup(p.id))}>
                       {p.name || '(név nélkül)'}
                       <span className="poll-acc-place">{placeSummary(p)}</span>
-                      {p.featured && <span className="poll-acc-badge" style={{ background: '#E0A800', color: '#1a1510' }}>kiemelt</span>}
                     </span>
-                    <label className="poll-switch" onClick={e => e.stopPropagation()} title={p.enabled ? 'Látható' : 'Rejtett'}>
-                      <input type="checkbox" checked={p.enabled} onChange={e => toggleEnabled(p, e.target.checked)} />
-                      <span className="poll-switch-lbl">{p.enabled ? 'Látható' : 'Rejtett'}</span>
-                    </label>
+                    <div className="acms-toggle-wrap" onClick={e => e.stopPropagation()}>
+                      <span className={`acms-toggle-word ${!p.enabled ? 'active' : ''}`}>Rejtett</span>
+                      <label className="acms-toggle">
+                        <input type="checkbox" checked={p.enabled} onChange={e => toggleEnabled(p, e.target.checked)} />
+                        <span className="acms-toggle-slider" />
+                      </label>
+                      <span className={`acms-toggle-word ${p.enabled ? 'active' : ''}`}>Látható</span>
+                    </div>
                     <span className={`poll-acc-tri ${selId === p.id ? 'open' : ''}`} style={{ cursor: 'pointer' }}
                       onClick={() => (selId === p.id ? closeEditor() : openPopup(p.id))}>▸</span>
                   </div>

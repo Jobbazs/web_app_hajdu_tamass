@@ -152,7 +152,7 @@
 }
 .poll-stats-head span {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.37rem;
+  font-size: 1.2rem;
   letter-spacing: 0.02em;
 }
 .poll-stats-x {
@@ -188,7 +188,7 @@
 .poll-acc-head:hover { background: rgba(128, 128, 128, 0.08); }
 .poll-acc-name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; flex-wrap: wrap; }
 .poll-acc-badge {
-  font-family: 'Space Mono', monospace; font-size: 0.92rem; letter-spacing: 0.06em;
+  font-family: 'Space Mono', monospace; font-size: 0.85rem; letter-spacing: 0.06em;
   text-transform: uppercase; padding: 0.15rem 0.45rem; border-radius: 999px;
   background: #2e7d32; color: #fff;
 }
@@ -233,10 +233,28 @@
 /* ── Popup lista: elhelyezés-összefoglaló + on-off kapcsoló ── */
 .poll-acc-place {
   font-family: 'Space Mono', monospace;
-  font-size: 1.14rem;
+  font-size: 1.02rem;
   opacity: 0.6;
   margin-left: 0.2rem;
   font-weight: 400;
 }
 .poll-switch { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; flex-shrink: 0; }
-.poll-switch-lbl { font-size: 1.14rem; opacity: 0.75; white-space: nowrap; }
+.poll-switch-lbl { font-size: 1.02rem; opacity: 0.75; white-space: nowrap; }
+
+/* ── Apple-stílusú csúszós kapcsoló (Látható / Rejtett) ── */
+.acms-toggle-wrap { display: inline-flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.acms-toggle-word { font-size: 0.85rem; opacity: 0.5; white-space: nowrap; transition: opacity 0.2s; }
+.acms-toggle-word.active { opacity: 1; font-weight: 700; }
+.acms-toggle { position: relative; display: inline-block; width: 44px; height: 26px; flex-shrink: 0; }
+.acms-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.acms-toggle-slider {
+  position: absolute; inset: 0; cursor: pointer;
+  background: #8a8a8e; border-radius: 999px; transition: background 0.2s;
+}
+.acms-toggle-slider::before {
+  content: ''; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px;
+  background: #fff; border-radius: 50%; transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.acms-toggle input:checked + .acms-toggle-slider { background: #34c759; }
+.acms-toggle input:checked + .acms-toggle-slider::before { transform: translateX(18px); }
