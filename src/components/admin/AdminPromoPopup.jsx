@@ -25,7 +25,7 @@ export default function AdminPromoPopup() {
 
   const loadList = async () => {
     const { data } = await supabase.from('site_popups')
-      .select('id, name, enabled, featured')
+      .select('id, name, enabled, featured, trigger, pages')
       .order('sort_order', { ascending: true }).order('created_at', { ascending: true })
     setPopups(data || []); setLL(false)
   }
@@ -39,6 +39,10 @@ export default function AdminPromoPopup() {
     setSelId(id); setPop({ ...p, pages: Array.isArray(p.pages) ? p.pages : [] })
   }
   const closeEditor = () => { setSelId(null); setPop(null); setConfirmDel(false) }
+  const toggleEnabled = async (p, val) => {
+    await supabase.from('site_popups').update({ enabled: val }).eq('id', p.id)
+    setPopups(list => list.map(x => (x.id === p.id ? { ...x, enabled: val } : x)))
+  }
   const setField = (k, v) => setPop(p => ({ ...p, [k]: v }))
   const togglePage = (path) => setPop(p => ({
     ...p, pages: p.pages.includes(path) ? p.pages.filter(x => x !== path) : [...p.pages, path],
@@ -51,6 +55,13 @@ export default function AdminPromoPopup() {
     { path: '/adatkezeles', label: 'Adatkezelési tájékoztató' },
     { path: '/impresszum', label: 'Impresszum' },
   ]
+
+  const placeSummary = (p) => {
+    if (p.trigger === 'first_visit') return 'Főoldal (első látogatás)'
+    const pages = Array.isArray(p.pages) ? p.pages : []
+    if (pages.length === 0) return 'nincs oldal kiválasztva'
+    return pages.map(path => (publicPages.find(pp => pp.path === path)?.label) || path).join(', ')
+  }
 
   const save = async () => {
     setSaving(true)
@@ -165,7 +176,7 @@ export default function AdminPromoPopup() {
       <div className="acms-content-group">
         <div className="acms-sect-header-row">
           <div className="acms-content-group-label">Felugró ablakok</div>
-          <button className="acms-btn-primary" onClick={() => openPopup('new')}>+ Új felugró ablak</button>
+          <button className="acms-btn-primary" onClick={() => openPopup('new')}>+ Új Popup Üzenet</button>
         </div>
 
         {selId === 'new' && editorBlock}
@@ -175,15 +186,19 @@ export default function AdminPromoPopup() {
             <div className="poll-acc-list">
               {popups.map(p => (
                 <div key={p.id} className="poll-acc-item">
-                  <div className="poll-acc-head" onClick={() => (selId === p.id ? closeEditor() : openPopup(p.id))}>
-                    <span className="poll-acc-name">
+                  <div className="poll-acc-head">
+                    <span className="poll-acc-name" style={{ cursor: 'pointer', flex: 1 }}
+                      onClick={() => (selId === p.id ? closeEditor() : openPopup(p.id))}>
                       {p.name || '(név nélkül)'}
-                      {p.enabled
-                        ? <span className="poll-acc-badge">aktív</span>
-                        : <span className="poll-acc-badge poll-acc-badge--closed">rejtett</span>}
+                      <span className="poll-acc-place">{placeSummary(p)}</span>
                       {p.featured && <span className="poll-acc-badge" style={{ background: '#E0A800', color: '#1a1510' }}>kiemelt</span>}
                     </span>
-                    <span className={`poll-acc-tri ${selId === p.id ? 'open' : ''}`} aria-hidden="true">▸</span>
+                    <label className="poll-switch" onClick={e => e.stopPropagation()} title={p.enabled ? 'Látható' : 'Rejtett'}>
+                      <input type="checkbox" checked={p.enabled} onChange={e => toggleEnabled(p, e.target.checked)} />
+                      <span className="poll-switch-lbl">{p.enabled ? 'Látható' : 'Rejtett'}</span>
+                    </label>
+                    <span className={`poll-acc-tri ${selId === p.id ? 'open' : ''}`} style={{ cursor: 'pointer' }}
+                      onClick={() => (selId === p.id ? closeEditor() : openPopup(p.id))}>▸</span>
                   </div>
                   {selId === p.id && editorBlock}
                 </div>

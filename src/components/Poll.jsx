@@ -184,7 +184,7 @@ export default function Poll() {
 
         {mode === 'pie' && poll.has_votes ? (
           <div className="poll-pie-wrap">
-            <PollPie slices={pieSlices} view={view} />
+            <PollPie slices={pieSlices} view={view} size={330} />
             <div className="poll-legend">
               {displayOptions.map((o, i) => {
                 const pct = totalScore > 0 ? Math.round((Math.max(0, scoreOf(o)) / totalScore) * 100) : 0

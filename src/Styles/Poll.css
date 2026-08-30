@@ -22,7 +22,7 @@
   border: none;
   padding: 0.45rem 1.1rem;
   font-family: 'Space Mono', monospace;
-  font-size: 0.72rem;
+  font-size: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
@@ -39,7 +39,7 @@
 }
 .poll-table th {
   font-family: 'Space Mono', monospace;
-  font-size: 0.7rem;
+  font-size: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.7;
@@ -53,7 +53,7 @@
   color: inherit;
   width: 34px; height: 34px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1.15rem;
   line-height: 1;
   transition: background 0.15s, border-color 0.15s;
 }
@@ -62,7 +62,7 @@
 .poll-vbtn.down { background: var(--rust, #B5231E); border-color: var(--rust, #B5231E); color: #fff; }
 .poll-score {
   font-family: 'Space Mono', monospace;
-  font-size: 0.8rem;
+  font-size: 1.1rem;
   min-width: 60px;
   text-align: center;
   font-weight: 700;
@@ -71,7 +71,7 @@
   text-align: center;
   margin-top: 1rem;
   font-family: 'Space Mono', monospace;
-  font-size: 0.8rem;
+  font-size: 1.1rem;
   opacity: 0.7;
 }
 
@@ -83,7 +83,7 @@
 }
 .poll-suggest-title {
   font-family: 'Space Mono', monospace;
-  font-size: 0.72rem;
+  font-size: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.75;
@@ -108,19 +108,19 @@
   border-radius: 4px;
   padding: 0.5rem 1.2rem;
   font-family: 'Space Mono', monospace;
-  font-size: 0.72rem;
+  font-size: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
 }
 .poll-suggest-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.poll-suggest-msg { margin-top: 0.6rem; font-size: 0.82rem; opacity: 0.85; }
+.poll-suggest-msg { margin-top: 0.6rem; font-size: 1.1rem; opacity: 0.85; }
 
 /* ── Visszaszámláló ── */
 .poll-countdown {
   text-align: center;
   font-family: 'Space Mono', monospace;
-  font-size: 0.85rem;
+  font-size: 1.15rem;
   letter-spacing: 0.05em;
   margin: -0.5rem 0 1.3rem;
   opacity: 0.9;
@@ -209,6 +209,34 @@
 .poll-legend-row { display: flex; align-items: center; gap: 0.6rem; }
 .poll-legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 .poll-legend-name { flex: 1; min-width: 0; }
-.poll-legend-val { font-family: 'Space Mono', monospace; font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+.poll-legend-val { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
 .poll-legend-vote { display: inline-flex; gap: 0.3rem; flex-shrink: 0; }
 .poll-legend-vote .poll-vbtn { width: 30px; height: 30px; }
+
+/* ── Nagyobb kördiagram a főoldalon + legend a diagram magasságához igazítva ── */
+.poll-pie-label { font-size: 13px; fill: currentColor; }
+.poll-section .poll-pie { max-width: 100%; height: auto; }
+.poll-section .poll-pie-label { font-size: 20px; }
+.poll-section .poll-pie-wrap { align-items: flex-start; gap: 2rem; }
+.poll-section .poll-legend {
+  flex-wrap: wrap;
+  max-height: 400px;
+  align-content: flex-start;
+  gap: 0.6rem 1.8rem;
+}
+@media (max-width: 640px) {
+  .poll-section .poll-pie { max-width: 260px; }
+  .poll-section .poll-legend { max-height: none; }
+  .poll-section .poll-pie-label { font-size: 30px; }   /* mobil: ~1,5× a szeletszámok */
+}
+
+/* ── Popup lista: elhelyezés-összefoglaló + on-off kapcsoló ── */
+.poll-acc-place {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.95rem;
+  opacity: 0.6;
+  margin-left: 0.2rem;
+  font-weight: 400;
+}
+.poll-switch { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; flex-shrink: 0; }
+.poll-switch-lbl { font-size: 0.95rem; opacity: 0.75; white-space: nowrap; }

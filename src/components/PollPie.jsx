@@ -31,7 +31,7 @@ export default function PollPie({ slices, view = 'percent', size = 220 }) {
     const lr = r + 15
     const lx = cx + lr * Math.cos(mid)
     const ly = cy + lr * Math.sin(mid)
-    const labelTxt = view === 'percent' ? `${Math.round(frac * 100)}%` : String(sl.value)
+    const labelTxt = view === "percent" ? `${(frac * 100).toFixed(1)}%` : String(sl.value)
     arcs.push({ d, color: sl.color, lx, ly, labelTxt, anchor: Math.cos(mid) >= 0 ? 'start' : 'end' })
   })
 
@@ -43,7 +43,7 @@ export default function PollPie({ slices, view = 'percent', size = 220 }) {
         <path key={i} d={a.d} fill={a.color} stroke="var(--pie-stroke, #1a1510)" strokeWidth="1.5" />
       ))}
       {arcs.map((a, i) => (
-        <text key={'t' + i} x={a.lx.toFixed(1)} y={a.ly.toFixed(1)} fontSize="12.5"
+        <text key={"t" + i} className="poll-pie-label" x={a.lx.toFixed(1)} y={a.ly.toFixed(1)}
           fill="currentColor" textAnchor={a.anchor} dominantBaseline="middle">{a.labelTxt}</text>
       ))}
     </svg>

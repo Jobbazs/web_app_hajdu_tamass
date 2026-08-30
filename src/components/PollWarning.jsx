@@ -46,7 +46,9 @@ export default function PollWarning() {
   const closeMs = poll?.closes_at ? new Date(poll.closes_at).getTime() : 0
   const warnMs  = (poll?.warn_before_min || 0) * 60000
   const started = !poll?.starts_at || new Date(poll.starts_at).getTime() <= now
-  const inWindow = !!poll && !dismissed && poll.status !== 'closed' && started &&
+  const onPublicPage = typeof window === 'undefined' ||
+    !/^\/(admin|confirm|cancel|login|termekismerteto)/.test(window.location.pathname)
+  const inWindow = !!poll && !dismissed && poll.status !== 'closed' && started && onPublicPage &&
     now < closeMs && now >= (closeMs - warnMs)
 
   useEffect(() => {
