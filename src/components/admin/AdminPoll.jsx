@@ -33,6 +33,13 @@ function download(name, text, mime) {
   a.href = url; a.download = name; a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+// Web Share csak iOS-en (ott a sima letöltés megbízhatatlan); máshol egyszerű letöltés.
+function isIOS() {
+  const ua = navigator.userAgent || ''
+  const classic = /iPad|iPhone|iPod/.test(ua)
+  const iPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+  return classic || iPadOS
+}
 function dataURLtoBlob(dataURL) {
   const [head, b64] = dataURL.split(',')
   const mime = (head.match(/:(.*?);/) || [])[1] || 'image/png'
@@ -275,7 +282,7 @@ export default function AdminPoll() {
     })
     const blob = dataURLtoBlob(canvas.toDataURL('image/png'))
     const file = new File([blob], `szavazas-${(poll.title_hu || 'eredmeny').slice(0, 40)}.png`, { type: 'image/png' })
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    if (isIOS() && navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file] }).catch(err => { if (err && err.name !== 'AbortError') downloadBlob(blob, file.name) })
     } else {
       downloadBlob(blob, file.name)

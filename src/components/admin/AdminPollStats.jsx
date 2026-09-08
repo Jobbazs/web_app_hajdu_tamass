@@ -13,6 +13,30 @@ function cellsFor(cells, columns) {
   return out
 }
 
+function csvCell(s) { return `"${String(s ?? '').replace(/"/g, '""')}"` }
+// Web Share csak iOS-en (ott a sima letöltés megbízhatatlan); máshol egyszerű letöltés.
+function isIOS() {
+  const ua = navigator.userAgent || ''
+  const classic = /iPad|iPhone|iPod/.test(ua)
+  const iPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+  return classic || iPadOS
+}
+function dataURLtoBlob(dataURL) {
+  const [head, b64] = dataURL.split(',')
+  const mime = (head.match(/:(.*?);/) || [])[1] || 'image/png'
+  const bin = atob(b64)
+  const arr = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
+  return new Blob([arr], { type: mime })
+}
+function download(name, text, mime) {
+  const blob = new Blob([text], { type: mime })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = name; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export default function AdminPollStats() {
   const [allPolls, setAllPolls] = useState([])
   const [selected, setSelected] = useState([])   // [{poll, options, view}]
@@ -85,8 +109,47 @@ export default function AdminPollStats() {
       })
       y += 28
     }
+    // iOS-barát: a data URL-t SZINKRON Blob-bá alakítjuk (a kattintáson belül
+    // maradva), majd Web Share (menthető Fotókba/Fájlokba) vagy letöltés.
+    const blob = dataURLtoBlob(canvas.toDataURL('image/png'))
+    const file = new File([blob], 'szavazas-osszehasonlitas.png', { type: 'image/png' })
+    if (isIOS() && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file] }).catch(err => { if (err && err.name !== 'AbortError') downloadBlob(blob, file.name) })
+    } else {
+      downloadBlob(blob, file.name)
+    }
+  }
+
+  const downloadBlob = (blob, name) => {
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = canvas.toDataURL('image/png'); a.download = 'szavazas-osszehasonlitas.png'; a.click()
+    a.href = url; a.download = name; a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  const exportCSV = () => {
+    const parts = selected.map(({ poll, options }) => {
+      const isSimple = (poll.vote_style || 'updown') === 'simple'
+      const scoreOf = (o) => (isSimple ? o.up_votes : o.up_votes - o.down_votes)
+      const sorted = poll.has_votes ? [...options].sort((a, b) => scoreOf(b) - scoreOf(a)) : options
+      const cols = (poll.columns || []).map(c => c.name_hu || '')
+      const header = [...cols, ...(poll.has_votes ? ['Fel', 'Le', 'Nettó'] : [])].map(csvCell).join(',')
+      const lines = sorted.map(o => {
+        const cells = cellsFor(o.cells, poll.columns).map(c => csvCell(c.hu))
+        const votes = poll.has_votes ? [o.up_votes, o.down_votes, o.up_votes - o.down_votes].map(csvCell) : []
+        return [...cells, ...votes].join(',')
+      })
+      return [csvCell(poll.title_hu || '(cím nélkül)'), header, ...lines].join('\n')
+    })
+    download('szavazas-osszehasonlitas.csv', parts.join('\n\n'), 'text/csv;charset=utf-8')
+  }
+
+  const exportJSON = () => {
+    const data = selected.map(({ poll, options }) => ({
+      title_hu: poll.title_hu, title_en: poll.title_en, columns: poll.columns, has_votes: poll.has_votes,
+      options: options.map(o => ({ cells: o.cells, up: o.up_votes, down: o.down_votes, net: o.up_votes - o.down_votes })),
+    }))
+    download('szavazas-osszehasonlitas.json', JSON.stringify(data, null, 2), 'application/json')
   }
 
   const available = allPolls.filter(p => !selected.some(s => s.poll.id === p.id))
@@ -104,7 +167,9 @@ export default function AdminPollStats() {
           <option value="">{selected.length >= 4 ? 'Elérted a 4 szavazást' : '+ Szavazás hozzáadása…'}</option>
           {available.map(p => <option key={p.id} value={p.id}>{p.title_hu || '(cím nélkül)'}</option>)}
         </select>
-        {selected.length > 0 && <button className="acms-btn-sm" onClick={exportPNG}>PNG letöltés</button>}
+        {selected.length > 0 && <button className="acms-btn-sm" onClick={exportCSV}>CSV</button>}
+        {selected.length > 0 && <button className="acms-btn-sm" onClick={exportJSON}>JSON</button>}
+        {selected.length > 0 && <button className="acms-btn-sm" onClick={exportPNG}>PNG</button>}
       </div>
 
       {selected.length === 0 ? (
