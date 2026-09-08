@@ -254,6 +254,27 @@ export default function AdminPoll() {
     download(`szavazas-${(poll.title_hu || 'eredmeny').slice(0, 40)}.json`, JSON.stringify(data, null, 2), 'application/json')
   }
 
+  const exportTXT = () => {
+    const isSimple = (poll.vote_style || 'updown') === 'simple'
+    const scoreOf = (r) => (isSimple ? r.up : r.up - r.down)
+    const sorted = poll.has_votes ? [...rows].sort((a, b) => scoreOf(b) - scoreOf(a)) : rows
+    const lines = []
+    lines.push(`Szavazás: ${poll.title_hu || '(cím nélkül)'}`)
+    const cols = (poll.columns || []).map(c => c.name_hu).filter(Boolean)
+    if (cols.length) lines.push(`Oszlopok: ${cols.join(', ')}`)
+    lines.push('')
+    sorted.forEach((r, i) => {
+      const cellText = r.cells.map(c => c.hu).filter(Boolean).join(' | ') || '—'
+      let vote = ''
+      if (poll.has_votes) {
+        const net = r.up - r.down
+        vote = isSimple ? ` — ${r.up} szavazat` : ` — ▲${r.up} / ▼${r.down} (nettó: ${net >= 0 ? '+' : ''}${net})`
+      }
+      lines.push(`${i + 1}. ${cellText}${vote}`)
+    })
+    download(`szavazas-${(poll.title_hu || 'eredmeny').slice(0, 40)}.txt`, lines.join('\n'), 'text/plain;charset=utf-8')
+  }
+
   const exportPNG = () => {
     const scale = 2, W = 760, PAD = 24, ROWH = 30, TITLEH = 40
     const cols = (poll.columns || []).map(c => c.name_hu || '')
@@ -477,6 +498,7 @@ export default function AdminPoll() {
               )}
               {poll.id && <button className="acms-btn-sm" onClick={exportCSV}>Letöltés CSV</button>}
               {poll.id && <button className="acms-btn-sm" onClick={exportJSON}>Letöltés JSON</button>}
+              {poll.id && <button className="acms-btn-sm" onClick={exportTXT}>Letöltés TXT</button>}
               {poll.id && poll.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>Letöltés PNG</button>}
               {poll.id && <button className="acms-btn-danger" onClick={() => setConfirmDel(true)}>Szavazás törlése</button>}
             </div>
@@ -491,6 +513,7 @@ export default function AdminPoll() {
                 <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
                   <button className="acms-btn-sm" onClick={exportCSV}>Letöltés CSV</button>
                   <button className="acms-btn-sm" onClick={exportJSON}>Letöltés JSON</button>
+                  <button className="acms-btn-sm" onClick={exportTXT}>Letöltés TXT</button>
                   {poll.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>Letöltés PNG</button>}
                   <button className="acms-btn-danger" onClick={doDelete} disabled={saving}>Törlés véglegesen</button>
                   <button className="acms-btn-sm" onClick={() => setConfirmDel(false)}>Mégse</button>

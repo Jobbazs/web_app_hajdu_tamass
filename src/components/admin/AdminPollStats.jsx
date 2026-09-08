@@ -152,6 +152,29 @@ export default function AdminPollStats() {
     download('szavazas-osszehasonlitas.json', JSON.stringify(data, null, 2), 'application/json')
   }
 
+  const exportTXT = () => {
+    const parts = selected.map(({ poll, options }) => {
+      const isSimple = (poll.vote_style || 'updown') === 'simple'
+      const scoreOf = (o) => (isSimple ? o.up_votes : o.up_votes - o.down_votes)
+      const sorted = poll.has_votes ? [...options].sort((a, b) => scoreOf(b) - scoreOf(a)) : options
+      const lines = [`Szavazás: ${poll.title_hu || '(cím nélkül)'}`]
+      const cols = (poll.columns || []).map(c => c.name_hu).filter(Boolean)
+      if (cols.length) lines.push(`Oszlopok: ${cols.join(', ')}`)
+      lines.push('')
+      sorted.forEach((o, i) => {
+        const cellText = cellsFor(o.cells, poll.columns).map(c => c.hu).filter(Boolean).join(' | ') || '—'
+        let vote = ''
+        if (poll.has_votes) {
+          const net = o.up_votes - o.down_votes
+          vote = isSimple ? ` — ${o.up_votes} szavazat` : ` — ▲${o.up_votes} / ▼${o.down_votes} (nettó: ${net >= 0 ? '+' : ''}${net})`
+        }
+        lines.push(`${i + 1}. ${cellText}${vote}`)
+      })
+      return lines.join('\n')
+    })
+    download('szavazas-osszehasonlitas.txt', parts.join('\n\n———\n\n'), 'text/plain;charset=utf-8')
+  }
+
   const available = allPolls.filter(p => !selected.some(s => s.poll.id === p.id))
 
   return (
@@ -169,6 +192,7 @@ export default function AdminPollStats() {
         </select>
         {selected.length > 0 && <button className="acms-btn-sm" onClick={exportCSV}>CSV</button>}
         {selected.length > 0 && <button className="acms-btn-sm" onClick={exportJSON}>JSON</button>}
+        {selected.length > 0 && <button className="acms-btn-sm" onClick={exportTXT}>TXT</button>}
         {selected.length > 0 && <button className="acms-btn-sm" onClick={exportPNG}>PNG</button>}
       </div>
 
