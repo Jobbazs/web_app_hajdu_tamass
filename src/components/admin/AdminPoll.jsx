@@ -390,17 +390,26 @@ export default function AdminPoll() {
               </select>
             </div>
 
-            <div className="acms-form-group">
-              <label>Állapot: {poll.status === 'closed' ? 'Lezárva' : 'Nyitott'}</label>
-              <button
-                className={poll.status === 'closed' ? 'acms-btn-sm' : 'acms-btn-danger'}
-                onClick={closePoll} disabled={saving} style={{ maxWidth: 260 }}>
-                {poll.status === 'closed' ? 'Szavazás újranyitása' : 'Szavazás lezárása'}
-              </button>
-              <div className="acms-hint">
-                Az új szavazás alapból <strong>nyitott</strong> (a beállítás után élő). A lezárási időpontnál automatikusan lezárul; ezzel a gombbal kézzel is lezárhatod.
+            {poll.closes_at && new Date(poll.closes_at).getTime() < Date.now() ? (
+              <div className="acms-form-group">
+                <label>Állapot: Lezárult (lejárt)</label>
+                <div className="acms-hint">
+                  A szavazás a lezárási időpontnál lezárult, az eredménye elérhető. Ha újra szeretnéd nyitni, előbb töröld vagy told ki a lezárási időpontot.
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="acms-form-group">
+                <label>Állapot: {poll.status === 'closed' ? 'Lezárva' : 'Nyitott'}</label>
+                <button
+                  className={poll.status === 'closed' ? 'acms-btn-sm' : 'acms-btn-danger'}
+                  onClick={closePoll} disabled={saving} style={{ maxWidth: 260 }}>
+                  {poll.status === 'closed' ? 'Szavazás újranyitása' : 'Szavazás lezárása'}
+                </button>
+                <div className="acms-hint">
+                  Az új szavazás alapból <strong>nyitott</strong> (a beállítás után élő). A lezárási időpontnál automatikusan lezárul; ezzel a gombbal kézzel is lezárhatod.
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Oszlopok */}
