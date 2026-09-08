@@ -460,7 +460,7 @@
   .acms-content { padding: 1rem; }
   /* Fő fülek: több sorba tördelnek, nincs vízszintes húzogatás */
   .acms-tabs { flex-wrap: wrap; overflow-x: visible; padding: 0 1rem; row-gap: 2px; }
-  .acms-tab { padding: 0.5rem 0.7rem; font-size: 0.83rem; letter-spacing: 0.1em; }
+  .acms-tab { padding: 0.5rem 0.7rem; font-size: 0.56rem; letter-spacing: 0.1em; }
   .acms-form-row { grid-template-columns: 1fr; }
   
   .acms-list-actions {
@@ -1279,3 +1279,87 @@
 
 /* Gombok SEHOL ne sötétedjenek/halványuljanak el (rejtett elemnél sem) */
 .acms-port-card .acms-btn-sm { opacity: 1 !important; filter: none !important; }
+
+/* Mobil (600px alatt): CMS betűméretek az eredetire állítva – desktop marad nagyobb */
+@media (max-width: 600px) {
+  .admin-title { font-size: 1.3rem; }
+  .admin-subtitle { font-size: 0.6rem; }
+  .admin-logout-btn { font-size: 0.62rem; }
+  .admin-empty { font-size: 0.7rem; }
+  .acms-section-title { font-size: 1.3rem; }
+  .acms-section-sub { font-size: 0.6rem; }
+  .acms-btn-primary { font-size: 0.62rem; }
+  .acms-btn-secondary { font-size: 0.62rem; }
+  .acms-btn-sm { font-size: 0.54rem; }
+  .acms-btn-danger { font-size: 0.54rem; }
+  .acms-tag { font-size: 0.5rem; }
+  .acms-form-group label { font-size: 0.58rem; }
+  .acms-form-group--check label { font-size: 0.66rem; }
+  .acms-input { font-size: 1rem; }
+  .acms-hint { font-size: 0.54rem; }
+  .acms-error { font-size: 0.62rem; }
+  .acms-success { font-size: 0.62rem; }
+  .acms-modal-header { font-size: 1.3rem; }
+  .acms-modal-close { font-size: 1rem; }
+  .acms-status-badge { font-size: 0.58rem; }
+  .acms-align-btn { font-size: 0.58rem; }
+  .acms-booking-name { font-size: 1.2rem; }
+  .acms-booking-contact { font-size: 0.62rem; }
+  .acms-booking-message { font-size: 0.9rem; }
+  .acms-table { font-size: 0.86rem; }
+  .acms-table th { font-size: 0.54rem; }
+  .acms-cell-strong { font-size: 1.06rem; }
+  .acms-cell-sub { font-size: 0.6rem; }
+  .acms-status-pill { font-size: 0.54rem; }
+  .acms-row-toggle { font-size: 0.8rem; }
+  .acms-detail-k { font-size: 0.54rem; }
+  .acms-detail-cancel-row .acms-input { font-size: 0.72rem; }
+  .acms-slot-date { font-size: 0.66rem; }
+  .acms-slot-title { font-size: 1.3rem; }
+  .acms-slot-capacity { font-size: 0.72rem; }
+  .acms-reliability-level { font-size: 0.66rem; }
+  .acms-reliability-stats { font-size: 0.6rem; }
+  .acms-port-cat-filter { font-size: 0.86rem; }
+  .acms-port-card-ph { font-size: 1.3rem; }
+  .acms-port-card-hidden-badge { font-size: 0.5rem; }
+  .acms-port-card-title { font-size: 0.62rem; }
+  .acms-port-card-btns .acms-btn-sm { font-size: 0.54rem; }
+  .acms-order-handle { font-size: 1.1rem; }
+  .acms-order-label { font-size: 1.2rem; }
+  .acms-order-badge { font-size: 0.58rem; }
+  .adv-doc { font-size: 0.94rem; }
+  .adv-doc-col-title { font-size: 0.6rem; }
+  .adv-doc-col li { font-size: 0.88rem; }
+  .adv-doc-note { font-size: 0.86rem; }
+  .acms-loading { font-size: 0.86rem; }
+  .acms-h2 { font-size: 1.14rem; }
+  .acms-label { font-size: 0.7rem; }
+  .acms-lang-toggle button { font-size: 0.72rem; }
+  .acms-cat-tab { font-size: 0.8rem; }
+  .acms-cat-view { font-size: 0.78rem; }
+  .acms-cat-preview-label { font-size: 0.68rem; }
+  .acms-secs-title { font-size: 1rem; }
+  .acms-btn-sm { font-size: 0.78rem; }
+  .acms-secs-empty { font-size: 0.86rem; }
+  .acms-sec-type { font-size: 0.62rem; }
+  .acms-sec-name { font-size: 0.9rem; }
+  .acms-sec-meta { font-size: 0.68rem; }
+  .acms-chip { font-size: 0.72rem; }
+  .acms-img-badge { font-size: 0.66rem; }
+  .dash-stat-val { font-size: 1.3rem; }
+  .dash-stat-label { font-size: 0.72rem; }
+  .dash-stat-sub { font-size: 0.66rem; }
+  .dash-card-title { font-size: 0.74rem; }
+  .dash-empty { font-size: 0.82rem; }
+  .dash-bar-val { font-size: 0.72rem; }
+  .dnd-handle { font-size: 1.1rem; }
+  .cld-upload-label { font-size: 0.8rem; }
+  .cld-upload-label small { font-size: 0.66rem; }
+  .cld-upload-progress span { font-size: 0.72rem; }
+  .cld-upload-error { font-size: 0.72rem; }
+  .dash-year-select { font-size: 0.78rem; }
+  .dash-info { font-size: 0.6rem; }
+  .acms-switch { font-size: 0.86rem; }
+  .admin-demo-banner { font-size: 0.8rem; }
+  .acms-switch-label { font-size: 0.72rem; }
+}

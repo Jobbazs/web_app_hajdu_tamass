@@ -33,6 +33,20 @@ function download(name, text, mime) {
   a.href = url; a.download = name; a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+function dataURLtoBlob(dataURL) {
+  const [head, b64] = dataURL.split(',')
+  const mime = (head.match(/:(.*?);/) || [])[1] || 'image/png'
+  const bin = atob(b64)
+  const arr = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
+  return new Blob([arr], { type: mime })
+}
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = name; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
 
 export default function AdminPoll() {
   const [polls, setPolls]         = useState([])
@@ -233,6 +247,41 @@ export default function AdminPoll() {
     download(`szavazas-${(poll.title_hu || 'eredmeny').slice(0, 40)}.json`, JSON.stringify(data, null, 2), 'application/json')
   }
 
+  const exportPNG = () => {
+    const scale = 2, W = 760, PAD = 24, ROWH = 30, TITLEH = 40
+    const cols = (poll.columns || []).map(c => c.name_hu || '')
+    const nCols = cols.length + (poll.has_votes ? 1 : 0)
+    const colW = (W - PAD * 2) / Math.max(nCols, 1)
+    const isSimple = (poll.vote_style || 'updown') === 'simple'
+    const scoreOf = (r) => (isSimple ? r.up : r.up - r.down)
+    const sorted = poll.has_votes ? [...rows].sort((a, b) => scoreOf(b) - scoreOf(a)) : rows
+    const totalH = PAD + TITLEH + ROWH + Math.max(rows.length, 1) * ROWH + 28
+    const canvas = document.createElement('canvas')
+    canvas.width = W * scale; canvas.height = totalH * scale
+    const ctx = canvas.getContext('2d'); ctx.scale(scale, scale)
+    ctx.fillStyle = '#1a1510'; ctx.fillRect(0, 0, W, totalH)
+    let y = PAD
+    ctx.fillStyle = '#FF3B30'; ctx.font = "700 20px 'Bebas Neue', sans-serif"
+    ctx.fillText(poll.title_hu || '(cím nélkül)', PAD, y + 24); y += TITLEH
+    ctx.font = '700 12px monospace'; ctx.fillStyle = '#C8B89A'
+    cols.forEach((c, i) => ctx.fillText(String(c).slice(0, 18), PAD + i * colW + 4, y + 20))
+    if (poll.has_votes) ctx.fillText(isSimple ? '▲' : '▲/▼', PAD + cols.length * colW + 4, y + 20)
+    y += ROWH
+    ctx.font = '13px monospace'; ctx.fillStyle = '#e8dcc8'
+    sorted.forEach(r => {
+      r.cells.forEach((cell, i) => ctx.fillText(String(cell.hu).slice(0, 20), PAD + i * colW + 4, y + 20))
+      if (poll.has_votes) ctx.fillText(isSimple ? `▲${r.up}` : `▲${r.up} ▼${r.down}`, PAD + cols.length * colW + 4, y + 20)
+      y += ROWH
+    })
+    const blob = dataURLtoBlob(canvas.toDataURL('image/png'))
+    const file = new File([blob], `szavazas-${(poll.title_hu || 'eredmeny').slice(0, 40)}.png`, { type: 'image/png' })
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file] }).catch(err => { if (err && err.name !== 'AbortError') downloadBlob(blob, file.name) })
+    } else {
+      downloadBlob(blob, file.name)
+    }
+  }
+
   // ── Törlés ──
   const doDelete = async () => {
     if (!poll?.id) { setSelId(null); setPoll(null); return }
@@ -377,11 +426,11 @@ export default function AdminPoll() {
             {rows.length === 0 && <div className="admin-empty">Még nincs sor.</div>}
             {rows.map((r, ri) => (
               <div key={ri} style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '0.7rem', marginBottom: '0.7rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <strong style={{ opacity: 0.7, fontSize: '0.8rem' }}>
+                <div className="poll-row-head">
+                  <strong className="poll-row-label">
                     {ri + 1}. sor {poll.has_votes && <span style={{ opacity: 0.6 }}>(▲ {r.up} / ▼ {r.down})</span>}
                   </strong>
-                  <div style={{ display: 'flex', gap: '0.3rem' }}>
+                  <div className="poll-row-btns">
                     <button className="acms-btn-sm" onClick={() => moveRow(ri, -1)} disabled={ri === 0}>↑</button>
                     <button className="acms-btn-sm" onClick={() => moveRow(ri, 1)} disabled={ri === rows.length - 1}>↓</button>
                     <button className="acms-btn-sm" onClick={() => removeRow(ri)}>Törlés</button>
@@ -412,6 +461,7 @@ export default function AdminPoll() {
               )}
               {poll.id && <button className="acms-btn-sm" onClick={exportCSV}>Letöltés CSV</button>}
               {poll.id && <button className="acms-btn-sm" onClick={exportJSON}>Letöltés JSON</button>}
+              {poll.id && poll.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>Letöltés PNG</button>}
               {poll.id && <button className="acms-btn-danger" onClick={() => setConfirmDel(true)}>Szavazás törlése</button>}
             </div>
             {msg && <span className="acms-hint" style={{ color: 'var(--rust-light)' }}>{msg}</span>}
@@ -425,6 +475,7 @@ export default function AdminPoll() {
                 <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
                   <button className="acms-btn-sm" onClick={exportCSV}>Letöltés CSV</button>
                   <button className="acms-btn-sm" onClick={exportJSON}>Letöltés JSON</button>
+                  {poll.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>Letöltés PNG</button>}
                   <button className="acms-btn-danger" onClick={doDelete} disabled={saving}>Törlés véglegesen</button>
                   <button className="acms-btn-sm" onClick={() => setConfirmDel(false)}>Mégse</button>
                 </div>

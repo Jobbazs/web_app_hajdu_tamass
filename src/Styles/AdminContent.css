@@ -411,3 +411,26 @@
   color: #3ddc84;
   white-space: nowrap;
 }
+
+/* Mobil (600px alatt): CMS betűméretek az eredetire állítva – desktop marad nagyobb */
+@media (max-width: 600px) {
+  .acms-sect-preview-text { font-size: 0.9rem; }
+  .acms-sect-preview-title { font-size: 1.3rem; }
+  .acms-sect-field-label { font-size: 0.58rem; }
+  .acms-sect-field-value { font-size: 0.9rem; }
+  .acms-tag-editor-label { font-size: 0.6rem; }
+  .acms-tag-empty { font-size: 0.6rem; }
+  .acms-tag-hu { font-size: 0.66rem; }
+  .acms-tag-en { font-size: 0.58rem; }
+  .acms-tag-remove { font-size: 0.66rem; }
+  .acms-cover-row label { font-size: 0.62rem; }
+  .acms-popup-lang { font-size: 0.7rem; }
+  .acms-popup-icon { font-size: 1.3rem; }
+  .acms-popup-eyebrow { font-size: 0.7rem; }
+  .acms-popup-title { font-size: 1.3rem; }
+  .acms-popup-flabel { font-size: 0.62rem; }
+  .acms-popup-body { font-size: 0.9rem; }
+  .acms-popup-btn { font-size: 0.74rem; }
+  .acms-popup-dismiss { font-size: 0.7rem; }
+  .acms-saved-badge { font-size: 1.3rem; }
+}

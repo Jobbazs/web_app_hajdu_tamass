@@ -34,12 +34,18 @@ export default function Login() {
             <label className="form-label" htmlFor="email">Email</label>
             <input
               id="email"
-              type="email"
+              type="text"
+              inputMode="email"
               className="form-input"
               placeholder="admin@email.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              onFocus={e => { const el = e.target; requestAnimationFrame(() => el.setSelectionRange(el.value.length, el.value.length)) }}
+              onFocus={e => {
+                const el = e.target
+                requestAnimationFrame(() => {
+                  try { el.setSelectionRange(el.value.length, el.value.length) } catch { /* egyes típusok nem támogatják */ }
+                })
+              }}
               autoComplete="email"
             />
           </div>
