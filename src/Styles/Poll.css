@@ -214,7 +214,7 @@
 .poll-legend-vote .poll-vbtn { width: 30px; height: 30px; }
 
 /* ── Nagyobb kördiagram a főoldalon + legend a diagram magasságához igazítva ── */
-.poll-pie-label { font-size: 13px; fill: currentColor; }
+.poll-pie-label { font-size: 17px; fill: currentColor; }
 .poll-section .poll-pie { max-width: 100%; height: auto; }
 .poll-section .poll-pie-label { font-size: 20px; }
 .poll-section .poll-pie-wrap { align-items: flex-start; gap: 2rem; }
@@ -258,3 +258,19 @@
 }
 .acms-toggle input:checked + .acms-toggle-slider { background: #34c759; }
 .acms-toggle input:checked + .acms-toggle-slider::before { transform: translateX(18px); }.acms-toggle-line { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+
+/* ── Szavazás sor-fejléc (szám + ▲/▼ + gombok) – mobilon egymás alá ── */
+.poll-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+.poll-row-label { opacity: 0.75; font-size: 0.95rem; }
+.poll-row-btns { display: flex; gap: 0.3rem; flex-shrink: 0; }
+@media (max-width: 600px) {
+  .poll-row-head { flex-direction: column; align-items: stretch; }
+  .poll-row-btns { justify-content: flex-start; }
+}

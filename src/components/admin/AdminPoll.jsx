@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import AdminPollStats from './AdminPollStats'
+import PollPie, { PIE_COLORS } from '../PollPie'
 
 // Szavazás-kezelő (1. szakasz): létrehozás/szerkesztés, oszlopok + sorok,
 // szavazat-oszlop, időzítő, aktív kapcsoló, Mentés + Előző verzió + Törlés
@@ -68,6 +69,8 @@ export default function AdminPoll() {
   const [snapshot, setSnapshot]   = useState(null)
   const [confirmDel, setConfirmDel] = useState(false)
   const [msg, setMsg]             = useState('')
+  const [resView, setResView]     = useState('percent')   // lezárt eredmény: darab/%
+  const [resMode, setResMode]     = useState('list')      // lezárt eredmény: lista/diagram
 
   const loadList = async () => {
     const { data } = await supabase.from('polls')
@@ -320,8 +323,180 @@ export default function AdminPoll() {
   }
 
   // ── RENDER ──
-  const editorBlock = poll ? (
+  const closed = poll && (poll.status === 'closed' || (poll.closes_at && new Date(poll.closes_at).getTime() < Date.now()))
+
+  const closedActionRow = (
+    <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      {poll && poll.status === 'closed' && !(poll.closes_at && new Date(poll.closes_at).getTime() < Date.now()) && (
+        <button className="acms-btn-sm" onClick={closePoll} disabled={saving}>↺ Szavazás újranyitása</button>
+      )}
+      <button className="acms-btn-danger" onClick={() => setConfirmDel(true)}>Szavazás törlése</button>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginLeft: '0.6rem', flexWrap: 'wrap' }}>
+        <span className="acms-hint" style={{ opacity: 0.85 }}>Letöltés:</span>
+        <button className="acms-btn-sm" onClick={exportCSV}>CSV</button>
+        <button className="acms-btn-sm" onClick={exportJSON}>JSON</button>
+        <button className="acms-btn-sm" onClick={exportTXT}>TXT</button>
+        {poll?.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>PNG</button>}
+      </span>
+    </div>
+  )
+
+  const confirmDelPanel = confirmDel ? (
+    <div style={{ marginTop: '1rem', border: '1px solid var(--rust-light)', borderRadius: 4, padding: '1rem' }}>
+      <p style={{ marginTop: 0 }}>
+        Biztosan <strong>véglegesen törlöd</strong> ezt a szavazást és az eredményét? Ez nem vonható vissza.
+        Előtte letöltheted az eredményt:
+      </p>
+      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+        <button className="acms-btn-sm" onClick={exportCSV}>CSV</button>
+        <button className="acms-btn-sm" onClick={exportJSON}>JSON</button>
+        <button className="acms-btn-sm" onClick={exportTXT}>TXT</button>
+        {poll?.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>PNG</button>}
+        <button className="acms-btn-danger" onClick={doDelete} disabled={saving}>Törlés véglegesen</button>
+        <button className="acms-btn-sm" onClick={() => setConfirmDel(false)}>Mégse</button>
+      </div>
+    </div>
+  ) : null
+
+  const readonlyBlock = poll ? (() => {
+    const isSimple = (poll.vote_style || 'updown') === 'simple'
+    const scoreOf = (r) => (isSimple ? r.up : r.up - r.down)
+    const totalScore = rows.reduce((s, r) => s + Math.max(0, scoreOf(r)), 0)
+    const sorted = poll.has_votes ? [...rows].sort((a, b) => scoreOf(b) - scoreOf(a)) : rows
+    const cols = (poll.columns || []).map(c => c.name_hu || '')
+    const rowLabel = (r) => r.cells.map(c => c.hu).filter(Boolean).join(' – ') || '—'
+    const pieSlices = sorted.map((r, i) => ({ label: rowLabel(r), value: Math.max(0, scoreOf(r)), color: PIE_COLORS[i % PIE_COLORS.length] }))
+    const info = [
+      ['Cím (HU)', poll.title_hu || '—'],
+      ['Cím (EN)', poll.title_en || '—'],
+      ['Típus', poll.type === 'suggestions' ? 'Látogatók javasolhatnak' : 'Fix opciók'],
+      ['Szavazat', poll.has_votes ? (isSimple ? 'Egyszerű (▲)' : 'Fel/le (▲/▼)') : 'Nincs'],
+      ['Kezdés', poll.starts_at ? new Date(poll.starts_at).toLocaleString('hu-HU') : '—'],
+      ['Lezárás', poll.closes_at ? new Date(poll.closes_at).toLocaleString('hu-HU') : '—'],
+      ['Oszlopok', cols.filter(Boolean).join(', ') || '—'],
+    ]
+    return (
+      <>
+        <div className="acms-content-group" style={{ paddingBottom: '0.4rem' }}>
+          {closedActionRow}
+          {confirmDelPanel}
+        </div>
+
+        <div className="acms-content-group">
+          <div className="acms-content-group-label">Szavazás lezárult – csak megtekintés</div>
+          {info.map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
+              <strong style={{ minWidth: 90, opacity: 0.7 }}>{k}:</strong> <span>{v}</span>
+            </div>
+          ))}
+        </div>
+
+        {poll.has_votes && (
+          <div className="acms-content-group">
+            <div className="acms-sect-header-row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div className="acms-content-group-label">Eredmény</div>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div className="poll-viewtoggle poll-stats-toggle">
+                  <button className={resView === 'count' ? 'active' : ''} onClick={() => setResView('count')}>Darab</button>
+                  <button className={resView === 'percent' ? 'active' : ''} onClick={() => setResView('percent')}>%</button>
+                </div>
+                <div className="poll-viewtoggle poll-stats-toggle">
+                  <button className={resMode === 'list' ? 'active' : ''} onClick={() => setResMode('list')}>Lista</button>
+                  <button className={resMode === 'pie' ? 'active' : ''} onClick={() => setResMode('pie')}>Diagram</button>
+                </div>
+              </div>
+            </div>
+            {resMode === 'pie' ? (
+              <div className="poll-pie-wrap">
+                <PollPie slices={pieSlices} view={resView} size={200} />
+                <div className="poll-legend">
+                  {sorted.map((r, i) => {
+                    const pct = totalScore > 0 ? Math.round((Math.max(0, scoreOf(r)) / totalScore) * 100) : 0
+                    return (
+                      <div className="poll-legend-row" key={r.id || i}>
+                        <span className="poll-legend-swatch" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                        <span className="poll-legend-name">{rowLabel(r)}</span>
+                        <span className="poll-legend-val">{resView === 'percent' ? `${pct}%` : (isSimple ? `▲${r.up}` : `▲${r.up} ▼${r.down}`)}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="poll-table-wrap">
+                <table className="poll-table">
+                  <thead>
+                    <tr>
+                      {cols.map((c, i) => <th key={i}>{c}</th>)}
+                      <th className="poll-vote-col">Eredmény</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sorted.map((r, i) => {
+                      const pct = totalScore > 0 ? Math.round((Math.max(0, scoreOf(r)) / totalScore) * 100) : 0
+                      return (
+                        <tr key={r.id || i}>
+                          {r.cells.map((cell, ci) => <td key={ci}>{cell.hu}</td>)}
+                          <td className="poll-vote-col">
+                            <span className="poll-score">{resView === 'percent' ? `${pct}%` : (isSimple ? <>▲{r.up}</> : <>▲{r.up} ▼{r.down}</>)}</span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </>
+    )
+  })() : null
+
+  const actionRow = (
+    <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <button className="acms-btn-primary" onClick={save} disabled={saving}>{saving ? 'Mentés…' : 'Mentés'}</button>
+      {saved && <span className="acms-saved-badge">✓ Mentve</span>}
+      {snapshot && poll?.id && (
+        <button className="acms-btn-sm" onClick={restorePrev} disabled={saving}>↶ Előző verzió</button>
+      )}
+      {poll?.id && <button className="acms-btn-danger" onClick={() => setConfirmDel(true)}>Szavazás törlése</button>}
+      {poll?.id && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginLeft: '0.6rem', flexWrap: 'wrap' }}>
+          <span className="acms-hint" style={{ opacity: 0.85 }}>Letöltés:</span>
+          <button className="acms-btn-sm" onClick={exportCSV}>CSV</button>
+          <button className="acms-btn-sm" onClick={exportJSON}>JSON</button>
+          <button className="acms-btn-sm" onClick={exportTXT}>TXT</button>
+          {poll.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>PNG</button>}
+        </span>
+      )}
+    </div>
+  )
+
+  const editorBlock = poll ? (closed ? readonlyBlock : (
         <>
+          {/* Felső gombsor (ugyanaz, mint alul – ne kelljen legörgetni) */}
+          <div className="acms-content-group" style={{ paddingBottom: '0.4rem' }}>
+            {actionRow}
+            {msg && <span className="acms-hint" style={{ color: 'var(--rust-light)' }}>{msg}</span>}
+            {confirmDel && (
+              <div style={{ marginTop: '1rem', border: '1px solid var(--rust-light)', borderRadius: 4, padding: '1rem' }}>
+                <p style={{ marginTop: 0 }}>
+                  Biztosan <strong>véglegesen törlöd</strong> ezt a szavazást és az eredményét? Ez nem vonható vissza.
+                  Előtte letöltheted az eredményt:
+                </p>
+                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  <button className="acms-btn-sm" onClick={exportCSV}>CSV</button>
+                  <button className="acms-btn-sm" onClick={exportJSON}>JSON</button>
+                  <button className="acms-btn-sm" onClick={exportTXT}>TXT</button>
+                  {poll.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>PNG</button>}
+                  <button className="acms-btn-danger" onClick={doDelete} disabled={saving}>Törlés véglegesen</button>
+                  <button className="acms-btn-sm" onClick={() => setConfirmDel(false)}>Mégse</button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Alapbeállítások */}
           <div className="acms-content-group">
             <div className="acms-content-group-label">Beállítások</div>
@@ -486,43 +661,12 @@ export default function AdminPoll() {
             <button className="acms-btn-sm" onClick={addRow} style={{ marginTop: '0.3rem' }}>+ Sor</button>
           </div>
 
-          {/* Műveletek */}
+          {/* Alsó gombsor (ugyanaz, mint fent) */}
           <div className="acms-content-group">
-            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <button className="acms-btn-primary" onClick={save} disabled={saving}>
-                {saving ? 'Mentés…' : 'Mentés'}
-              </button>
-              {saved && <span className="acms-saved-badge">✓ Mentve</span>}
-              {snapshot && poll.id && (
-                <button className="acms-btn-sm" onClick={restorePrev} disabled={saving}>↶ Előző verzió visszaállítása</button>
-              )}
-              {poll.id && <button className="acms-btn-sm" onClick={exportCSV}>Letöltés CSV</button>}
-              {poll.id && <button className="acms-btn-sm" onClick={exportJSON}>Letöltés JSON</button>}
-              {poll.id && <button className="acms-btn-sm" onClick={exportTXT}>Letöltés TXT</button>}
-              {poll.id && poll.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>Letöltés PNG</button>}
-              {poll.id && <button className="acms-btn-danger" onClick={() => setConfirmDel(true)}>Szavazás törlése</button>}
-            </div>
-            {msg && <span className="acms-hint" style={{ color: 'var(--rust-light)' }}>{msg}</span>}
-
-            {confirmDel && (
-              <div style={{ marginTop: '1rem', border: '1px solid var(--rust-light)', borderRadius: 4, padding: '1rem' }}>
-                <p style={{ marginTop: 0 }}>
-                  Biztosan <strong>véglegesen törlöd</strong> ezt a szavazást és az eredményét? Ez nem vonható vissza.
-                  Előtte letöltheted az eredményt:
-                </p>
-                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-                  <button className="acms-btn-sm" onClick={exportCSV}>Letöltés CSV</button>
-                  <button className="acms-btn-sm" onClick={exportJSON}>Letöltés JSON</button>
-                  <button className="acms-btn-sm" onClick={exportTXT}>Letöltés TXT</button>
-                  {poll.has_votes && <button className="acms-btn-sm" onClick={exportPNG}>Letöltés PNG</button>}
-                  <button className="acms-btn-danger" onClick={doDelete} disabled={saving}>Törlés véglegesen</button>
-                  <button className="acms-btn-sm" onClick={() => setConfirmDel(false)}>Mégse</button>
-                </div>
-              </div>
-            )}
+            {actionRow}
           </div>
         </>
-  ) : null
+  )) : null
 
   return (
     <div className="acms-section">
