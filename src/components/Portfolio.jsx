@@ -68,7 +68,7 @@ export default function Portfolio() {
     setSelected(modalItems[(idx - 1 + modalItems.length) % modalItems.length])
   }, [selected, modalItems])
 
-ű
+
   const displayCats = (categories.length ? categories : FIXED_CATEGORIES).map(cat => ({
     ...cat,
     cover: getCoverItem(cat.slug),
