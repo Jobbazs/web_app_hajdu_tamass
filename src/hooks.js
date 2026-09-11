@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient'
 
 function useRealtimeRefetch(tables, refetch) {
   useEffect(() => {
-   
+
     if (typeof window === 'undefined' || !window.location.pathname.startsWith('/admin')) return
 
     let timer = null
@@ -22,7 +22,7 @@ function useRealtimeRefetch(tables, refetch) {
       clearTimeout(timer)
       supabase.removeChannel(channel)
     }
-  }, [refetch]) 
+  }, [refetch])
 }
 
 export function usePortfolio(includeHidden = false) {
@@ -39,7 +39,6 @@ export function usePortfolio(includeHidden = false) {
       .select('*, portfolio_categories(id, slug, label_hu, label_en)')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true })
- 
     if (!includeHidden) query = query.eq('visible', true)
     const { data, error } = await query
     if (error) setError(error)
@@ -151,7 +150,6 @@ export function useCustomSections() {
   return { sections, loading, refetch: fetch }
 }
 
-
 export function useAvailableSlots() {
   const [slots,   setSlots]   = useState([])
   const [loading, setLoading] = useState(true)
@@ -250,7 +248,6 @@ export function useCategorySections() {
   useRealtimeRefetch(['category_sections'], fetch)
   return { sections, loading, refetch: fetch }
 }
-
 export function useAdminRole() {
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -279,4 +276,19 @@ export function useAdminRole() {
     isSuperadmin: role === 'superadmin',
     loading,
   }
+}
+
+export function useActivePoll() {
+  const [active, setActive] = useState(false)
+
+  useEffect(() => {
+    supabase.from('polls').select('starts_at').eq('active', true).limit(1).maybeSingle()
+      .then(({ data }) => {
+        if (!data) { setActive(false); return }
+        const started = !data.starts_at || new Date(data.starts_at).getTime() <= Date.now()
+        setActive(started)
+      })
+  }, [])
+
+  return active
 }
