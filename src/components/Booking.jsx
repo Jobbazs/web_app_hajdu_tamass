@@ -31,14 +31,14 @@ export default function Booking() {
 
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [form,         setForm]         = useState(EMPTY_FORM)
-  const [step,         setStep]         = useState('list')   // 'list' | 'form'
+  const [step,         setStep]         = useState('list')
   const [sending,      setSending]      = useState(false)
   const [error,        setError]        = useState('')
   const [waitlistDone, setWaitlistDone] = useState(false)
   const [showThanks,   setShowThanks]   = useState(false)
-  const [thanksKind,   setThanksKind]   = useState('booking')  // 'booking' | 'waitlist'
+  const [thanksKind,   setThanksKind]   = useState('booking')
   const [sentEmail,    setSentEmail]    = useState('')
-  const [consent,      setConsent]      = useState(false)   // GDPR – kötelező bepipálni
+  const [consent,      setConsent]      = useState(false)
 
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
 
@@ -49,7 +49,6 @@ export default function Booking() {
     return null
   }
 
-  // ── Időpont foglalás ─────────────────────────────────────────
   const handleBook = async (e) => {
     e.preventDefault()
     const err = validate()
@@ -57,10 +56,9 @@ export default function Booking() {
 
     setSending(true); setError('')
 
-    // Token generálás
     const token     = crypto.randomUUID()
     const cancelTok = crypto.randomUUID()
-    const expires   = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 perc
+    const expires   = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
     const { error: dbErr } = await supabase.from('appointments').insert({
       slot_id:            selectedSlot.id,
@@ -79,11 +77,8 @@ export default function Booking() {
       setSending(false); return
     }
 
-    // Email küldés (Supabase Edge Function-nel, vagy EmailJS fallback)
     await sendConfirmationEmail(form, selectedSlot, token)
-
-    // A lista marad a helyén (nem zsugorodik a szekció → nincs ugrás),
-    // a visszajelzés popupban érkezik
+   
     setSentEmail(form.email)
     setThanksKind('booking')
     setShowThanks(true)
@@ -94,7 +89,6 @@ export default function Booking() {
     setSending(false)
   }
 
-  // ── Várólistára feliratkozás ─────────────────────────────────
   const handleWaitlist = async (e) => {
     e.preventDefault()
     const err = validate()
@@ -102,9 +96,6 @@ export default function Booking() {
 
     setSending(true); setError('')
 
-    // A pozíciót a szerveroldali trigger (trg_set_waitlist_position) tölti ki,
-    // így a kliensnek nem kell a várólista-táblát olvasnia (a publikus SELECT
-    // biztonsági okból meg lett szüntetve).
     const { error: dbErr } = await supabase.from('appointment_waitlist').insert({
       slot_id:  selectedSlot.id,
       name:     form.name.trim(),
@@ -129,7 +120,6 @@ export default function Booking() {
   const isFull   = (s) => s.booked_count >= s.capacity
   const isAlmost = (s) => s.available_spots === 1
 
-  // ── Csoportosítás dátum szerint ─────────────────────────────
   const grouped = slots.reduce((acc, s) => {
     const key = s.slot_date
     if (!acc[key]) acc[key] = []
@@ -147,7 +137,6 @@ export default function Booking() {
           {lang === 'hu' ? 'Időpontfoglalás' : 'Booking'}
         </h2>
 
-        {/* ── LISTA ── */}
         {step === 'list' && (
           loading ? (
             <div className="booking-empty">
@@ -209,7 +198,6 @@ export default function Booking() {
           )
         )}
 
-        {/* ── FORM ── */}
         {step === 'form' && selectedSlot && (
           <div className="booking-form-wrap">
             <button className="booking-back" onClick={() => setStep('list')}>
@@ -224,7 +212,6 @@ export default function Booking() {
               <div className="booking-selected-title">{selectedSlot.title}</div>
             </div>
 
-            {/* Várólistára ha tele */}
             {isFull(selectedSlot) ? (
               waitlistDone ? (
                 <div className="booking-success">
@@ -284,11 +271,8 @@ export default function Booking() {
             )}
           </div>
         )}
-
-        {/* ── SIKER ── */}
       </div>
 
-      {/* Visszajelző popup – a szekció nem zsugorodik, nincs görgetés-ugrás */}
       <ThankYou
         visible={showThanks}
         onClose={() => setShowThanks(false)}
@@ -311,7 +295,6 @@ export default function Booking() {
   )
 }
 
-// ── Form mezők ────────────────────────────────────────────────
 function renderFields(form, handleChange, lang) {
   return (
     <>
@@ -355,10 +338,6 @@ function renderFields(form, handleChange, lang) {
   )
 }
 
-// ── Email küldés – Resend.com ────────────────────────────────
-// Csak a confirmToken-t küldjük: a címzettet és minden adatot a szerver
-// a DB-ből olvas ki (token-ellenőrzés) → a függvény nem használható
-// nyílt email-relay-ként. (A cancelToken paraméter már nem kell.)
 async function sendConfirmationEmail(form, slot, token) {
   try {
     const { error } = await supabase.functions.invoke('send-booking-email', {
@@ -367,6 +346,5 @@ async function sendConfirmationEmail(form, slot, token) {
     if (error) console.warn('Edge function email error:', error)
   } catch (e) {
     console.warn('sendConfirmationEmail error:', e)
-    // Nem blokkolja a foglalást ha az email küldés hibázik
   }
 }

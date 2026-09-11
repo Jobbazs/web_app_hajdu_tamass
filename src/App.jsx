@@ -19,13 +19,6 @@ import PollWarning    from './components/PollWarning'
 
 import './Styles/global.css'
 
-// Ritka / privát útvonalak – külön chunk, csak igény szerint töltődik.
-// A legnagyobb nyereség: az admin (8 panel + @dnd-kit) így NEM része a
-// főoldali csomagnak. A publikus aloldalak (Hub, CategoryPage) szándékosan
-// eager-ek, mert prerenderelt tartalmuk van – ott a lazy villanást okozna.
-// Ha egy dinamikus import elbukik (általában ELAVULT CHUNK egy új deploy után),
-// egyszer újratöltjük az oldalt – így a böngésző a friss index.html-t és az új
-// chunk-neveket kapja. Időalapú védelem a végtelen újratöltés ellen (10 mp).
 function lazyWithReload(factory) {
   return lazy(() =>
     factory().catch((err) => {
@@ -48,7 +41,6 @@ const Termekismerteto = lazyWithReload(() => import('./components/Termekismertet
 const Adatkezeles     = lazyWithReload(() => import('./components/Adatkezeles'))
 const Impresszum      = lazyWithReload(() => import('./components/Impresszum'))
 
-// Szekció komponens térkép
 const SECTION_COMPONENTS = {
   about:     <About />,
   portfolio: <Portfolio />,
@@ -59,12 +51,8 @@ const SECTION_COMPONENTS = {
   poll:      <Poll />,
 }
 
-// Nem publikus termékismertető aloldal útvonala.
-// Nincs sehol linkelve, nincs a sitemapben, a komponens noindex-eli.
-// Átnevezéshez elég ezt az egy sort módosítani.
 const INFO_PATH = '/termekismerteto-9fa3'
 
-// Alapértelmezett sorrend ha nincs DB beállítás
 const DEFAULT_ORDER = [
   { key: 'about',     visible: true },
   { key: 'portfolio', visible: true },
@@ -85,10 +73,6 @@ function useRoute() {
   return path
 }
 
-// A főoldal szekcióit React rendereli, adatbetöltés UTÁN – ezért a böngésző
-// a betöltés pillanatában még nem találja a #hash horgonyt, és a lap tetején
-// marad. Ez a hook megvárja, míg az elem megjelenik, és odagördít.
-// Érinti: a navbar aloldali linkjei (/#contact stb.) és a 404 oldal linkjei.
 function useHashScroll() {
   useEffect(() => {
     const id = decodeURIComponent(window.location.hash.slice(1))
@@ -103,7 +87,6 @@ function useHashScroll() {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' })
         return
       }
-      // ~3 másodpercig várunk az adatbetöltésre, aztán feladjuk
       if (++tries < 30) timer = setTimeout(attempt, 100)
     }
 
@@ -154,7 +137,6 @@ function AppInner() {
   if (path === '/confirm' || path === '/cancel')
     return <Suspense fallback={null}><Confirm /></Suspense>
 
-  // Nem publikus termékismertető (noindex, nincs a menüben/sitemapben)
   if (path === INFO_PATH || path === INFO_PATH + '/')
     return <Suspense fallback={null}><Termekismerteto /></Suspense>
 
@@ -164,7 +146,6 @@ function AppInner() {
   if (path === '/impresszum' || path === '/impresszum/')
     return <Suspense fallback={null}><Impresszum /></Suspense>
 
-  // Portfólió aloldalak (SEO): hub + kategória-oldalak
   if (path === '/portfolio' || path === '/portfolio/') return <PortfolioHub />
   if (path.startsWith('/portfolio/')) {
     const slug = decodeURIComponent(path.slice('/portfolio/'.length).replace(/\/+$/, ''))
@@ -179,8 +160,6 @@ function AppInner() {
         <Hero />
         {(() => {
           let list = sectOrder.filter(s => s.visible)
-          // Aktív szavazásnál a Poll szekció akkor is megjelenik, ha a mentett
-          // sorrend még nem tartalmazza (a Poll magától null, ha nincs aktív szavazás).
           if (!sectOrder.some(s => s.key === 'poll')) {
             const ci = list.findIndex(s => s.key === 'contact')
             const entry = { key: 'poll', visible: true }

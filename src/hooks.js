@@ -1,23 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from './supabaseClient'
 
-// ─────────────────────────────────────────────────────────────
-//  Realtime segéd: a megadott táblák változásaira újratölt.
-//  Egyetlen csatorna / hook, több táblára is feliratkozhat.
-//  Kis debounce, hogy a gyors egymásutáni események ne
-//  indítsanak fölösleges lekérdezés-áradatot (free tier-barát).
-//
-//  FONTOS: a táblákon a Realtime-nak engedélyezve kell lennie
-//  (a mellékelt SQL 5) blokkja ezt beállítja), és a Realtime
-//  tiszteletben tartja az RLS-t – anonim kliens csak azt kapja
-//  meg, amit amúgy is olvashat.
-// ─────────────────────────────────────────────────────────────
 function useRealtimeRefetch(tables, refetch) {
   useEffect(() => {
-    // Realtime CSAK az adminban kell (élő frissítés a szerkesztéshez).
-    // Publikus oldalakon felesleges WebSocket-kapcsolat lenne: az adatok az
-    // első betöltéskor megvannak, és úgyis teljes újratöltéssel navigálunk.
-    // Ez csökkenti a kapcsolatokat és megszünteti a publikus WS-hibákat.
+   
     if (typeof window === 'undefined' || !window.location.pathname.startsWith('/admin')) return
 
     let timer = null
@@ -36,10 +22,9 @@ function useRealtimeRefetch(tables, refetch) {
       clearTimeout(timer)
       supabase.removeChannel(channel)
     }
-  }, [refetch]) // a refetch useCallback-stabil, csak akkor változik, ha kell (pl. filter)
+  }, [refetch]) 
 }
 
-// ─── Portfólió elemek ────────────────────────────────────────
 export function usePortfolio(includeHidden = false) {
   const [items,   setItems]   = useState([])
   const [loading, setLoading] = useState(true)
@@ -47,18 +32,14 @@ export function usePortfolio(includeHidden = false) {
   const firstLoad = useRef(true)
 
   const fetch = useCallback(async () => {
-    // Csak az ELSŐ betöltésnél mutatunk "Betöltés..."-t; a frissítések (mentés,
-    // rejtés, realtime) csendben cserélik az adatot – nincs villogás, a görgetés
-    // sem ugrik a tetejére.
+
     if (firstLoad.current) setLoading(true)
     let query = supabase
       .from('portfolio_items')
       .select('*, portfolio_categories(id, slug, label_hu, label_en)')
       .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: true })   // stabil holtverseny-döntő: azonos sort_order-nél se ugráljanak
-    // A publikus oldal CSAK a látható elemeket kéri; az admin (includeHidden=true)
-    // a rejtetteket is, hogy szürkítve megjelenjenek és visszahozhatók legyenek,
-    // és a darabszámok se essenek le elrejtéskor.
+      .order('created_at', { ascending: true })
+ 
     if (!includeHidden) query = query.eq('visible', true)
     const { data, error } = await query
     if (error) setError(error)
@@ -72,7 +53,6 @@ export function usePortfolio(includeHidden = false) {
   return { items, loading, error, refetch: fetch }
 }
 
-// ─── Portfólió kategóriák ────────────────────────────────────
 export function useCategories() {
   const [categories, setCategories] = useState([])
   const [loading,    setLoading]    = useState(true)
@@ -94,7 +74,6 @@ export function useCategories() {
   return { categories, loading, refetch: fetch }
 }
 
-// ─── Szolgáltatások ──────────────────────────────────────────
 export function useServices() {
   const [services, setServices] = useState([])
   const [loading,  setLoading]  = useState(true)
@@ -114,11 +93,8 @@ export function useServices() {
   return { services, loading, refetch: fetch }
 }
 
-// ─── Site content ────────────────────────────────────────────
 export function useSiteContent() {
-  // Kezdőállapot a prerender által injektált adatból (window.__PRERENDER__),
-  // hogy az első React-render EGYEZZEN a statikus HTML-lel – így megszűnik a
-  // hero/navbar "villanás". A háttér-fetch utána frissíti, ha közben változott.
+
   const [content, setContent] = useState(() => globalThis.__PRERENDER__?.siteContent ?? {})
   const [loading, setLoading] = useState(() => !globalThis.__PRERENDER__?.siteContent)
 
@@ -136,7 +112,6 @@ export function useSiteContent() {
   return { content, loading, refetch: fetch }
 }
 
-// ─── Custom sections – ADMIN: minden szekciót visszaad (visible és rejtett is)
 export function useAllCustomSections() {
   const [sections, setSections] = useState([])
   const [loading,  setLoading]  = useState(true)
@@ -156,7 +131,6 @@ export function useAllCustomSections() {
   return { sections, loading, refetch: fetch }
 }
 
-// ─── Custom sections – FŐOLDAL: csak a látható szekciók
 export function useCustomSections() {
   const [sections, setSections] = useState([])
   const [loading,  setLoading]  = useState(true)
@@ -177,11 +151,7 @@ export function useCustomSections() {
   return { sections, loading, refetch: fetch }
 }
 
-// ─── Időpontfoglalás – elérhető slotok (publikus) ────────────
-//     Csak az appointment_slots-ra iratkozik fel: a foglalások
-//     a booked_count oszlopon keresztül propagálódnak ide (a
-//     trigger frissíti), így a publikus oldal NEM kap PII-t
-//     (nevek / emailek) a realtime csatornán.
+
 export function useAvailableSlots() {
   const [slots,   setSlots]   = useState([])
   const [loading, setLoading] = useState(true)
@@ -189,7 +159,7 @@ export function useAvailableSlots() {
   const fetch = useCallback(async () => {
     setLoading(true)
     const { data } = await supabase
-      .from('available_slots')   // a view-t olvassa
+      .from('available_slots')
       .select('*')
       .order('slot_date', { ascending: true })
     setSlots(data || [])
@@ -201,7 +171,6 @@ export function useAvailableSlots() {
   return { slots, loading, refetch: fetch }
 }
 
-// ─── Admin: összes slot (látható és rejtett) ──────────────────
 export function useAllSlots() {
   const [slots,   setSlots]   = useState([])
   const [loading, setLoading] = useState(true)
@@ -221,7 +190,6 @@ export function useAllSlots() {
   return { slots, loading, refetch: fetch }
 }
 
-// ─── Admin: foglalások ────────────────────────────────────────
 export function useAppointments(filter = 'all') {
   const [appointments, setAppointments] = useState([])
   const [loading,      setLoading]      = useState(true)
@@ -245,7 +213,6 @@ export function useAppointments(filter = 'all') {
   return { appointments, loading, refetch: fetch }
 }
 
-// ─── Admin: megbízhatósági lista ──────────────────────────────
 export function useClientReliability() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
@@ -264,8 +231,6 @@ export function useClientReliability() {
   useRealtimeRefetch(['client_reliability'], fetch)
   return { clients, loading, refetch: fetch }
 }
-// Kategória-szekciók (Fázis 2) – a /portfolio/<slug> aloldalak tartalmi blokkjai.
-// Csak a látható szekciók (a publikus oldalhoz). A CMS külön, teljes listát kér.
 export function useCategorySections() {
   const [sections, setSections] = useState([])
   const [loading,  setLoading]  = useState(true)
@@ -285,12 +250,7 @@ export function useCategorySections() {
   useRealtimeRefetch(['category_sections'], fetch)
   return { sections, loading, refetch: fetch }
 }
-// ─────────────────────────────────────────────────────────────
-//  Admin szerepkör: a bejelentkezett user szerepe az admin_users-ből.
-//  Visszaad: { role, isDemo, isSuperadmin, loading }.
-//  A TÉNYLEGES védelmet az RLS adja (a demo szerver-oldalon nem tud írni);
-//  ez a hook a UI-hoz kell (demo-sáv, jogkezelő láthatósága).
-// ─────────────────────────────────────────────────────────────
+
 export function useAdminRole() {
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)

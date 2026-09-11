@@ -24,13 +24,11 @@ export default function Admin() {
   const [email, setEmail] = useState('')
   const { isDemo } = useAdminRole()
 
-  // Aktivitás-napló: a belépéstől gyűjti a kattintásokat a hibajegyhez.
   useEffect(() => {
     startAdminLog()
     return () => stopAdminLog()
   }, [])
 
-  // Bejelentkezett felhasználó e-mailje (a fejlécbe)
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data?.user?.email || ''))
   }, [])
@@ -41,7 +39,6 @@ export default function Admin() {
 
   return (
     <div className="admin-bg">
-      {/* Header */}
       <div className="admin-header">
         <div className="admin-header-left">
           <div className="admin-title">Admin</div>
@@ -59,7 +56,6 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Tab navigáció */}
       <div className="acms-tabs">
         {TABS.map(tab => (
           <button
@@ -72,7 +68,6 @@ export default function Admin() {
         ))}
       </div>
 
-      {/* Tab tartalom */}
       <div className="acms-content">
         {activeTab === 'dashboard' && <AdminDashboard />}
         {activeTab === 'messages'  && <AdminMessages />}

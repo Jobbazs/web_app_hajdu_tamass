@@ -1,17 +1,11 @@
-// Segédek a portfólió aloldalakhoz (kategória-oldal + hub)
 
-// Cloudinary URL optimalizálás: automata formátum + agresszív (de rács-méretben
-// nem feltűnő) minőség + méretkorlát. c_limit → sosem nagyít fel az eredeti fölé.
-// Nem duplázza, ha már van transzformáció a /upload/ után.
 export function cldThumb(url, w = 800) {
   if (!url || !url.includes('/upload/')) return url
   if (/\/upload\/[^/]*(?:w_|q_|f_)/.test(url)) return url
   return url.replace('/upload/', `/upload/f_auto,q_auto:eco,c_limit,w_${w}/`)
 }
 
-// Nagy (modal) nézet: garantáltan méret- és minőség-cap, akkor is ha a tárolt
-// URL nyers (/upload/<id>) VAGY már tartalmaz transzformációt. A modalban q_auto
-// (jó) minőséget hagyunk, mert itt egy hibás pixel is látszana.
+
 export function cldLarge(url, w = 2000) {
   if (!url || !url.includes('/upload/')) return url
   const seg = url.match(/\/upload\/([^/]+)\//)
@@ -27,15 +21,12 @@ export function cldLarge(url, w = 2000) {
   return url.replace('/upload/', `/upload/f_auto,q_auto,c_limit,w_${w}/`)
 }
 
-// ── Modal-méretű kép háttér-előtöltés ──────────────────────
-const _prefetched = new Set()   // már elindított előtöltés (dedup)
-const _ready      = new Set()   // már teljesen betöltött full URL-ek
+const _prefetched = new Set()
+const _ready      = new Set()
 
-// A full (modal) URL már készen áll? (előtöltve VAGY korábban megnézve)
 export function largeReady(url) {
   return !!url && _ready.has(cldLarge(url, 2000))
 }
-// Kézi jelölés, hogy egy full kép betöltött (a modal onLoad-ból hívjuk)
 export function markLargeReady(url) {
   if (url) _ready.add(cldLarge(url, 2000))
 }
@@ -45,8 +36,6 @@ function _conn() {
   return navigator.connection || navigator.mozConnection || navigator.webkitConnection || null
 }
 
-// Jó kapcsolat? Csak 4g-n és ha nincs Save-Data → biztonságos tömeges előtöltés.
-// Ha nincs Network Information API (pl. Safari desktop), OK-nak vesszük.
 export function goodConnection() {
   const c = _conn()
   if (!c) return true
@@ -54,7 +43,6 @@ export function goodConnection() {
   return (c.effectiveType || '4g') === '4g'
 }
 
-// Egy nagy (modal) kép előtöltése – dedup + Save-Data tisztelet.
 export function prefetchLarge(url) {
   if (!url || typeof Image === 'undefined') return
   const c = _conn()
@@ -68,7 +56,6 @@ export function prefetchLarge(url) {
   if (im.complete && im.naturalWidth > 0) _ready.add(large)
 }
 
-// Igazítási presetek (bal 0-75%, közép 0-100%, jobb 25-100%)
 export const ALIGN_STYLE = {
   left:   { textAlign: 'left',   marginRight: 'auto', maxWidth: '75%'  },
   center: { textAlign: 'center', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%' },
@@ -76,7 +63,6 @@ export const ALIGN_STYLE = {
 }
 export const alignStyle = (a) => ALIGN_STYLE[a] || ALIGN_STYLE.center
 
-// Betűméret presetek → CSS osztály
 export const sizeClass = (s) => `pp-sz-${s || 'normal'}`
 
 export function catLabel(cat, lang) {

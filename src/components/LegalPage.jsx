@@ -3,8 +3,7 @@ import Footer from './Footer'
 import { useLang } from '../LangContext'
 import '../Styles/Legal.css'
 
-// Közös keret a jogi aloldalakhoz (Adatkezelés, Impresszum): navbar felül,
-// tartalom középen, footer alul, plusz egy "Főoldal" vissza-link.
+
 export default function LegalPage({ title, children }) {
   const { lang } = useLang()
   return (

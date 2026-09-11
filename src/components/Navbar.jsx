@@ -1,14 +1,34 @@
 import { useState, useEffect } from 'react'
 import { OWNER } from '../data'
 import { useLang } from '../LangContext'
-import { useSiteContent } from '../hooks'
-import { supabase } from '../supabaseClient'
+import { useSiteContent, useActivePoll } from '../hooks'
 import '../Styles/Navbar.css'
 
-/* ── Social ikonok (inline SVG, currentColor) ───────────────────
-   A CMS csak { label, url } párokat tárol – a platformot a label/url
-   alapján ismerjük fel, és ahhoz rendelünk ikont. Ismeretlen esetén
-   egy általános "link" (glóbusz) ikon jelenik meg. */
+function parseSocials(content) {
+  const stored = content['footer_socials']
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored)
+      if (parsed.length) return parsed
+    } catch {
+      return []
+    }
+  }
+  if (OWNER.instagram) return [{ label: 'Instagram', url: OWNER.instagram }]
+  return []
+}
+
+function parseHiddenSections(content) {
+  const stored = content['sections_order']
+  if (!stored) return new Set()
+  try {
+    const order = JSON.parse(stored)
+    return new Set(order.filter(s => s.visible === false).map(s => s.key))
+  } catch {
+    return new Set()
+  }
+}
+
 const ICON_PATHS = {
   instagram: 'M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41 1.27-.06 1.65-.07 4.85-.07M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.13 1.38C1.35 2.68.94 3.35.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.31.79.72 1.46 1.38 2.13.67.66 1.34 1.07 2.13 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.13-1.38.66-.67 1.07-1.34 1.38-2.13.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.13C21.32 1.35 20.65.94 19.86.63 19.1.33 18.22.13 16.95.07 15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 1 0 12 18.16 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm6.41-11.85a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z',
   facebook: 'M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.87v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z',
@@ -20,13 +40,13 @@ const ICON_PATHS = {
 }
 
 function iconKey(label = '', url = '') {
-  const s = `${label} ${url}`.toLowerCase()
-  if (s.includes('instagram')) return 'instagram'
-  if (s.includes('facebook') || s.includes('fb.com')) return 'facebook'
-  if (s.includes('tiktok')) return 'tiktok'
-  if (s.includes('youtu')) return 'youtube'
-  if (s.includes('twitter') || s.includes('x.com')) return 'x'
-  if (s.includes('linkedin')) return 'linkedin'
+  const haystack = `${label} ${url}`.toLowerCase()
+  if (haystack.includes('instagram')) return 'instagram'
+  if (haystack.includes('facebook') || haystack.includes('fb.com')) return 'facebook'
+  if (haystack.includes('tiktok')) return 'tiktok'
+  if (haystack.includes('youtu')) return 'youtube'
+  if (haystack.includes('twitter') || haystack.includes('x.com')) return 'x'
+  if (haystack.includes('linkedin')) return 'linkedin'
   return 'link'
 }
 
@@ -38,23 +58,41 @@ function SocialIcon({ label, url }) {
   )
 }
 
+function SocialLinks({ socials, className }) {
+  if (!socials.length) return null
+  return (
+    <div className={className}>
+      {socials.map(social => (
+        <a key={social.url} href={social.url} target="_blank" rel="noreferrer" aria-label={social.label}>
+          <SocialIcon label={social.label} url={social.url} />
+        </a>
+      ))}
+    </div>
+  )
+}
+
+function LangSwitcher({ lang, onToggle, className = 'lang-switcher' }) {
+  return (
+    <button
+      className={className}
+      onClick={onToggle}
+      aria-label={lang === 'hu' ? 'Switch to English' : 'Váltás magyarra'}
+    >
+      <span className={lang === 'hu' ? 'lang-active' : ''}>HU</span>
+      <span className="lang-sep">/</span>
+      <span className={lang === 'en' ? 'lang-active' : ''}>EN</span>
+    </button>
+  )
+}
+
 export default function Navbar({ subpage = false }) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const { lang, t, toggleLang } = useLang()
   const { content } = useSiteContent()
-  const [hasActivePoll, setHasActivePoll] = useState(false)
+  const hasActivePoll = useActivePoll()
 
-  // Social linkek – site_content-ből (JSON), fallback az OWNER-re.
-  // A CMS változatlanul a footer_socials kulcsot tölti fel.
-  let socials = []
-  try {
-    const raw = content['footer_socials']
-    if (raw) socials = JSON.parse(raw)
-  } catch {}
-  if (!socials.length && OWNER.instagram) {
-    socials = [{ label: 'Instagram', url: OWNER.instagram }]
-  }
+  const socials = parseSocials(content)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60)
@@ -73,21 +111,7 @@ export default function Navbar({ subpage = false }) {
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
-  // Van-e aktív, már elindult szavazás? (ettől függ a Navbar „Szavazás" gomb)
-  useEffect(() => {
-    supabase.from('polls').select('starts_at').eq('active', true).limit(1).maybeSingle()
-      .then(({ data }) => {
-        if (!data) { setHasActivePoll(false); return }
-        const started = !data.starts_at || new Date(data.starts_at).getTime() <= Date.now()
-        setHasActivePoll(started)
-      })
-  }, [])
-
   const scrollTo = (id) => {
-    // Ha a keresett szekció a JELENLEGI oldalon is létezik (a Kapcsolat pl. az
-    // aloldalakon is renderelődik), akkor odagördítünk – nem visszük vissza a
-    // főoldalra. Ha az adott szekció itt nincs (about/portfolio/stb. egy
-    // aloldalon), akkor a főoldal megfelelő horgonyára navigálunk.
     if (subpage && !document.getElementById(id)) {
       window.location.href = `/#${id}`
       return
@@ -111,56 +135,32 @@ export default function Navbar({ subpage = false }) {
     { id: 'contact',   label: t.nav.contact },
   ]
 
-  // A CMS-ből elrejtett szekciók gombja a navbaron se jelenjen meg.
-  // A sections_order JSON: [{ key, visible }]. Csak a visible===false-t szűrjük.
-  const hiddenSections = new Set()
-  try {
-    const rawOrder = content['sections_order']
-    if (rawOrder) {
-      for (const s of JSON.parse(rawOrder)) {
-        if (s && s.visible === false) hiddenSections.add(s.key)
-      }
-    }
-  } catch {}
-  // Aktív + a főoldalon látható (a sorrendben nem elrejtett) szavazásnál
-  // a Navbarba is bekerül egy „Szavazás" gomb (a Kapcsolat elé).
+  const hiddenSections = parseHiddenSections(content)
   const pollVisible = hasActivePoll && !hiddenSections.has('poll')
   const baseLinks = links.filter(l => !hiddenSections.has(l.id))
-  const visibleLinks = pollVisible
-    ? (() => {
-        const ci = baseLinks.findIndex(l => l.id === 'contact')
-        const pl = { id: 'szavazas', label: lang === 'hu' ? 'Szavazás' : 'Poll' }
-        return ci >= 0 ? [...baseLinks.slice(0, ci), pl, ...baseLinks.slice(ci)] : [...baseLinks, pl]
-      })()
-    : baseLinks
+
+  let visibleLinks = baseLinks
+  if (pollVisible) {
+    const pollLink = { id: 'szavazas', label: lang === 'hu' ? 'Szavazás' : 'Poll' }
+    const contactIdx = baseLinks.findIndex(l => l.id === 'contact')
+    if (contactIdx >= 0) {
+      visibleLinks = [...baseLinks.slice(0, contactIdx), pollLink, ...baseLinks.slice(contactIdx)]
+    } else {
+      visibleLinks = [...baseLinks, pollLink]
+    }
+  }
 
   return (
     <>
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-        {/* Bal oldali csoport: teljes név + social ikonok */}
         <div className="nav-brand">
-          <div
-            className="nav-logo"
-            onClick={goHome}
-            role="button"
-            tabIndex={0}
-            onKeyDown={e => e.key === 'Enter' && goHome()}
-          >
+          <button className="nav-logo" onClick={goHome}>
             {OWNER.name}
-          </div>
+          </button>
 
-          {socials.length > 0 && (
-            <div className="nav-socials">
-              {socials.map((s, i) => (
-                <a key={i} href={s.url} target="_blank" rel="noreferrer" aria-label={s.label}>
-                  <SocialIcon label={s.label} url={s.url} />
-                </a>
-              ))}
-            </div>
-          )}
+          <SocialLinks socials={socials} className="nav-socials" />
         </div>
 
-        {/* Desktop links + language switcher */}
         <div className="nav-right">
           <ul className="nav-links">
             {subpage && (
@@ -170,28 +170,18 @@ export default function Navbar({ subpage = false }) {
                 </a>
               </li>
             )}
-            {visibleLinks.map(l => (
-              <li key={l.id}>
-                <a href={subpage ? `/#${l.id}` : `#${l.id}`} onClick={e => { e.preventDefault(); scrollTo(l.id) }}>
-                  {l.label}
+            {visibleLinks.map(link => (
+              <li key={link.id}>
+                <a href={subpage ? `/#${link.id}` : `#${link.id}`} onClick={e => { e.preventDefault(); scrollTo(link.id) }}>
+                  {link.label}
                 </a>
               </li>
             ))}
           </ul>
 
-          {/* Language switcher */}
-          <button
-            className="lang-switcher"
-            onClick={toggleLang}
-            aria-label={lang === 'hu' ? 'Switch to English' : 'Váltás magyarra'}
-          >
-            <span className={lang === 'hu' ? 'lang-active' : ''}>HU</span>
-            <span className="lang-sep">/</span>
-            <span className={lang === 'en' ? 'lang-active' : ''}>EN</span>
-          </button>
+          <LangSwitcher lang={lang} onToggle={toggleLang} />
         </div>
 
-        {/* Hamburger */}
         <button
           className={`nav-hamburger ${menuOpen ? 'open' : ''}`}
           onClick={() => setMenuOpen(o => !o)}
@@ -202,35 +192,21 @@ export default function Navbar({ subpage = false }) {
         </button>
       </nav>
 
-      {/* Mobil menü */}
       <div className={`nav-mobile ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
         {subpage && (
           <a href="/" onClick={e => { e.preventDefault(); goHome() }}>
             {lang === 'hu' ? 'Főoldal' : 'Home'}
           </a>
         )}
-        {visibleLinks.map(l => (
-          <a key={l.id} href={subpage ? `/#${l.id}` : `#${l.id}`} onClick={e => { e.preventDefault(); scrollTo(l.id) }}>
-            {l.label}
+        {visibleLinks.map(link => (
+          <a key={link.id} href={subpage ? `/#${link.id}` : `#${link.id}`} onClick={e => { e.preventDefault(); scrollTo(link.id) }}>
+            {link.label}
           </a>
         ))}
-        {/* Language switcher mobilon is */}
-        <button className="lang-switcher lang-switcher--mobile" onClick={toggleLang}>
-          <span className={lang === 'hu' ? 'lang-active' : ''}>HU</span>
-          <span className="lang-sep">/</span>
-          <span className={lang === 'en' ? 'lang-active' : ''}>EN</span>
-        </button>
 
-        {/* Social ikonok a mobil menüben (a navbar sávban csak desktopon látszanak) */}
-        {socials.length > 0 && (
-          <div className="nav-mobile-socials">
-            {socials.map((s, i) => (
-              <a key={i} href={s.url} target="_blank" rel="noreferrer" aria-label={s.label}>
-                <SocialIcon label={s.label} url={s.url} />
-              </a>
-            ))}
-          </div>
-        )}
+        <LangSwitcher lang={lang} onToggle={toggleLang} className="lang-switcher lang-switcher--mobile" />
+
+        <SocialLinks socials={socials} className="nav-mobile-socials" />
       </div>
     </>
   )

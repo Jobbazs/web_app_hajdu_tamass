@@ -1,13 +1,3 @@
--- ============================================================================
--- NOX PORTFOLIO APP — TELJES SQL SÉMA (idempotens)
--- Tartalmazza az alap portfólió sémát + az időpontfoglalás rendszert
--- Supabase Dashboard → SQL Editor → New query → Paste → Run
--- ============================================================================
-
-
--- ============================================================================
--- 1. MESSAGES
--- ============================================================================
 
 create table if not exists public.messages (
   id             uuid primary key default gen_random_uuid(),
@@ -34,10 +24,6 @@ drop policy if exists "Admin select messages"  on public.messages;
 drop policy if exists "Admin update messages"  on public.messages;
 drop policy if exists "Admin delete messages"  on public.messages;
 
--- MEGJEGYZÉS: a publikus (anon) beszúrás SZÁNDÉKOSAN nincs engedélyezve.
--- Az üzenetek mostantól a 'submit-contact' Edge Function-ön keresztül
--- kerülnek be (service_role), a spam-ellenőrzés (honeypot + idő-csapda +
--- IP rate limit) UTÁN. Így a bot nem tud közvetlenül a táblába írni.
 create policy "Admin select messages"
   on public.messages for select using (auth.role() = 'authenticated');
 create policy "Admin update messages"
@@ -45,10 +31,6 @@ create policy "Admin update messages"
 create policy "Admin delete messages"
   on public.messages for delete using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
-
--- ============================================================================
--- 2. PORTFOLIO_CATEGORIES
--- ============================================================================
 
 create table if not exists public.portfolio_categories (
   id         uuid primary key default gen_random_uuid(),
@@ -70,12 +52,6 @@ create policy "Admin all categories"
   using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
   with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
-
-
-
--- ============================================================================
--- 3. PORTFOLIO_ITEMS
--- ============================================================================
 
 create table if not exists public.portfolio_items (
   id             uuid primary key default gen_random_uuid(),
@@ -103,8 +79,6 @@ create policy "Admin all portfolio"
   using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
   with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
--- ── Kategória: automatikus sorrend + törlés-takarítás ───────────────────────
--- Új kategória sort_order-e mindig a következő szabad szám (kézi ütközés kizárva).
 create or replace function public.portfolio_categories_autoorder()
 returns trigger language plpgsql as $$
 begin
@@ -117,7 +91,6 @@ create trigger trg_pc_autoorder
   before insert on public.portfolio_categories
   for each row execute function public.portfolio_categories_autoorder();
 
--- Törlés után a maradék kategóriák sorszámának 1..N újratömörítése.
 create or replace function public.portfolio_categories_recompact()
 returns trigger language plpgsql as $$
 begin
@@ -136,8 +109,6 @@ create trigger trg_pc_recompact
   after delete on public.portfolio_categories
   for each statement execute function public.portfolio_categories_recompact();
 
--- Kategória törlésekor a képek ÁRVÁK legyenek (category_id = NULL), NE törlődjenek.
--- A "képekkel törlés" opciót az admin app intézi (előbb törli a képeket).
 drop trigger if exists trg_pc_del_items on public.portfolio_categories;
 drop function if exists public.portfolio_categories_del_items();
 do $$
@@ -163,11 +134,6 @@ begin
       foreign key (category_id) references public.portfolio_categories(id) on delete set null;
   end if;
 end $$;
-
-
--- ============================================================================
--- 4. SERVICES
--- ============================================================================
 
 create table if not exists public.services (
   id           uuid primary key default gen_random_uuid(),
@@ -210,11 +176,6 @@ from (values
 ) as v(number,name_hu,name_en,desc_hu,desc_en,sort_order)
 where not exists (select 1 from public.services s where s.number = v.number);
 
-
--- ============================================================================
--- 5. SITE_CONTENT
--- ============================================================================
-
 create table if not exists public.site_content (
   key   text primary key,
   value text not null
@@ -250,11 +211,6 @@ insert into public.site_content (key, value) values
   ('about_portrait_url', ''),
   ('footer_socials',   '[{"label":"Instagram","url":""},{"label":"TikTok","url":""},{"label":"Behance","url":""}]')
 on conflict (key) do nothing;
-
-
--- ============================================================================
--- 6. CUSTOM_SECTIONS
--- ============================================================================
 
 create table if not exists public.custom_sections (
   id          uuid primary key default gen_random_uuid(),
@@ -295,19 +251,12 @@ create policy "Admin all sections"
   with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
--- ============================================================================
--- 7. STORAGE — attachments bucket
--- ============================================================================
-
 insert into storage.buckets (id, name, public)
   values ('attachments', 'attachments', true)
   on conflict (id) do nothing;
 
--- Feltöltési méret-limit: 10 MB / fájl (a publikus feltöltés így nem
--- használható a tárhely teleszemetelésére óriásfájlokkal). Csak a méretet
--- korlátozza, a fájltípust nem – így meglévő feltöltések nem törnek el.
 update storage.buckets
-  set file_size_limit = 10485760   -- 10 MB
+  set file_size_limit = 10485760
   where id = 'attachments';
 
 drop policy if exists "Public upload attachments" on storage.objects;
@@ -323,44 +272,29 @@ create policy "Admin delete attachments"
   using (bucket_id = 'attachments' and auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
--- ============================================================================
--- 8. IDŐPONTFOGLALÁS — appointment booking system
--- ============================================================================
-
--- ── 8a. Foglalható időblokkok (admin hozza létre / generálja) ──────────────
 
 create table if not exists public.appointment_slots (
   id               uuid primary key default gen_random_uuid(),
   created_at       timestamptz not null default now(),
 
-  -- Megjelenítési adatok
-  title            text not null,                    -- pl. "Portré fotózás"
-  description      text,                             -- opcionális leírás kliensnek
-  service_type     text not null,                    -- pl. 'portrait', 'event', 'video'
+  title            text not null,
+  description      text,
+  service_type     text not null,
 
-  -- Időpont
   slot_date        date not null,
   start_time       time not null,
   end_time         time not null,
 
-  -- Kapacitás (1 az alapértelmezett, de növelhető pl. workshophoz)
   capacity         int not null default 1,
   booked_count     int not null default 0,
 
-  -- Ismétlődés (rrule string, pl. 'FREQ=WEEKLY;BYDAY=MO')
-  -- null = egyszeri időpont
   is_recurring     boolean not null default false,
   recurrence_rule  text,
-  recurrence_end   date,                             -- meddig generálódjon
+  recurrence_end   date,
 
-  -- Láthatóság
   visible          boolean not null default true
 );
 
--- A booked_count > capacity (túlfoglalás) MEGENGEDETT, hogy a valós szám
--- mindig látszódjon. A régi CHECK constraint hibát dobna az újraszámoló
--- triggernél / visszatöltésnél, ezért eltávolítjuk. A "betelt" állapotot a
--- frontend a booked_count >= capacity összehasonlítással kezeli.
 alter table public.appointment_slots
   drop constraint if exists booked_not_exceed_capacity;
 
@@ -374,7 +308,6 @@ drop policy if exists "Admin read appointment_slots" on public.appointment_slots
 create policy "Public read slots"
   on public.appointment_slots for select
   using (visible = true);
--- Demo (és minden admin) OLVASHAT; írni csak nem-demo tud
 create policy "Admin read appointment_slots"
   on public.appointment_slots for select using (auth.role() = 'authenticated');
 create policy "Admin all slots"
@@ -383,43 +316,35 @@ create policy "Admin all slots"
   with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
--- ── 8b. Foglalások ────────────────────────────────────────────────────────
 
 create table if not exists public.appointments (
   id                    uuid primary key default gen_random_uuid(),
   created_at            timestamptz not null default now(),
 
-  -- Melyik időblokhoz tartozik
   slot_id               uuid not null references public.appointment_slots(id) on delete cascade,
 
-  -- Kliens adatok
   name                  text not null,
   email                 text not null,
   phone                 text,
-  message               text,                        -- korlátlan hossz (text típus)
+  message               text,
 
-  -- Státusz
-  -- pending_confirmation → confirmed → approved → completed | cancelled | no_show
   status                text not null default 'pending_confirmation'
     check (status in (
-      'pending_confirmation',   -- email megerősítésre vár
-      'confirmed',              -- kliens megerősítette emailben
-      'approved',               -- admin jóváhagyta (automatikus)
-      'completed',              -- megtörtént
-      'cancelled',              -- lemondva
-      'no_show'                 -- nem jelent meg
+      'pending_confirmation',
+      'confirmed',
+      'approved',
+      'completed',
+      'cancelled',
+      'no_show'
     )),
 
-  -- Email megerősítő token
   confirmation_token    text unique,
   token_expires_at      timestamptz,
   confirmed_at          timestamptz,
   approved_at           timestamptz,
 
-  -- Lemondási token (kliens saját magát mondhatja le)
   cancellation_token    text unique,
 
-  -- Megjegyzés adminnak
   admin_notes           text
 );
 
@@ -431,24 +356,10 @@ drop policy if exists "Public update by token"      on public.appointments;
 drop policy if exists "Admin all appointments"      on public.appointments;
 drop policy if exists "Admin read appointments"     on public.appointments;
 
--- Bárki FOGLALHAT, de CSAK megerősítésre váró státusszal.
--- (Így nem lehet közvetlenül 'confirmed' foglalást beszúrni a megerősítés
---  kikerülésével. A várólista-elfogadás confirmed foglalását a
---  respond_waitlist RPC hozza létre, ami SECURITY DEFINER → megkerüli ezt.)
 create policy "Public insert appointments"
   on public.appointments for insert
   with check (status = 'pending_confirmation');
 
--- FIGYELEM – SZÁNDÉKOSAN NINCS publikus SELECT és UPDATE policy.
--- Korábban a "Public confirm appointment" (using true) MINDEN foglalást
--- olvashatóvá tett (PII + tokenek), a "Public update by token" pedig
--- token ismerete nélkül is engedte a lemondást/megerősítést.
--- Helyettük token-scope-olt SECURITY DEFINER RPC-k állnak (lásd 8h szekció):
---   confirm_appointment(token), cancel_appointment(token), respond_waitlist(token, accept)
--- Az anonim kliens így csak beszúrni tud (fent), olvasni/módosítani nem.
-
--- Admin mindent lát és módosíthat
--- Demo (és minden admin) OLVASHAT; írni csak nem-demo tud
 create policy "Admin read appointments"
   on public.appointments for select using (auth.role() = 'authenticated');
 create policy "Admin all appointments"
@@ -457,7 +368,6 @@ create policy "Admin all appointments"
   with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
--- ── 8c. Várólisták ────────────────────────────────────────────────────────
 
 create table if not exists public.appointment_waitlist (
   id              uuid primary key default gen_random_uuid(),
@@ -469,21 +379,14 @@ create table if not exists public.appointment_waitlist (
   email           text not null,
   phone           text,
 
-  -- Mikor küldtük az értesítő emailt
   notified_at     timestamptz,
 
-  -- Elfogadta / elutasította a felajánlott helyet
-  -- null = még nem értesítettük / vár
-  -- 'accepted' = elfogadta, appointment létrejött
-  -- 'declined' = elutasította, következő kap értesítést
   response        text check (response in ('accepted', 'declined')),
   responded_at    timestamptz,
 
-  -- Token az elfogad/elutasít linkekhez
   offer_token     text unique,
   offer_expires_at timestamptz,
 
-  -- Sorrend a várólistán
   position        int not null default 0
 );
 
@@ -494,8 +397,6 @@ drop policy if exists "Public read waitlist"  on public.appointment_waitlist;
 drop policy if exists "Admin all waitlist"    on public.appointment_waitlist;
 drop policy if exists "Admin read appointment_waitlist" on public.appointment_waitlist;
 
--- Bárki feliratkozhat, de csak "friss" sorral: nem állíthat be magának
--- értesítést / ajánlat-tokent / választ. A position-t trigger tölti ki (8h).
 create policy "Public join waitlist"
   on public.appointment_waitlist for insert
   with check (
@@ -503,10 +404,6 @@ create policy "Public join waitlist"
     and notified_at is null
     and offer_token is null
   );
--- SZÁNDÉKOSAN NINCS publikus SELECT: korábban a "Public read waitlist"
--- (using true) minden várólistás nevét/emailjét/offer_token-jét kiadta.
--- Az elfogadás/elutasítás a respond_waitlist RPC-n megy (8h).
--- Demo (és minden admin) OLVASHAT; írni csak nem-demo tud
 create policy "Admin read appointment_waitlist"
   on public.appointment_waitlist for select using (auth.role() = 'authenticated');
 create policy "Admin all waitlist"
@@ -515,36 +412,25 @@ create policy "Admin all waitlist"
   with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
--- ── 8d. Kliens megbízhatósági lista ────────────────────────────────────────
 
 create table if not exists public.client_reliability (
   id                uuid primary key default gen_random_uuid(),
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now(),
 
-  -- Azonosítók (email az elsődleges)
   email             text not null unique,
   name              text,
   phone             text,
 
-  -- Megbízhatósági szint
-  -- 0 = tiszta (új kliens)
-  -- 1 = warning: nem erősítette meg az emailt
-  -- 2 = warning: visszaigazolta, de lemondta 24h-n belül
-  -- 3 = piros: megjelent a naptárban, de nem jött el (no-show)
-  -- 4 = manuálisan blokkolt (a rendszer nem fogad el tőle foglalást)
   reliability_level int not null default 0
     check (reliability_level between 0 and 4),
 
-  -- Számláló mezők (automatikusan nőnek)
-  unconfirmed_count int not null default 0,   -- meg nem erősített foglalások
-  late_cancel_count int not null default 0,   -- 24h-n belüli lemondások
-  no_show_count     int not null default 0,   -- meg nem jelent foglalások
+  unconfirmed_count int not null default 0,
+  late_cancel_count int not null default 0,
+  no_show_count     int not null default 0,
 
-  -- Manuális megjegyzés (admin írja)
   notes             text,
 
-  -- Utolsó incidens időpontja
   last_incident_at  timestamptz
 );
 
@@ -553,8 +439,6 @@ alter table public.client_reliability enable row level security;
 drop policy if exists "Admin all reliability" on public.client_reliability;
 drop policy if exists "Admin read client_reliability" on public.client_reliability;
 
--- Csak admin látja és kezeli
--- Demo (és minden admin) OLVASHAT; írni csak nem-demo tud
 create policy "Admin read client_reliability"
   on public.client_reliability for select using (auth.role() = 'authenticated');
 create policy "Admin all reliability"
@@ -563,7 +447,6 @@ create policy "Admin all reliability"
   with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
 
--- ── 8e. Trigger: updated_at automatikus frissítése ──────────────────────
 
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
@@ -578,23 +461,6 @@ create trigger set_updated_at_reliability
   before update on public.client_reliability
   for each row execute function public.set_updated_at();
 
-
--- ── 8f. Trigger: booked_count automatikus karbantartása ──────────────────
---
---  EGYETLEN forrás az igazsághoz. A korábbi inkrementális triggert
---  (update_slot_booked_count / trg_update_booked_count) SZÁNDÉKOSAN
---  eltávolítjuk, mert:
---    • nem SECURITY DEFINER volt → anonim (kliens) confirm-nál az
---      appointment_slots UPDATE-et az RLS csendben eldobta → a szám
---      sosem frissült,
---    • ha együtt futott az újraszámolóval, dupláztak.
---
---  Az új függvény ABSZOLÚT értékre számol (mindig helyre áll), és
---  SECURITY DEFINER, így az RLS-t megkerülve tud írni a slot-táblába.
---  Aktívnak a 'confirmed' / 'approved' / 'completed' státusz számít
---  (a 'pending_confirmation' nem foglal helyet, az eredeti szándék szerint).
-
--- Régi trigger + függvény takarítása
 drop trigger  if exists trg_update_booked_count on public.appointments;
 drop function if exists public.update_slot_booked_count();
 
@@ -621,19 +487,16 @@ begin
   )
   where s.id = affected;
 
-  return null; -- AFTER trigger
+  return null;
 end;
 $$;
 
--- A név '00'-val kezdődik, hogy ALFABÉTIKUSAN korán fusson, így a
--- booked_count minden más appointments-triggernél előbb frissül.
 drop trigger if exists trg_recalc_booked_count on public.appointments;
 drop trigger if exists trg_00_recalc_booked_count on public.appointments;
 create trigger trg_00_recalc_booked_count
   after insert or update or delete on public.appointments
   for each row execute function public.recalc_slot_booked_count();
 
--- Egyszeri visszatöltés: a MOSTANI állapotot azonnal korrigálja
 update public.appointment_slots s
 set booked_count = coalesce((
   select count(*)
@@ -643,10 +506,9 @@ set booked_count = coalesce((
 ), 0);
 
 
--- ── 8g. View: szabad helyek publikus nézete ──────────────────────────────
 
 create or replace view public.available_slots
-  with (security_invoker = true)   -- RLS-t az alaptáblán alkalmazza, nem kerüli meg
+  with (security_invoker = true)
 as
   select
     s.id,
@@ -662,21 +524,7 @@ as
   from public.appointment_slots s
   where s.visible = true
     and s.slot_date >= current_date
-  -- A betelt időpontok SZÁNDÉKOSAN bennmaradnak: a látogató lássa hogy
-  -- betelt, és fel tudjon iratkozni a várólistára. A szűrést a frontend
-  -- végzi (booked_count >= capacity -> várólistás ág).
   order by s.slot_date, s.start_time;
-
-
--- ── 8h. BIZTONSÁG: token-scope-olt RPC-k a publikus műveletekhez ──────────
---
---  Ezek váltják ki a korábbi, túl megengedő publikus SELECT/UPDATE policy-kat.
---  Mindegyik SECURITY DEFINER (a tulajdonos jogaival fut, megkerüli az RLS-t),
---  DE csak egy konkrét, token alapján beazonosított sorra hat, és semmilyen
---  más adatot nem ad vissza – csak egy státusz-stringet. A search_path
---  rögzítve van (search_path hijack ellen).
-
--- Megerősítés: a confirmation_token-hez tartozó foglalást 'confirmed'-re állítja
 create or replace function public.confirm_appointment(p_token text)
 returns text
 language plpgsql
@@ -693,7 +541,7 @@ begin
     where confirmation_token = p_token;
 
   if not found then return 'error'; end if;
-  if r.status <> 'pending_confirmation' then return 'confirmed'; end if; -- már megerősítve
+  if r.status <> 'pending_confirmation' then return 'confirmed'; end if;
   if r.token_expires_at is not null and r.token_expires_at < now() then return 'expired'; end if;
 
   update public.appointments
@@ -704,8 +552,6 @@ begin
 end;
 $$;
 
--- Lemondás: a cancellation_token-hez tartozó foglalást 'cancelled'-re állítja
--- (a recalc + waitlist trigger emiatt lefut → hely felszabadul, következő értesül)
 create or replace function public.cancel_appointment(p_token text)
 returns text
 language plpgsql
@@ -732,9 +578,6 @@ begin
 end;
 $$;
 
--- Várólista-ajánlat elfogadása / elutasítása offer_token alapján
--- A visszatérési típus text→jsonb váltás miatt előbb el kell dobni
--- (a create or replace nem tud return type-ot módosítani meglévő DB-n)
 drop function if exists public.respond_waitlist(text, boolean);
 create or replace function public.respond_waitlist(p_token text, p_accept boolean)
 returns jsonb
@@ -778,28 +621,21 @@ begin
       set response = 'accepted', responded_at = now()
       where id = w.id;
 
-    -- A cancel_token-t visszaadjuk, hogy a kliens ellőhesse a megerősítő
-    -- emailt (benne a lemondó linkkel). Ez a foglalás saját tokene, az
-    -- elfogadó ügyfélé – nála amúgy is szerepel majd az emailben.
     return jsonb_build_object('status', 'waitlist_accepted', 'cancel_token', v_cancel_token);
   else
     update public.appointment_waitlist
       set response = 'declined', responded_at = now()
       where id = w.id;
-    -- A következő várakozót a waitlist-tick értesíti a következő futáskor
-    -- (a slot most szabad kapacitású lett).
+
     return jsonb_build_object('status', 'waitlist_declined');
   end if;
 end;
 $$;
 
--- A publikus (anon) kliens hívhatja ezeket; más táblaműveletet nem
 grant execute on function public.confirm_appointment(text) to anon, authenticated;
 grant execute on function public.cancel_appointment(text)  to anon, authenticated;
 grant execute on function public.respond_waitlist(text, boolean) to anon, authenticated;
 
--- Várólista pozíció szerveroldali kiosztása (a kliensnek nem kell a táblát
--- olvasnia hozzá – így a publikus SELECT megszüntethető volt)
 create or replace function public.set_waitlist_position()
 returns trigger
 language plpgsql
@@ -820,18 +656,6 @@ create trigger trg_set_waitlist_position
   before insert on public.appointment_waitlist
   for each row execute function public.set_waitlist_position();
 
-
--- ── 8i. RATE LIMIT: egyszerű, email-alapú spam-fék ───────────────────────
---
---  DB-szintű "lágy" limit: ugyanarról az email-címről óránként legfeljebb
---  MAX_PER_HOUR publikus foglalás ill. kontakt-üzenet. Kódmentes a
---  frontenden. FIGYELEM: ez EMAIL-alapú (nem IP), tehát változó címmel
---  megkerülhető – a durva, ismétlődő spamet fogja meg. Erősebb védelemhez
---  IP-szintű limit kell (pl. Cloudflare a domain elé), ami a szerver előtt
---  szűr. A limit értéke bőven a normál használat felett van; tuningolható.
-
--- Publikus foglalás-spam (csak a pending_confirmation ágra; az admin- és a
--- várólista-elfogadás confirmed insertjeit NEM érinti)
 create or replace function public.rate_limit_appointments()
 returns trigger
 language plpgsql
@@ -859,8 +683,6 @@ create trigger trg_rate_limit_appointments
   before insert on public.appointments
   for each row execute function public.rate_limit_appointments();
 
--- Kontakt-űrlap spam (a rendszer által beszúrt waitlist_notification sorokat
--- kihagyja, hogy a várólista-értesítés soha ne akadjon el)
 create or replace function public.rate_limit_messages()
 returns trigger
 language plpgsql
@@ -889,45 +711,11 @@ create trigger trg_rate_limit_messages
   before insert on public.messages
   for each row execute function public.rate_limit_messages();
 
-
--- ============================================================================
--- 9. VÁRÓLISTA MOTOR — a waitlist-tick Edge Function felel érte
--- ============================================================================
---
--- A korábbi DB-trigger alapú értesítés (notify_next_waitlist /
--- notify_next_on_decline) meg lett szüntetve: az csak beállította a
--- következő várakozónak az offer-tokent, de emailt NEM küldött (azt egy
--- sosem feldolgozott messages-sor "küldte" volna), így a lánc első embere
--- csendben kimaradt.
---
--- Helyette a teljes logikát a `waitlist-tick` Edge Function végzi, amely
--- ESEMÉNY-AGNOSZTIKUS: percenként (pg_cron) újraszámolja az állapotot, és
--- MINDEN szabad kapacitású, mai/jövőbeli slotra értesíti a soron következő
--- várakozó(ka)t – függetlenül attól, mi szabadította fel a helyet
--- (lemondás, no-show, elutasítás, lejárat).
---
--- A régi triggerek/függvények eldobása (idempotens; meglévő DB-t is tisztít):
 drop trigger  if exists trg_notify_waitlist         on public.appointments;
 drop trigger  if exists trg_notify_waitlist_decline on public.appointment_waitlist;
 drop function if exists public.notify_next_waitlist();
 drop function if exists public.notify_next_on_decline();
 
--- A waitlist-tick pg_cron ütemezését NEM itt állítjuk be, mert tartalmazza a
--- CRON_SECRET-et és a projekt URL-t (nem való publikus repóba). A beállító
--- parancsot külön, egyszeri futtatásra add ki (lásd a kísérő dokumentációt).
-
-
--- ============================================================================
--- 10. REALTIME — élő frissítés engedélyezése a szükséges táblákra
--- A frontend hookok postgres_changes eseményekre iratkoznak fel; ez a blokk
--- adja hozzá a táblákat a supabase_realtime publikációhoz. Idempotens.
--- A Realtime tiszteletben tartja az RLS-t: anonim kliens csak azt kapja meg,
--- amit amúgy is olvashat (a publikus foglalás-oldal csak az appointment_slots-ra
--- iratkozik fel → nem szivárog PII a realtime csatornán).
--- ============================================================================
-
--- Publikáció létrehozása, ha egy tiszta (nem Supabase-managed) telepítésen
--- még nem létezne
 do $$
 begin
   if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
@@ -939,8 +727,8 @@ do $$
 declare
   t text;
   tables text[] := array[
-    'appointment_slots',   -- publikus: booked_count itt frissül (nincs PII)
-    'appointments',        -- admin: foglaláslista élő frissítés
+    'appointment_slots',
+    'appointments',
     'appointment_waitlist',
     'client_reliability',
     'portfolio_items',
@@ -963,20 +751,11 @@ begin
 end $$;
 
 
--- ============================================================================
--- 11. PG_CRON — régi foglalások automatikus törlése
--- Előfeltétel: Supabase Dashboard → Database → Extensions → pg_cron → Enable
--- Ez a blokk kihagyható ha nem kell automatikus takarítás.
--- ============================================================================
-
--- Extension engedélyezése (ha még nem fut)
 create extension if not exists pg_cron;
 
--- Hetente egyszer (minden vasárnap 02:00 UTC) töröl minden olyan foglalást
--- amelynek az időpontja legalább 1 hete volt (slot_date + 7 nap < ma)
 select cron.schedule(
-  'delete-old-appointments',          -- job neve (egyedi, módosítható)
-  '0 2 * * 0',                        -- cron expr: vasárnap 02:00 UTC
+  'delete-old-appointments',
+  '0 2 * * 0',
   $$
     delete from public.appointments a
     using public.appointment_slots s
@@ -985,7 +764,6 @@ select cron.schedule(
   $$
 );
 
--- Opcionális: régi waitlist bejegyzések törlése is (ugyanolyan logika)
 select cron.schedule(
   'delete-old-waitlist',
   '0 2 * * 0',
@@ -997,8 +775,6 @@ select cron.schedule(
   $$
 );
 
--- Régi, lejárt slot-ok törlése (ha a slot_date > 30 napja múlt el)
--- Ez opcionális – ha meg akarod tartani a historikus slot adatokat, hagyd ki
 select cron.schedule(
   'delete-old-slots',
   '0 3 * * 0',
@@ -1008,22 +784,6 @@ select cron.schedule(
   $$
 );
 
--- ── Ellenőrzés ──────────────────────────────────────────────
--- A beütemezett job-ok listája:
--- select * from cron.job;
---
--- Job törlése ha nem kell:
--- select cron.unschedule('delete-old-appointments');
--- select cron.unschedule('delete-old-waitlist');
--- select cron.unschedule('delete-old-slots');
-
-
--- ============================================================================
--- 12. PORTFÓLIÓ KATEGÓRIA-OLDALAK (SEO aloldalak: /portfolio/<slug>)
--- Minden kategóriának saját aloldala: hero + intro + képgrid. A mezők
--- CMS-ből írhatók. Idempotens: a seed csak akkor tölt, ha üres a mező,
--- így nem írja felül a későbbi CMS-szerkesztést.
--- ============================================================================
 
 alter table public.portfolio_categories
   add column if not exists hero_subtitle_hu   text default '',
@@ -1031,15 +791,13 @@ alter table public.portfolio_categories
   add column if not exists intro_hu           text default '',
   add column if not exists intro_en           text default '',
   add column if not exists cover_url          text,
-  -- Megjelenítési presetek (a CMS constrainálja az értékeket)
-  add column if not exists hero_align         text default 'center',   -- left | center | right
-  add column if not exists hero_title_size    text default 'large',    -- small | normal | large
+  add column if not exists hero_align         text default 'center',
+  add column if not exists hero_title_size    text default 'large',
   add column if not exists hero_subtitle_size text default 'normal',
   add column if not exists intro_align        text default 'left',
   add column if not exists intro_size         text default 'normal',
-  add column if not exists hero_words         text[] default '{}';   -- szórt hero-szavak
+  add column if not exists hero_words         text[] default '{}';
 
--- ── Seed PR-szövegek (csak üres mezőt tölt) ────────────────────────────────
 update public.portfolio_categories set
   hero_subtitle_hu = 'Éjszakai energia, nyers pillanatok — ahogy a fény a sötétben él.',
   intro_hu = 'A budapesti éjszaka nem áll meg egy pillanatra sem, és én ezt a lüktetést kapom el. Klubok, rave-ek, underground helyszínek — az Arzenáltól a Lärmig ott vagyok, ahol a zene és a tömeg egy testté olvad. A képeim nem pózolt mosolyok: verejték, füst, fény és mozgás, pontosan úgy, ahogy megtörtént. Ha olyasvalakit keresel, aki nem kívülállóként, hanem a buli részeként dokumentálja az estét, jó helyen jársz.'
@@ -1065,7 +823,6 @@ update public.portfolio_categories set
   intro_hu = 'Ez a tér a kísérletezésé: koncepciók, kreatív együttműködések és személyes projektek, amelyek nem férnek be egyetlen kategóriába sem. Zenészekkel, alkotókkal és márkákkal közösen építek egyedi vizuális világot — az ötlettől a végső gradinges kockáig. Ha van egy elképzelésed, amit még senki nem valósított meg, itt a helye. A határ legtöbbször csak a bátorság.'
 where slug = 'kreativ' and (intro_hu is null or intro_hu = '');
 
--- ── Seed szórt hero-szavak (csak ha üres) ──────────────────────────────────
 update public.portfolio_categories set hero_words =
   '{éjszaka,fény,ritmus,tömeg,underground,pillanat,energia,neon,mozgás,hangulat}'
 where slug = 'nightlife' and (hero_words is null or hero_words = '{}');
@@ -1086,18 +843,6 @@ update public.portfolio_categories set hero_words =
   '{koncepció,kísérlet,vízió,forma,fény,ötlet,merészség,stílus,textúra,kontraszt}'
 where slug = 'kreativ' and (hero_words is null or hero_words = '{}');
 
-
--- ============================================================================
--- 13. KATEGÓRIA-SZEKCIÓK (Fázis 2) — a /portfolio/<slug> aloldalak
--- konfigurálható, váltakozó tartalmi blokkjai.
---   type: 'text_images'  – szöveg + 2x2 kép
---         'images_text'  – 2x2 kép + szöveg (fordított)
---         'text_only'    – csak szöveg
---         'images_only'  – csak képek (max 4/sor)
--- Képek (hibrid): image_ids kézi lista; ha üres, a kategória képeiből
--- automatikusan tölt (sorrendben, szekciónként a következő adag).
--- ============================================================================
-
 create table if not exists public.category_sections (
   id           uuid primary key default gen_random_uuid(),
   category_id  uuid not null references public.portfolio_categories(id) on delete cascade,
@@ -1107,9 +852,9 @@ create table if not exists public.category_sections (
   title_en     text default '',
   body_hu      text default '',
   body_en      text default '',
-  image_ids    uuid[] default '{}',        -- kézi képhozzárendelés; üres = auto
-  title_align  text default 'left',        -- left | center | right
-  title_size   text default 'large',       -- small | normal | large
+  image_ids    uuid[] default '{}',
+  title_align  text default 'left',
+  title_size   text default 'large',
   body_align   text default 'left',
   body_size    text default 'normal',
   visible      boolean not null default true,
@@ -1129,7 +874,6 @@ create policy "Admin all category_sections"
   using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
   with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
--- Realtime a category_sections-re (itt, a tábla létrehozása UTÁN – idempotens)
 do $$
 begin
   if not exists (
@@ -1142,14 +886,6 @@ begin
   end if;
 end $$;
 
-
--- ============================================================================
--- 14. SPAM-VÉDELEM — IP rate limit napló
--- A 'submit-contact' Edge Function ír/olvas ide (service_role). Nincs
--- publikus hozzáférés. A function a régi sorokat magától takarítja, de
--- pg_cron-nal is lehet (lásd lent).
--- ============================================================================
-
 create table if not exists public.rate_limits (
   id         bigint generated always as identity primary key,
   ip         text not null,
@@ -1160,19 +896,7 @@ create index if not exists idx_rate_limits_ip_action_time
   on public.rate_limits (ip, action, created_at desc);
 
 alter table public.rate_limits enable row level security;
--- Nincs policy => anon/authenticated nem fér hozzá; a service_role megkerüli az RLS-t.
 
--- (Opcionális) pg_cron takarítás – EGYSZER lefuttatva:
--- select cron.schedule('cleanup-rate-limits','15 * * * *',
---   $$ delete from public.rate_limits where created_at < now() - interval '1 hour'; $$);
-
-
--- ============================================================================
--- 14/b. SZÖVEG AZ ÚJABB KATEGÓRIÁKHOZ (mood, konditerem, urban)
--- Csak akkor ír, ha a mező jelenleg ÜRES – így a CMS-ben kézzel megadott
--- szöveget nem írja felül. A slugok akkor is biztonságosak, ha valamelyik
--- kategória nem létezik (az update egyszerűen 0 sort érint).
--- ============================================================================
 
 update public.portfolio_categories set
   hero_subtitle_hu = coalesce(nullif(hero_subtitle_hu, ''), 'Hangulat és karakter — a fény, ami eldönti, mit érzel a képen.'),
@@ -1216,17 +940,6 @@ update public.portfolio_categories set
     else hero_words end
 where slug = 'urban';
 
-
--- ============================================================================
--- 15. MÓDOSÍTÁS-IDŐPONT (updated_at) — a sitemap <lastmod> jelzéshez
--- A keresőmotorok (Bing Webmaster Guidelines 3. és 19. pont, Google Search
--- Central) pontos frissesség-jelzést kérnek. A prerender ezekből az
--- oszlopokból számolja ki oldalanként a legutóbbi módosítást.
--- FONTOS: csak akkor van értelme, ha VALÓS – a mindig "most" értékű lastmod
--- rosszabb, mint a hiányzó, mert a keresők figyelmen kívül hagyják.
--- ============================================================================
-
--- Egyetlen közös trigger-függvény minden táblához
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
@@ -1250,28 +963,15 @@ begin
       'custom_sections'
     ])
   loop
-    -- oszlop felvétele (a meglévő sorok a default miatt kapnak értéket)
     execute format(
       'alter table public.%I add column if not exists updated_at timestamptz not null default now()', t);
 
-    -- trigger újraépítése (idempotens)
     execute format('drop trigger if exists trg_touch_updated_at on public.%I', t);
     execute format(
       'create trigger trg_touch_updated_at before update on public.%I
          for each row execute function public.touch_updated_at()', t);
   end loop;
 end $$;
-
-
--- ============================================================================
--- 16. ADMIN SZEREPKÖRÖK (hierarchia) + HIBAJEGYEK
--- admin_users: superadmin | admin | demo szerepkör + jövőbeli granuláris jogok
--- (permissions jsonb), EMAIL-kulcsú (a UI-ból e-mail alapján kezelhető).
--- current_admin_role(): a bejelentkezett user szerepköre a JWT e-mailjéből
--- (SECURITY DEFINER, RLS-rekurzió ellen). bug_tickets: admin hibajegyek a
--- csatolt aktivitás-naplóval. A DEMO-blokkot a fenti tartalmi tábla-policy-k
--- "is distinct from 'demo'" feltétele adja (a demo olvas, de nem ír). Idempotens.
--- ============================================================================
 
 create table if not exists public.admin_users (
   email       text primary key,
@@ -1303,7 +1003,6 @@ drop policy if exists "admin_users delete" on public.admin_users;
 
 create policy "admin_users read"
   on public.admin_users for select using (auth.role() = 'authenticated');
--- Superadmin vehet fel / módosíthat / törölhet – de SAJÁT magát NEM.
 create policy "admin_users insert"
   on public.admin_users for insert
   with check (public.current_admin_role() = 'superadmin');
@@ -1316,7 +1015,6 @@ create policy "admin_users delete"
   using (public.current_admin_role() = 'superadmin'
          and lower(email) <> lower(auth.jwt() ->> 'email'));
 
--- Hibajegyek
 create table if not exists public.bug_tickets (
   id           uuid primary key default gen_random_uuid(),
   description  text not null,
@@ -1340,28 +1038,16 @@ create policy "bug_tickets update" on public.bug_tickets for update
 create policy "bug_tickets delete" on public.bug_tickets for delete
   using (public.current_admin_role() = 'superadmin');
 
--- A jelenlegi (egyetlen) admin superadminként  >>> TÖLTSD KI AZ E-MAILEDET! <<<
 insert into public.admin_users (email, role)
 values ('hajdutamas@webapp.com', 'superadmin')
 on conflict (email) do update set role = 'superadmin';
 
 
-
--- ============================================================================
--- Hibajegy: e-mail-továbbítás + státusz-gombok + jegylista (KONSZOLIDÁLT)
--- Egy fájl mindent tartalmaz. Idempotens. Futtasd a Supabase SQL Editorban.
--- (A 16. szekció bug_tickets részébe is beépíthető.)
--- ============================================================================
-
--- ── Küldés-státusz mezők (e-mail-továbbítás) ────────────────────────────────
 alter table public.bug_tickets add column if not exists notified_at     timestamptz;
 alter table public.bug_tickets add column if not exists notify_attempts int not null default 0;
 
--- ── Státusz-váltó token (az e-mailben lévő gombokhoz, bejelentkezés nélkül) ──
 alter table public.bug_tickets add column if not exists status_token text not null default gen_random_uuid()::text;
 
--- ── Státuszok átállítása 3 értékre: reported | in_progress | closed ─────────
---    (megjelenítve: Bejelentve / Folyamatban / Lezárva)
 alter table public.bug_tickets alter column status drop default;
 alter table public.bug_tickets drop constraint if exists bug_tickets_status_check;
 update public.bug_tickets
@@ -1371,7 +1057,6 @@ alter table public.bug_tickets
   add constraint bug_tickets_status_check check (status in ('reported', 'in_progress', 'closed'));
 alter table public.bug_tickets alter column status set default 'reported';
 
--- ── Olvasás: superadmin MINDET lát; más admin CSAK a saját beküldéseit ──────
 drop policy if exists "bug_tickets read" on public.bug_tickets;
 create policy "bug_tickets read" on public.bug_tickets for select
   using (
@@ -1379,50 +1064,18 @@ create policy "bug_tickets read" on public.bug_tickets for select
     or lower(created_by) = lower(auth.jwt() ->> 'email')
   );
 
-
--- ============================================================================
--- VÉGE
--- Táblák:   messages, portfolio_categories, portfolio_items, services,
---           site_content, custom_sections, appointment_slots, appointments,
---           appointment_waitlist, client_reliability, admin_users, bug_tickets
--- View:     available_slots
--- RPC:      confirm_appointment, cancel_appointment, respond_waitlist
---           (SECURITY DEFINER, token-scope-olt publikus műveletek)
--- Szerep:   admin_users (superadmin/admin/demo, EMAIL-kulcsú) + current_admin_role();
---           a demo a tartalmi táblákon NEM írhat (RLS: is distinct from demo);
---           bug_tickets (hibajegyek az aktivitás-naplóval)
--- Trigger:  set_updated_at_reliability, trg_00_recalc_booked_count,
---           trg_set_waitlist_position,
---           trg_rate_limit_appointments, trg_rate_limit_messages
--- Motor:    waitlist-tick Edge Function (várólista értesítés, pg_cron)
--- Realtime: appointment_slots, appointments, appointment_waitlist,
---           client_reliability, portfolio_items, portfolio_categories,
---           services, site_content, custom_sections
--- Storage:  attachments (public bucket)
--- Cron:     delete-old-appointments, delete-old-waitlist, delete-old-slots
--- ============================================================================
-
-
--- ============================================================================
--- 17. SZAVAZÁS RENDSZER (polls) — táblák + szavazás-RPC + moderálás + teszt mód
--- ============================================================================
--- Cookieless dedup: a szavazó azonosítója böngészőben tárolt anonim UUID.
--- Publikus: csak jóváhagyott (approved) opciók; a szavazatokat a cast_vote RPC írja.
--- suggestions típus: látogatói javaslatok (approved=false) → CMS moderálás.
--- test_mode: IDEIGLENES teszt (korlátlan szavazás egy böngészőből) — élesben KI.
-
 create table if not exists public.polls (
   id           uuid primary key default gen_random_uuid(),
   title_hu     text not null default '',
   title_en     text not null default '',
-  columns      jsonb not null default '[]'::jsonb,   -- [{name_hu, name_en}]
-  has_votes    boolean not null default true,        -- van-e "Szavazat" oszlop
+  columns      jsonb not null default '[]'::jsonb,
+  has_votes    boolean not null default true,
   type         text not null default 'fixed'
                check (type in ('fixed', 'suggestions')),
   status       text not null default 'open'
                check (status in ('open', 'closed')),
-  closes_at    timestamptz,                          -- opcionális időzítő (lezárás)
-  active       boolean not null default false,       -- a főoldalon megjelenő szavazás
+  closes_at    timestamptz,
+  active       boolean not null default false,
   default_view text not null default 'percent'
                check (default_view in ('percent', 'count')),
   test_mode    boolean not null default false,
@@ -1434,8 +1087,6 @@ create table if not exists public.polls (
   updated_at   timestamptz not null default now()
 );
 
--- ── Opciók (a tábla sorai) ──────────────────────────────────────────────────
--- meglévő táblákhoz (korábbi séma-verzió) a később bevezetett oszlop:
 alter table public.polls add column if not exists test_mode boolean not null default false;
 alter table public.polls add column if not exists vote_style text not null default 'updown';
 alter table public.polls add column if not exists live_sort boolean not null default true;
@@ -1445,27 +1096,25 @@ alter table public.polls add column if not exists warn_before_min int not null d
 create table if not exists public.poll_options (
   id          uuid primary key default gen_random_uuid(),
   poll_id     uuid not null references public.polls(id) on delete cascade,
-  cells       jsonb not null default '[]'::jsonb,    -- [{hu, en}] oszloponként
+  cells       jsonb not null default '[]'::jsonb,
   up_votes    int not null default 0,
   down_votes  int not null default 0,
-  approved    boolean not null default true,         -- false = moderálásra vár (2. szakasz)
-  suggested   boolean not null default false,        -- látogatói javaslat volt-e (2. szakasz)
+  approved    boolean not null default true,
+  suggested   boolean not null default false,
   sort_order  int not null default 0,
   created_at  timestamptz not null default now()
 );
 create index if not exists idx_poll_options_poll on public.poll_options (poll_id, sort_order);
 
--- ── Szavazatok (dedup: opciónként + szavazónként egy) ───────────────────────
 create table if not exists public.poll_votes (
   id         uuid primary key default gen_random_uuid(),
   option_id  uuid not null references public.poll_options(id) on delete cascade,
-  voter_id   text not null,                          -- böngészőben tárolt anonim UUID
+  voter_id   text not null,
   direction  text not null check (direction in ('up', 'down')),
   created_at timestamptz not null default now(),
   unique (option_id, voter_id)
 );
 
--- ── updated_at trigger a polls-ra ───────────────────────────────────────────
 create or replace function public.touch_polls_updated_at()
 returns trigger language plpgsql as $$
 begin new.updated_at := now(); return new; end $$;
@@ -1473,7 +1122,6 @@ drop trigger if exists trg_polls_touch on public.polls;
 create trigger trg_polls_touch before update on public.polls
   for each row execute function public.touch_polls_updated_at();
 
--- ── Csak EGY aktív szavazás lehet (új aktív → a többi inaktív) ──────────────
 create or replace function public.polls_single_active()
 returns trigger language plpgsql as $$
 begin
@@ -1486,7 +1134,6 @@ drop trigger if exists trg_polls_single_active on public.polls;
 create trigger trg_polls_single_active after insert or update of active on public.polls
   for each row when (new.active) execute function public.polls_single_active();
 
--- ── RLS ─────────────────────────────────────────────────────────────────────
 alter table public.polls        enable row level security;
 alter table public.poll_options enable row level security;
 alter table public.poll_votes   enable row level security;
@@ -1501,22 +1148,17 @@ create policy "Admin all polls" on public.polls for all
 drop policy if exists "Public read poll_options" on public.poll_options;
 drop policy if exists "Admin read poll_options"  on public.poll_options;
 drop policy if exists "Admin all poll_options"   on public.poll_options;
--- Publikus: csak jóváhagyott opciók látszanak
 create policy "Public read poll_options" on public.poll_options for select using (approved = true);
--- Admin: mindet látja (moderáláshoz), és írhat (nem demo)
 create policy "Admin read poll_options" on public.poll_options for select using (auth.role() = 'authenticated');
 create policy "Admin all poll_options" on public.poll_options for all
   using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')
   with check (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo');
 
--- poll_votes: nincs publikus közvetlen hozzáférés; kizárólag a cast_vote RPC ír.
 drop policy if exists "Admin read poll_votes" on public.poll_votes;
 create policy "Admin read poll_votes" on public.poll_votes for select using (auth.role() = 'authenticated');
 
--- ── Szavazás RPC (dedup + toggle + váltás; lezárt szavazást elutasít) ───────
 
 
--- ── Szavazás RPC (dedup + toggle/váltás; teszt módban korlátlan) ──
 create or replace function public.cast_vote(p_option uuid, p_voter text, p_dir text)
 returns jsonb
 language plpgsql
@@ -1540,7 +1182,6 @@ begin
     return jsonb_build_object('status', 'closed');
   end if;
 
-  -- ── TESZT MÓD: nincs dedup, minden hívás növel ──
   if v_poll.test_mode then
     if p_dir = 'up' then
       update public.poll_options set up_votes = up_votes + 1 where id = p_option;
@@ -1551,7 +1192,6 @@ begin
     return jsonb_build_object('status', 'ok', 'up', v_opt.up_votes, 'down', v_opt.down_votes);
   end if;
 
-  -- ── Normál mód: dedup + toggle/váltás ──
   select v.* into v_exist from public.poll_votes v
     where v.option_id = p_option and v.voter_id = p_voter;
 
@@ -1584,7 +1224,6 @@ end;
 $$;
 grant execute on function public.cast_vote(uuid, text, text) to anon, authenticated;
 
--- ── Látogatói javaslat RPC (moderálásra, approved=false) ──
 create or replace function public.suggest_option(p_poll uuid, p_cells jsonb)
 returns jsonb
 language plpgsql
@@ -1611,7 +1250,6 @@ end;
 $$;
 grant execute on function public.suggest_option(uuid, jsonb) to anon, authenticated;
 
--- ── Realtime (élő szavazat-frissítés) ───────────────────────────────────────
 do $$
 declare t text;
 begin
@@ -1625,26 +1263,20 @@ begin
   end loop;
 end $$;
 
-
--- ============================================================================
--- 18. FELUGRÓ ABLAKOK (több, egyenként elhelyezve) — site_popups
--- ============================================================================
--- Kiváltja a korábbi site_content promo_popup_* kulcsokat.
-
 create table if not exists public.site_popups (
   id          uuid primary key default gen_random_uuid(),
-  name        text not null default '',          -- admin-oldali név (a listában)
-  enabled     boolean not null default false,    -- aktív / rejtett
-  featured    boolean not null default false,    -- Kiemelt
+  name        text not null default '',
+  enabled     boolean not null default false,
+  featured    boolean not null default false,
   trigger     text not null default 'first_visit' check (trigger in ('first_visit', 'subpage')),
-  pages       jsonb not null default '[]'::jsonb, -- pl. ['/portfolio', '/impresszum']
+  pages       jsonb not null default '[]'::jsonb,
   eyebrow_hu  text not null default '', eyebrow_en text not null default '',
   title1_hu   text not null default '', title1_en  text not null default '',
   title2_hu   text not null default '', title2_en  text not null default '',
   body_hu     text not null default '', body_en    text not null default '',
   button_hu   text not null default '', button_en  text not null default '',
   link        text not null default '',
-  version     bigint not null default 0,          -- verzió; mentéskor bumpol → újra megjelenik
+  version     bigint not null default 0,
   sort_order  int not null default 0,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
@@ -1660,7 +1292,7 @@ create trigger trg_site_popups_touch before update on public.site_popups
 alter table public.site_popups enable row level security;
 drop policy if exists "Public read site_popups" on public.site_popups;
 drop policy if exists "Admin all site_popups"   on public.site_popups;
--- Publikus: csak az engedélyezett popupokat kéri le
+
 create policy "Public read site_popups" on public.site_popups for select using (enabled = true);
 create policy "Admin all site_popups" on public.site_popups for all
   using (auth.role() = 'authenticated' and public.current_admin_role() is distinct from 'demo')

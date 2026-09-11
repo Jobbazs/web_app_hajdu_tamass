@@ -1,7 +1,3 @@
-// bug-status — a hibajegy e-mailben lévő "Folyamatban" / "Lezárva" gombok célja.
-// Token alapján állítja a státuszt, BEJELENTKEZÉS NÉLKÜL (mint a foglalás
-// megerősítő linkje). Egyszerű HTML visszaigazoló lapot ad vissza.
-// Nyilvános végpont – deploykor: supabase functions deploy bug-status --no-verify-jwt
 
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''

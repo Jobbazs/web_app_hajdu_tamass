@@ -6,7 +6,6 @@ import CloudinaryUpload from './CloudinaryUpload'
 import { cldThumb } from '../../lib/portfolioPages'
 import '../../Styles/AdminContent.css'
 
-// ── Rögzített szöveg csoportok ───────────────────────────────
 const FIXED_GROUPS = [
   {
     id: 'hero', label: 'Hero szekció',
@@ -31,7 +30,7 @@ const FIXED_GROUPS = [
       { key: 'about_bio2_en', label: 'Bio paragraph 2 – EN',     type: 'textarea', hasAlign: true, hasSize: true },
       { key: 'about_bio3_en', label: 'Bio paragraph 3 – EN',     type: 'textarea', hasAlign: true, hasSize: true },
     ],
-    hasTags: true,   // különleges flag: a TagEditor komponenst rendereli
+    hasTags: true,
   },
   {
     id: 'portfolio_hub', label: 'Portfólió hub oldal',
@@ -75,7 +74,6 @@ const FIELD_TYPES = [
   { value: 'number',   label: 'Szám' },
 ]
 
-// ── Kép elhelyezés opciók ────────────────────────────────────
 const POS_OPTIONS = [
   { value: 'above', label: '⬆ Szöveg felett',     side: false },
   { value: 'below', label: '⬇ Szöveg alatt',       side: false },
@@ -83,8 +81,6 @@ const POS_OPTIONS = [
   { value: 'right', label: '➡ Szöveg jobb oldala', side: true  },
 ]
 
-// Kép szélesség opciók oldalnézethez (user-barát nevek)
-// Oldalkép szélessége mindig 25% (Kis sáv) – fix érték
 
 const EMPTY_SECTION = {
   title_hu: '', title_en: '',
@@ -100,7 +96,6 @@ const EMPTY_SECTION = {
   images:       [],
 }
 
-// ── blockStyle – azonos logika mint CustomSections.jsx ───────
 const blockStyle = (align) => {
   switch (align) {
     case 'center-left':
@@ -116,7 +111,6 @@ const blockStyle = (align) => {
   }
 }
 
-// ── AlignPicker ───────────────────────────────────────────────
 function AlignPicker({ value, onChange }) {
   return (
     <div className="acms-align-picker">
@@ -131,7 +125,6 @@ function AlignPicker({ value, onChange }) {
   )
 }
 
-// ── SizePicker ───────────────────────────────────────────────
 function SizePicker({ value, onChange }) {
   return (
     <div className="acms-align-picker">
@@ -144,14 +137,11 @@ function SizePicker({ value, onChange }) {
   )
 }
 
-// ── Cloudinary URL → kisbélyegkép URL ────────────────────────
 function thumbUrl(url) {
   if (!url) return ''
-  // Beillesztjük a w_80,h_60,c_fill transzformációt az upload/ után
   return url.replace('/upload/', '/upload/w_80,h_60,c_fill,f_auto,q_auto/')
 }
 
-// ── Live előnézet ─────────────────────────────────────────────
 function SectionPreview({ form }) {
   const fontSize = form.font_size === 'small' ? '0.9rem'
     : form.font_size === 'large' ? '1.2rem' : '1rem'
@@ -206,7 +196,6 @@ function SectionPreview({ form }) {
 
   return (
     <div className="acms-sect-live-preview">
-      {/* Felette */}
       {aboveImgs.length > 0 && (
         <div className="acms-prev-img-row" style={{ marginBottom: '1rem' }}>
           {aboveImgs.map(img => (
@@ -215,7 +204,6 @@ function SectionPreview({ form }) {
         </div>
       )}
 
-      {/* Fő tartalom: oldalkép + szöveg */}
       {(hasLeft || hasRight) ? (
         <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '0.8rem', alignItems: 'start' }}>
           {hasLeft && (
@@ -236,7 +224,6 @@ function SectionPreview({ form }) {
         </div>
       ) : textBlock}
 
-      {/* Alatta */}
       {belowImgs.length > 0 && (
         <div className="acms-prev-img-row" style={{ marginTop: '1rem' }}>
           {belowImgs.map(img => (
@@ -248,14 +235,11 @@ function SectionPreview({ form }) {
   )
 }
 
-// ════════════════════════════════════════════════════════════
 
-// ── TagEditor – Rólam szekció tag kezelő ────────────────────
 function TagEditor({ getValue, handleChange }) {
   const [newTagHu, setNewTagHu] = useState('')
   const [newTagEn, setNewTagEn] = useState('')
 
-  // Tagek kiolvasása (vesszővel elválasztott string → tömb)
   const tagsHu = getValue('about_tags_hu')
     ? getValue('about_tags_hu').split(',').map(t => t.trim()).filter(Boolean)
     : []
@@ -271,7 +255,7 @@ function TagEditor({ getValue, handleChange }) {
     const en = newTagEn.trim()
     if (!hu) return
     saveHu([...tagsHu, hu])
-    saveEn([...tagsEn, en || hu])   // ha nincs EN verzió, a HU-t duplikálja
+    saveEn([...tagsEn, en || hu])
     setNewTagHu('')
     setNewTagEn('')
   }
@@ -287,7 +271,6 @@ function TagEditor({ getValue, handleChange }) {
         Tagek (pl. Rendezvény, Urbex, Portré)
       </div>
 
-      {/* Meglévő tagek */}
       <div className="acms-tag-list">
         {tagsHu.length === 0 && (
           <span className="acms-tag-empty">Még nincs tag</span>
@@ -308,7 +291,6 @@ function TagEditor({ getValue, handleChange }) {
         ))}
       </div>
 
-      {/* Új tag hozzáadása */}
       <div className="acms-tag-add-row">
         <input
           type="text"
@@ -342,7 +324,7 @@ export default function AdminContent({ view = 'sekciok' }) {
   const { content, loading: contentLoading, refetch: refetchContent } = useSiteContent()
   const [edits,  setEdits]  = useState({})
   const [saving, setSaving] = useState(false)
-  const [lastSnapshot, setLastSnapshot] = useState(null)   // mentés előtti állapot (1-lépés visszaállítás)
+  const [lastSnapshot, setLastSnapshot] = useState(null)
   const [saved,  setSaved]  = useState(false)
   const [error,  setError]  = useState('')
 
@@ -354,7 +336,6 @@ export default function AdminContent({ view = 'sekciok' }) {
   const [sectError,    setSectError]    = useState('')
 
 
-  // Szekció sorrend state
   const SECTION_LABELS = {
     about:     'Rólam',
     portfolio: 'Portfólió',
@@ -374,24 +355,20 @@ export default function AdminContent({ view = 'sekciok' }) {
     { key: 'contact',   visible: true },
   ]
 
-  const [sectionOrder, setSectionOrder] = useState(null)   // null = betöltés alatt
+  const [sectionOrder, setSectionOrder] = useState(null)
   const [sectSavingO,  setSectSavingO]  = useState(false)
   const [dragIdx,      setDragIdx]      = useState(null)
   const [hasActivePoll, setHasActivePoll] = useState(false)
 
-  // Van-e aktív szavazás? (ettől függ, hogy a „Szavazás" megjelenik-e a sorrendben)
   useEffect(() => {
     supabase.from('polls').select('id').eq('active', true).limit(1)
       .then(({ data }) => setHasActivePoll((data || []).length > 0))
   }, [])
 
-  // Betöltés site_content-ből
   useEffect(() => {
     const raw = content['sections_order']
     let base = DEFAULT_SECTIONS
     if (raw) { try { base = JSON.parse(raw) } catch { base = DEFAULT_SECTIONS } }
-    // Aktív szavazásnál a „Szavazás" bekerül a listába (a Kapcsolat elé), ha még
-    // nincs benne; ha nincs aktív szavazás, nem mutatjuk a sorrend-szerkesztőben.
     if (hasActivePoll && !base.some(s => s.key === 'poll')) {
       const ci = base.findIndex(s => s.key === 'contact')
       const entry = { key: 'poll', visible: true }
@@ -416,7 +393,6 @@ export default function AdminContent({ view = 'sekciok' }) {
     saveSectionsOrder(updated)
   }
 
-  // Drag and drop
   const handleDragStart = (idx) => setDragIdx(idx)
   const handleDragOver  = (e, idx) => {
     e.preventDefault()
@@ -432,7 +408,6 @@ export default function AdminContent({ view = 'sekciok' }) {
     saveSectionsOrder(sectionOrder || DEFAULT_SECTIONS)
   }
 
-  // Footer social state
   const [socialSaving, setSocialSaving] = useState(false)
   const [socialError,  setSocialError]  = useState('')
   const getSocials = () => {
@@ -448,12 +423,10 @@ export default function AdminContent({ view = 'sekciok' }) {
     setSocialSaving(false)
   }
 
-  // Új kép hozzáadás state
   const [newImgUrl,   setNewImgUrl]   = useState('')
   const [newImgPos,   setNewImgPos]   = useState('above')
   const [imgError,    setImgError]    = useState('')
 
-  // ── Rögzített szövegek ──────────────────────────────────
   const getValue     = (key)        => key in edits ? edits[key] : (content[key] || '')
   const handleChange = (key, val)   => { setSaved(false); setEdits(p => ({ ...p, [key]: val })) }
   const hasChanges   = Object.keys(edits).length > 0
@@ -462,7 +435,6 @@ export default function AdminContent({ view = 'sekciok' }) {
     const keys = Object.keys(edits)
     if (!keys.length) return
     setSaving(true); setError('')
-    // A mentés ELŐTTI értékek eltárolása (egy lépés visszaállításához)
     const snapshot = {}
     for (const k of keys) snapshot[k] = content[k] ?? ''
     const { error } = await supabase
@@ -473,7 +445,6 @@ export default function AdminContent({ view = 'sekciok' }) {
     setSaving(false)
   }
 
-  // Előző verzió visszaállítása: a legutóbbi mentés ELŐTTI értékeket írja vissza.
   const restorePrev = async () => {
     if (!lastSnapshot) return
     if (!window.confirm('Visszaállítod a legutóbbi mentés előtti állapotot?')) return
@@ -487,7 +458,6 @@ export default function AdminContent({ view = 'sekciok' }) {
     setSaving(false)
   }
 
-  // ── Section kezelés ─────────────────────────────────────
   const openNewSect = () => {
     setEditingSect(null)
     setSectForm({ ...EMPTY_SECTION, sort_order: sections.length })
@@ -523,7 +493,6 @@ export default function AdminContent({ view = 'sekciok' }) {
 
   const setAlign = (field, value) => setSectForm(p => ({ ...p, [field]: value }))
 
-  // ── Extra mezők ──────────────────────────────────────────
   const addField = () => {
     setSectForm(p => ({
       ...p,
@@ -545,7 +514,6 @@ export default function AdminContent({ view = 'sekciok' }) {
     setSectForm(p => ({ ...p, fields: p.fields.filter((_, i) => i !== idx) }))
   }
 
-  // ── Képkezelés ───────────────────────────────────────────
   const addImage = () => {
     const url = newImgUrl.trim()
     if (!url) { setImgError('Add meg a kép Cloudinary URL-jét.'); return }
@@ -554,7 +522,6 @@ export default function AdminContent({ view = 'sekciok' }) {
     const isSide = POS_OPTIONS.find(p => p.value === newImgPos)?.side
     const existing = sectForm.images
 
-    // Limit check
     if (isSide) {
       const thisSideCount = existing.filter(img => img.position === newImgPos).length
       if (thisSideCount >= 3) {
@@ -589,7 +556,6 @@ export default function AdminContent({ view = 'sekciok' }) {
     setSectForm(p => ({ ...p, images: p.images.filter(img => img.id !== imgId) }))
   }
 
-  // ── Section mentés ───────────────────────────────────────
   const handleSectSave = async (e) => {
     e.preventDefault()
     if (!sectForm.body_hu.trim() && !sectForm.title_hu.trim()) {
@@ -617,7 +583,6 @@ export default function AdminContent({ view = 'sekciok' }) {
     await refetchSections()
   }
 
-  // ════════════════════════════════════════════════════════
   return (
     <div className="acms-section">
       <div className="acms-section-header">
@@ -646,7 +611,6 @@ export default function AdminContent({ view = 'sekciok' }) {
       </div>
 
 
-      {/* ── RÖGZÍTETT SZÖVEGEK ── */}
       {view === 'sekciok' && (
         <>
           {error && <div className="acms-error" style={{ marginBottom: '1rem' }}>{error}</div>}
@@ -718,7 +682,6 @@ export default function AdminContent({ view = 'sekciok' }) {
                   </div>
                 ))}
               </div>
-              {/* Tag szerkesztő – csak a Rólam szekciónál */}
               {group.hasTags && (
                 <TagEditor
                   getValue={getValue}
@@ -738,7 +701,6 @@ export default function AdminContent({ view = 'sekciok' }) {
         </>
       )}
 
-      {/* ── EGYEDI SZEKCIÓK LISTA ── */}
       {view === 'sekciok' && (
         <>
           <div className="acms-sect-header-row">
@@ -798,7 +760,6 @@ export default function AdminContent({ view = 'sekciok' }) {
 
 
 
-      {/* ── FOOTER & PORTRÉ ── */}
       {view === 'sekciok' && (
         <>
           <div className="acms-content-group">
@@ -846,9 +807,7 @@ export default function AdminContent({ view = 'sekciok' }) {
         </>
       )}
 
-      {/* ── PORTFÓLIÓ COVEREK ── */}
 
-      {/* ── POPUP SZÖVEGEK ── */}
       {view === 'popup' && (
         <div className="acms-content-group">
           <div className="acms-content-group-label">Kapcsolat PopUp szöveg</div>
@@ -910,7 +869,6 @@ export default function AdminContent({ view = 'sekciok' }) {
         </div>
       )}
 
-      {/* ── SZEKCIÓ SORREND ── */}
       {view === 'order' && (
         <div className="acms-content-group">
           <div className="acms-content-group-label">Szekció sorrend & láthatóság</div>
@@ -919,14 +877,12 @@ export default function AdminContent({ view = 'sekciok' }) {
             {sectSavingO && <span style={{marginLeft:'1rem', color:'var(--accent)'}}>Mentés...</span>}
           </div>
 
-          {/* Hero – fix, nem mozgatható */}
           <div className="acms-order-item acms-order-item--fixed">
             <span className="acms-order-handle">⠿</span>
             <span className="acms-order-label">Hero</span>
             <span className="acms-order-badge">Fix – nem mozgatható</span>
           </div>
 
-          {/* Többi szekció – drag-and-drop (@dnd-kit, érintésbarát) */}
           <SortableList
             items={(sectionOrder || DEFAULT_SECTIONS).map(s => s.key)}
             onReorder={(orderedKeys) => {
@@ -953,7 +909,6 @@ export default function AdminContent({ view = 'sekciok' }) {
         </div>
       )}
 
-      {/* ── SECTION FORM MODAL ── */}
       {showSectForm && (
         <div className="acms-modal-backdrop" onClick={() => setShowSectForm(false)}>
           <div className="acms-modal acms-modal--wide" onClick={e => e.stopPropagation()}>
@@ -964,7 +919,6 @@ export default function AdminContent({ view = 'sekciok' }) {
 
             <form onSubmit={handleSectSave} className="acms-form">
 
-              {/* Globális */}
               <div className="acms-form-divider">Globális beállítások</div>
               <div className="acms-form-row acms-form-row--3">
                 <div className="acms-form-group">
@@ -991,7 +945,6 @@ export default function AdminContent({ view = 'sekciok' }) {
                 </label>
               </div>
 
-              {/* Magyar */}
               <div className="acms-form-divider">Magyar tartalom</div>
               <div className="acms-form-group">
                 <label>Cím igazítása</label>
@@ -1013,7 +966,6 @@ export default function AdminContent({ view = 'sekciok' }) {
                 <span className="acms-hint">Enter = új sor az előnézetben és az oldalon is</span>
               </div>
 
-              {/* English */}
               <div className="acms-form-divider">English content</div>
               <div className="acms-form-group">
                 <label>Title – English (optional)</label>
@@ -1026,7 +978,6 @@ export default function AdminContent({ view = 'sekciok' }) {
                   placeholder="English version..." />
               </div>
 
-              {/* Extra mezők */}
               <div className="acms-form-divider">
                 Extra mezők
                 <span className="acms-hint" style={{ marginLeft: '0.6rem' }}>pl. Ár, Dátum, Helyszín</span>
@@ -1084,7 +1035,6 @@ export default function AdminContent({ view = 'sekciok' }) {
                 + Új mező hozzáadása
               </button>
 
-              {/* ── KÉPEK ── */}
               <div className="acms-form-divider">
                 Képek
                 <span className="acms-hint" style={{ marginLeft: '0.6rem' }}>
@@ -1092,7 +1042,6 @@ export default function AdminContent({ view = 'sekciok' }) {
                 </span>
               </div>
 
-              {/* Meglévő képek listája */}
               {sectForm.images.length > 0 && (
                 <div className="acms-img-list">
                   {sectForm.images.map(img => {
@@ -1119,7 +1068,6 @@ export default function AdminContent({ view = 'sekciok' }) {
                 </div>
               )}
 
-              {/* Új kép hozzáadása */}
               <div className="acms-img-upload">
                 <div className="acms-form-group">
                   <label>Hová kerüljön a kép?</label>
@@ -1153,7 +1101,6 @@ export default function AdminContent({ view = 'sekciok' }) {
                 </button>
               </div>
 
-              {/* Élő előnézet */}
               <div className="acms-form-divider">Élő előnézet – Magyar</div>
               <SectionPreview form={sectForm} />
 

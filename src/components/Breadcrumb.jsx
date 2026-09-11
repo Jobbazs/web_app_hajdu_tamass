@@ -1,6 +1,3 @@
-// Csak JSON-LD BreadcrumbList (SEO) – LÁTHATÓ útvonal NINCS.
-// A morzsa vizuálisan el lett rejtve; a strukturált adat viszont megmarad
-// a keresőknek. A prerender is injektálja a statikus oldalra.
 const SITE = 'https://hajdutamas.hu'
 
 export default function Breadcrumb({ items }) {

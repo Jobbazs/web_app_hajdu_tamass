@@ -5,7 +5,6 @@ import '../Styles/ThankYou.css'
 
 export default function ThankYou({
   visible, name, onClose,
-  // Opcionális override – ha nincs megadva, a site_content / LangContext szöveg jön
   eyebrow: eyebrowProp,
   titleLine1: title1Prop,
   titleLine2: title2Prop,
@@ -15,7 +14,6 @@ export default function ThankYou({
   const { content }  = useSiteContent()
   const ty = t.thankYou
 
-  // Szövegek site_content-ből, fallback LangContext-re
   const eyebrow     = eyebrowProp ?? (content[`thankyou_eyebrow_${lang}`] || ty.eyebrow)
   const titleLine1  = title1Prop  ?? (content[`thankyou_title1_${lang}`]  || ty.titleLine1)
   const titleLine2  = title2Prop  ?? (content[`thankyou_title2_${lang}`]  || ty.titleLine2)
@@ -53,7 +51,6 @@ export default function ThankYou({
 
   if (!rendered) return null
 
-  // Ha bodyProp van, az már kész szöveg – nincs {name} helyettesítés
   const bodyText = bodyProp
     ? bodyProp
     : (name ? bodyName.replace('{name}', name) : body)

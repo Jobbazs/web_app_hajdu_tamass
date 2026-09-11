@@ -1,7 +1,3 @@
-/* ============================================================
-   ABOUT
-   ============================================================ */
-
 
 .about-grid {
   display: grid;
@@ -14,8 +10,8 @@
 .about-img-frame {
   float: right;
   width: clamp(250px, 23vw, 600px);
-  margin: 0 0 2rem 3rem;   /* bal és alsó margó: szöveg légzik mellette */
-  shape-outside: border-box; /* szöveg a sarkot is megkerüli */
+  margin: 0 0 2rem 3rem;
+  shape-outside: border-box;
 }
 
 .about-img-frame img {
@@ -24,21 +20,15 @@
   display: block;
 }
 
-/* Szövegblokk: balról indul, float mellé folyik */
-.about-text {
-  /* nincs explicit szélesség – a float automatikusan szűkíti */
-}
 
 .about-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 2rem;
-  /* clearfix után is a szöveg alatt marad */
   clear: both;
 }
 
-/* ── Tablet (max 1023px): 2 oszlopos grid, kép hangsúlyosabb ── */
 @media (max-width: 1023px) {
   .about-img-frame {
     float: none;
@@ -62,7 +52,6 @@
   .about-tags { clear: none; }
 }
 
-/* ── Mobile (max 767px) ── */
 @media (max-width: 767px) {
   .about-img-frame {
     max-width: 260px;

@@ -8,7 +8,7 @@ export default function Confirm() {
     const params    = new URLSearchParams(window.location.search)
     const token     = params.get('token')
     const waitlist  = params.get('waitlist')
-    const action    = params.get('action')   // 'accept' | 'decline'
+    const action    = params.get('action')
     const isCancel  = window.location.pathname.includes('cancel')
 
     if (waitlist) {
@@ -20,25 +20,16 @@ export default function Confirm() {
     }
   }, [])
 
-  // ── Foglalás megerősítése ────────────────────────────────
-  // A token-ellenőrzés + státuszváltás szerveroldalon, SECURITY DEFINER
-  // RPC-ben történik. A kliens nem olvashatja/írhatja közvetlenül a
-  // foglalás-táblát – csak ezt az egy, tokenre szűkített műveletet hívja.
   const handleConfirm = async (token) => {
     const { data, error } = await supabase.rpc('confirm_appointment', { p_token: token })
     setStatus(error ? 'error' : (data || 'error'))
   }
 
-  // ── Foglalás lemondása ───────────────────────────────────
   const handleCancel = async (token) => {
     const { data, error } = await supabase.rpc('cancel_appointment', { p_token: token })
     setStatus(error ? 'error' : (data || 'error'))
   }
 
-  // ── Waitlist ajánlat elfogadás / elutasítás ──────────────
-  // Az RPC most jsonb-t ad vissza: { status, cancel_token? }. Elfogadáskor
-  // visszakapjuk az új foglalás lemondó tokenét, és ellőjük a megerősítő
-  // emailt (benne a lemondó linkkel) – az UI-t nem blokkolja, ha hibázik.
   const handleWaitlist = async (offerToken, action) => {
     const { data, error } = await supabase.rpc('respond_waitlist', {
       p_token:  offerToken,
@@ -56,7 +47,6 @@ export default function Confirm() {
     }
   }
 
-  // ── Megjelenítés ─────────────────────────────────────────
   const messages = {
     loading:          { icon: '…', title: 'Feldolgozás...',           body: 'Egy pillanat.' },
     confirmed:        { icon: '✓', title: 'Foglalás megerősítve!',    body: 'Várlak szeretettel!' },

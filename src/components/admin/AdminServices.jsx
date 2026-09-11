@@ -10,7 +10,6 @@ const EMPTY_FORM = {
   extra_fields: [],
 }
 
-// Extra mező típusok
 const FIELD_TYPES = [
   { value: 'text',     label: 'Szöveg' },
   { value: 'number',   label: 'Szám' },
@@ -21,7 +20,6 @@ export default function AdminServices() {
   const { services, loading, refetch } = useServices()
   const [pendingOrder, setPendingOrder] = useState(null)
 
-  // Optimista sorrend: húzás után azonnal ezt mutatjuk, míg a refetch beér
   const displayServices = pendingOrder
     ? pendingOrder.map((id) => services.find((s) => s.id === id)).filter(Boolean)
     : services
@@ -37,7 +35,7 @@ export default function AdminServices() {
   const [form,     setForm]     = useState(EMPTY_FORM)
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState('')
-  const [lastAction, setLastAction] = useState(null)  // egy lépés visszaállítás (mentés után)
+  const [lastAction, setLastAction] = useState(null)
 
   const openNew = () => {
     setEditing(null)
@@ -65,7 +63,6 @@ export default function AdminServices() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  // ── Extra mezők kezelése ────────────────────────────────
   const addExtraField = () => {
     setForm(prev => ({
       ...prev,
@@ -91,7 +88,6 @@ export default function AdminServices() {
     }))
   }
 
-  // ── Mentés ──────────────────────────────────────────────
   const handleSave = async (e) => {
     e.preventDefault()
     if (!form.name_hu.trim() || !form.name_en.trim()) {
@@ -109,7 +105,6 @@ export default function AdminServices() {
       extra_fields: form.extra_fields,
     }
 
-    // Undo-hoz: frissítésnél a régi értékek kellenek (a lista aktuális rekordja)
     const prevRecord = editing ? services.find(s => s.id === editing) : null
 
     let error, newId = null
@@ -124,7 +119,6 @@ export default function AdminServices() {
 
     if (error) { setError('Hiba: ' + error.message); setSaving(false); return }
 
-    // Egy lépés visszaállítás eltárolása
     if (editing && prevRecord) {
       setLastAction({
         type: 'update', id: editing,
@@ -143,8 +137,6 @@ export default function AdminServices() {
     setSaving(false)
   }
 
-  // Előző verzió visszaállítása: az utolsó mentést vonja vissza (frissítésnél a
-  // régi értékek visszaírása, új rekordnál a létrehozott elem törlése).
   const restorePrev = async () => {
     if (!lastAction) return
     const msg = lastAction.type === 'insert'
@@ -217,7 +209,6 @@ export default function AdminServices() {
         </SortableList>
       )}
 
-      {/* Form modal */}
       {showForm && (
         <div className="acms-modal-backdrop" onClick={() => setShowForm(false)}>
           <div className="acms-modal acms-modal--wide" onClick={e => e.stopPropagation()}>
@@ -259,7 +250,6 @@ export default function AdminServices() {
                 <textarea name="desc_en" className="acms-input acms-textarea" value={form.desc_en} onChange={handleChange} rows={3} />
               </div>
 
-              {/* Extra mezők */}
               <div className="acms-form-divider">
                 Extra mezők
                 <span className="acms-hint" style={{ marginLeft: '0.5rem' }}>pl. Ár, Időtartam – szabadon bővíthető</span>

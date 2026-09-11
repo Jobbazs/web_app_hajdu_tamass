@@ -7,8 +7,6 @@ import AdminCovers     from './AdminCovers'
 import AdminPromoPopup from './AdminPromoPopup'
 import AdminPoll       from './AdminPoll'
 
-// "Tartalom" gyűjtő fül – saját al-menüvel. A PopUp/Felugró alatt két alpont:
-// Általános (az új, több-popup modul) és Kapcsolat (a kapcsolat-popup szövege).
 const SUB = [
   { key: 'portfolio', label: 'Portfólió' },
   { key: 'pages',     label: 'Portfólió-oldalak' },
@@ -27,7 +25,6 @@ export default function AdminTartalom() {
   const [sub, setSub] = useState('portfolio')
   const [popupTab, setPopupTab] = useState('altalanos')
 
-  // Egyetlen AdminContent-példány nézete: szekciók / sorrend / kapcsolat-popup.
   let contentView = null
   if (sub === 'sections') contentView = 'sekciok'
   else if (sub === 'order') contentView = 'order'
@@ -77,9 +74,6 @@ export default function AdminTartalom() {
         </>
       )}
 
-      {/* Egy AdminContent-példány marad felcsatolva a szekciók/sorrend/kapcsolat-popup
-          nézetek közt (a view prop változik), így a nem mentett szerkesztések nem
-          vesznek el. */}
       {contentView && <AdminContent view={contentView} />}
     </div>
   )

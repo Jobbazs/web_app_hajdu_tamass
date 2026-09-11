@@ -1,6 +1,4 @@
-/* ============================================================
-   ADMIN – shell, header, tabs, shared form elements
-   ============================================================ */
+
 .admin-bg { min-height: 100vh; padding-top: 0; overflow-x: clip; }
 
 .admin-title {
@@ -48,11 +46,7 @@
   padding: 4rem 2rem;
 }
 
-/* ============================================================
-   ADMIN CMS – TABS
-   ============================================================ */
 
-/* Tab sáv */
 .acms-tabs {
   display: flex;
   gap: 0;
@@ -85,12 +79,10 @@
   border-bottom-color: var(--accent);
 }
 
-/* Tab tartalom */
 .acms-content { padding: 2rem; max-width: 90vw; margin: 0 auto; }
 
-/* Section fejléc */
 .acms-section { max-width: 100%; margin: 0 auto; }
-.acms-section--wide { max-width: none; }   /* pl. portfólió rács – teljes szélesség */
+.acms-section--wide { max-width: none; }
 
 .acms-section-header {
   display: flex;
@@ -115,10 +107,6 @@
   color: var(--text-muted);
   margin-top: 0.2rem;
 }
-
-/* ============================================================
-   ADMIN CMS – SHARED BUTTONS
-   ============================================================ */
 
 .acms-btn-primary {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
@@ -187,10 +175,6 @@
   color: #e05050 !important;
 }
 
-/* ============================================================
-   ADMIN CMS – SHARED LIST ITEMS
-   ============================================================ */
-
 .acms-hidden { opacity: 0.45; }
 
 .acms-tag {
@@ -211,9 +195,6 @@
   justify-content: flex-end;
 }
 
-/* ============================================================
-   ADMIN CMS – SHARED FORM ELEMENTS
-   ============================================================ */
 
 .acms-form { display: flex; flex-direction: column; gap: 0; }
 
@@ -324,7 +305,6 @@
   margin-left: 4px;
 }
 
-/* Sticky mentés gomb */
 .acms-sticky-save {
   position: sticky;
   bottom: 1.5rem;
@@ -335,15 +315,12 @@
 }
 .acms-sticky-save button { pointer-events: all; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
 
-/* ============================================================
-   ADMIN CMS – SHARED MODAL
-   ============================================================ */
 
 .acms-modal-backdrop {
   position: fixed; inset: 0; z-index: 4000;
   background: rgba(0,0,0,0.85);
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);   /* Safari <18 */
+  -webkit-backdrop-filter: blur(6px);
   display: flex; align-items: center; justify-content: center;
   padding: 1rem;
 }
@@ -384,14 +361,9 @@
 
 .acms-modal--wide { max-width: 820px; }
 
-/* ============================================================
-   ADMIN CMS – STATUS BADGE
-   ============================================================ */
-
 .acms-sect-status {
   flex-shrink: 0;
   margin-right: 0;
-  /* Mobilon is a sor elején legyen */
   order: -1;
 }
 
@@ -415,10 +387,6 @@
   border-color: var(--border-subtle);
   color: var(--text-muted);
 }
-
-/* ============================================================
-   ALIGN PICKER – gombsor az igazítás választáshoz
-   ============================================================ */
 
 .acms-align-picker {
   display: flex;
@@ -451,14 +419,10 @@
   background: rgba(var(--rust-light-rgb),0.08);
 }
 
-/* ============================================================
-   ADMIN CMS – Reszponzív
-   ============================================================ */
 
 @media (max-width: 767px) {
   .acms-modal-backdrop { align-items: flex-start; padding-top: max(1rem, env(safe-area-inset-top)); }
   .acms-content { padding: 1rem; }
-  /* Fő fülek: több sorba tördelnek, nincs vízszintes húzogatás */
   .acms-tabs { flex-wrap: wrap; overflow-x: visible; padding: 0 1rem; row-gap: 2px; }
   .acms-tab { padding: 0.5rem 0.7rem; font-size: 0.56rem; letter-spacing: 0.1em; }
   .acms-form-row { grid-template-columns: 1fr; }
@@ -476,7 +440,6 @@
     }
   }
 
-  /* Gombok mindig láthatók – sticky az alján */
   .acms-form-actions {
     position: sticky;
     bottom: 0;
@@ -489,7 +452,6 @@
   }
 }
 
-/* ── Booking kártyák ── */
 .acms-booking-filters {
   display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
 }
@@ -510,7 +472,6 @@
   line-height: 1.6;
 }
 
-/* ── Foglalás-táblázat (Foglalások fül) ─────────────────── */
 .acms-booking-toolbar {
   display: flex; flex-wrap: wrap; gap: 0.75rem;
   align-items: center; margin-bottom: 1.2rem;
@@ -591,7 +552,6 @@
   justify-content: flex-end;
 }
 
-/* Részletek sor */
 .acms-table-detail > td { background: var(--bg-secondary); padding: 1rem 0.8rem; }
 .acms-detail-grid {
   display: grid;
@@ -626,10 +586,9 @@
   .acms-booking-toolbar { flex-direction: column; align-items: stretch; }
   .acms-booking-search { min-width: 0; }
   .acms-row-actions { justify-content: flex-start; }
-  .acms-table th:nth-child(5), .acms-table td:nth-child(5) { display: none; } /* "Létrehozva" oszlop elrejtése mobilon */
+  .acms-table th:nth-child(5), .acms-table td:nth-child(5) { display: none; }
 }
 
-/* ── Slot kártyák ── */
 .acms-slot-card {
   border: 1px solid var(--border-subtle);
   background: var(--bg-card);
@@ -653,7 +612,6 @@
   color: var(--text-muted); flex-shrink: 0;
 }
 
-/* ── Reliability kártyák ── */
 .acms-reliability-card {
   border: 1px solid var(--border-subtle);
   background: var(--bg-card);
@@ -674,12 +632,10 @@
   margin-bottom: 0.6rem;
 }
 
-/* ── rrule preset gombok ── */
 .acms-booking-rrule-presets {
   display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem;
 }
 
-/* ── Portfólió grid ── */
 .acms-port-filter-row {
   display: flex;
   align-items: center;
@@ -694,7 +650,6 @@
   font-size: 0.98rem;
 }
 
-/* 8 oszlop desktopon, arányos csökkentés */
 .acms-port-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -715,7 +670,6 @@
 
 .acms-port-card--hidden { opacity: 1; }
 
-/* A kép a kártya – nagy, négyzetes */
 .acms-port-card-img {
   position: relative;
   width: 100%;
@@ -754,7 +708,6 @@
   border-radius: 3px;
 }
 
-/* Akciók: overlay a kép alján – hoverre látszik, így a kártya = a kép */
 .acms-port-card-actions {
   position: absolute;
   left: 0; right: 0; bottom: 0;
@@ -790,14 +743,12 @@
   text-align: center;
 }
 
-/* Reszponzív oszlopszám (a rács mindig kitölti a teljes szélességet) */
 @media (max-width: 1400px) { .acms-port-grid { grid-template-columns: repeat(7, 1fr); } }
 @media (max-width: 1150px) { .acms-port-grid { grid-template-columns: repeat(6, 1fr); } }
 @media (max-width: 950px)  { .acms-port-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 700px)  { .acms-port-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 520px)  { .acms-port-grid { grid-template-columns: repeat(2, 1fr); } }
 
-/* Érintőeszköz (nincs hover): az akciók legyenek MINDIG láthatók a kép alatt */
 @media (hover: none) {
   .acms-port-card-actions {
     position: static;
@@ -808,7 +759,6 @@
   .acms-port-card-title { color: var(--text-muted); }
 }
 
-/* ── Szekció sorrend ── */
 .acms-order-item {
   display: flex;
   align-items: center;
@@ -819,7 +769,7 @@
   margin-bottom: 4px;
   cursor: grab;
   transition: background 0.2s, border-color 0.2s;
-  -webkit-user-select: none;   /* Safari <17 */
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -854,7 +804,6 @@
   padding: 0.2rem 0.5rem;
 }
 
-/* ── Haladó beállítások – publikálás ── */
 .adv-doc {
   font-size: 1.02rem;
   color: var(--text-secondary);
@@ -910,9 +859,6 @@
   .adv-publish-row .acms-btn-primary { width: 100%; }
 }
 
-/* ============================================================
-   KATEGÓRIA-OLDALAK SZERKESZTŐ (AdminCategories)
-   ============================================================ */
 .acms-loading { padding: 3rem 1rem; text-align: center; color: #8a7a68; font-size: 0.98rem; letter-spacing: 0.1em; }
 
 .acms-cat-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.2rem; }
@@ -921,18 +867,15 @@
 
 .acms-label { display: block; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.4rem; }
 
-/* HU/EN kapcsoló */
 .acms-lang-toggle { display: inline-flex; border: 1px solid #3a332a; border-radius: 5px; overflow: hidden; flex-shrink: 0; }
 .acms-lang-toggle button { background: transparent; border: none; color: #8a7a68; padding: 0.4rem 0.9rem; font-size: 0.91rem; font-weight: bold; letter-spacing: 0.1em; cursor: pointer; }
 .acms-lang-toggle button.active { background: var(--rust-light); color: #fff; }
 
-/* Kategória-választó tabok */
 .acms-cat-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid #2a2520; padding-bottom: 1rem; }
 .acms-cat-tab { background: #201a14; border: 1px solid #2a2520; color: #C8B89A; padding: 0.45rem 0.9rem; border-radius: 5px; font-size: 0.95rem; cursor: pointer; transition: all 0.15s; }
 .acms-cat-tab:hover { border-color: #8B6A4A; }
 .acms-cat-tab.active { background: var(--rust-light); border-color: var(--rust-light); color: #fff; font-weight: bold; }
 
-/* Szerkesztő + előnézet elrendezés */
 .acms-cat-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
 .acms-preset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
 
@@ -940,7 +883,6 @@
 .acms-cat-view { color: #8B6A4A; text-decoration: none; font-size: 0.94rem; margin-left: auto; }
 .acms-cat-view:hover { color: var(--rust-light); }
 
-/* Élő előnézet */
 .acms-cat-preview { position: sticky; top: 1rem; }
 .acms-cat-preview-label { font-size: 0.89rem; letter-spacing: 0.15em; text-transform: uppercase; color: #8a7a68; margin-bottom: 0.5rem; }
 .acms-cat-preview-box { background: #1a1510; border: 1px solid #2a2520; border-radius: 6px; padding: 1.5rem; min-height: 200px; }
@@ -951,9 +893,6 @@
   .acms-cat-preview { position: static; }
 }
 
-/* ============================================================
-   SZEKCIÓ-SZERKESZTŐ (AdminCategorySections)
-   ============================================================ */
 .acms-secs { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #2a2520; }
 .acms-secs-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .acms-secs-title { font-size: 1.05rem; color: #fff; margin: 0; letter-spacing: 0.03em; }
@@ -985,7 +924,6 @@
 }
 .acms-sec-editor-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: #fff; }
 
-/* Képválasztó rács */
 .acms-img-picker {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px;
   max-height: 320px; overflow-y: auto; padding: 4px; background: #15110c; border-radius: 6px;
@@ -1007,9 +945,6 @@
   .acms-sec-actions { width: 100%; }
 }
 
-/* ============================================================
-   DASHBOARD (AdminDashboard)
-   ============================================================ */
 .dash { padding-bottom: 2rem; }
 
 .dash-stats {
@@ -1055,9 +990,6 @@
   .dash-bar-label { flex-basis: 46%; max-width: 46%; }
 }
 
-/* ============================================================
-   DRAG & DROP (SortableList / SortableItem)
-   ============================================================ */
 .dnd-row { display: flex; align-items: stretch; gap: 0.5rem; }
 .dnd-row--dragging { box-shadow: 0 6px 20px rgba(0,0,0,0.4); border-radius: 8px; }
 .dnd-row-body { flex: 1; min-width: 0; }
@@ -1069,15 +1001,12 @@
   width: 30px; padding: 0;
   background: transparent; border: none;
   color: #6b5f50; font-size: 1.1rem; line-height: 1;
-  cursor: grab; touch-action: none;   /* fontos: mobilon a húzás elkapja */
+  cursor: grab; touch-action: none;
   border-radius: 6px; transition: color 0.15s, background 0.15s;
 }
 .dnd-handle:hover { color: var(--rust-light); background: rgba(var(--rust-light-rgb),0.08); }
 .dnd-handle:active { cursor: grabbing; }
 
-/* ============================================================
-   CLOUDINARY FELTÖLTŐ (CloudinaryUpload)
-   ============================================================ */
 .cld-upload-wrap { width: 100%; }
 .cld-upload {
   display: flex; align-items: center; justify-content: center;
@@ -1105,18 +1034,16 @@
   border-radius: 5px; padding: 0.4rem 0.6rem;
 }
 
-/* Rács-elem drag (portfólió képek) */
 .dnd-grid-item { position: relative; }
 .dnd-handle--overlay {
   position: absolute; top: 6px; left: 6px; z-index: 6;
   width: 28px; height: 28px; align-self: auto;
   background: rgba(0,0,0,0.55); color: #fff; border-radius: 6px;
   backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);   /* Safari <18 */
+  -webkit-backdrop-filter: blur(2px);
 }
 .dnd-handle--overlay:hover { background: var(--rust-light); color: #fff; }
 
-/* ── Dashboard: havi kártya fejléc + év-választó + 2 oszlop ── */
 .dash-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 1rem; }
 .dash-card-head .dash-card-title { margin-bottom: 0; }
 .dash-year-select {
@@ -1126,7 +1053,6 @@
 .dash-months { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.6rem; }
 .dash-months-col { min-width: 0; }
 
-/* ── Dashboard: info tooltip ── */
 .dash-info {
   display: inline-flex; align-items: center; justify-content: center;
   width: 15px; height: 15px; margin-left: 0.4rem;
@@ -1152,7 +1078,6 @@
   .dash-tip { max-width: 160px; }
 }
 
-/* ── Portfólió: tömeges kijelölés + kategória-törlés modal ── */
 .acms-port-card { position: relative; }
 .acms-port-card--selected { outline: 2px solid #c8a24a; outline-offset: 2px; }
 .acms-port-select {
@@ -1176,7 +1101,6 @@
 .acms-del-option > button { align-self: flex-start; }
 .acms-del-option .acms-hint { margin: 0; line-height: 1.45; }
 
-/* ── Kijelölés: csúszka (mind ki/be) + elválasztó ── */
 .acms-switch { display: inline-flex; align-items: center; gap: .45rem; cursor: pointer; user-select: none; font-size: 0.98rem; }
 .acms-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
 .acms-switch-track { position: relative; flex: none; width: 34px; height: 18px; border-radius: 999px; background: rgba(255,255,255,.18); transition: background .2s; }
@@ -1184,7 +1108,6 @@
 .acms-switch input:checked + .acms-switch-track { background: #c8a24a; }
 .acms-switch input:checked + .acms-switch-track .acms-switch-thumb { transform: translateX(16px); }
 .acms-bulk-sep { flex: 1 1 auto; }
-/* ── DEMO mód sáv ── */
 .admin-demo-banner {
   background: var(--rust);
   color: #fff;
@@ -1196,7 +1119,6 @@
   font-weight: 700;
 }
 
-/* ── Jogkezelő táblázat ── */
 .acms-roles-add {
   display: flex;
   gap: 0.5rem;
@@ -1218,7 +1140,6 @@
   vertical-align: middle;
 }
 .acms-roles-table select { max-width: 160px; }
-/* ── Fejléc: bejelentkezett e-mail a kilépés gomb mellett ── */
 .admin-header-right {
   display: flex;
   align-items: center;
@@ -1231,7 +1152,6 @@
   opacity: 0.7;
   white-space: nowrap;
 }
-/* Mobilon a bejelentkezett e-mail és a Kilépés gomb egymás alá kerül */
 @media (max-width: 600px) {
   .admin-header-right {
     flex-direction: column;
@@ -1245,7 +1165,6 @@
     max-width: 100%;
   }
 }
-/* ── Látható/Rejtett kapcsoló (on-off switch) ── */
 .acms-switch {
   display: inline-flex; align-items: center; gap: 0.5rem;
   background: none; border: none; cursor: pointer;
@@ -1265,22 +1184,18 @@
 .acms-switch.on .acms-switch-thumb { transform: translateX(16px); }
 .acms-switch-label { font-size: 0.91rem; letter-spacing: 0.05em; opacity: 0.85; color: #fff; }
 .acms-switch.off .acms-switch-label { opacity: 0.5; }
-/* ── Rejtett portfólió-elem: CSAK a kép szürkül, a gombok teljes fényben ── */
 .acms-port-card--hidden .acms-port-card-img img,
 .acms-port-card--hidden .acms-port-card-ph {
   filter: grayscale(1);
   opacity: 0.45;
 }
 .acms-port-card--hidden .acms-port-card-title { opacity: 0.5; }
-/* a "Rejtett" jelvény és a gombok NEM halványulnak */
 .acms-port-card--hidden .acms-port-card-hidden-badge,
 .acms-port-card--hidden .acms-port-card-actions,
 .acms-port-card--hidden .acms-port-card-btns { opacity: 1; }
 
-/* Gombok SEHOL ne sötétedjenek/halványuljanak el (rejtett elemnél sem) */
 .acms-port-card .acms-btn-sm { opacity: 1 !important; filter: none !important; }
 
-/* Mobil (600px alatt): CMS betűméretek az eredetire állítva – desktop marad nagyobb */
 @media (max-width: 600px) {
   .admin-title { font-size: 1.3rem; }
   .admin-subtitle { font-size: 0.6rem; }

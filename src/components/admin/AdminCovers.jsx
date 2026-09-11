@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useCategories } from '../../hooks'
 
-// A portfólió-áttekintő csempéinek borítóképe kategóriánként.
-// Tárolás: site_content `portfolio_cover_<slug>` kulcs. A lista az ÉLŐ
-// kategóriákból generálódik. Van egy lépés visszaállítás (mentés előtti állapot).
 function cldThumb(url, w = 300) {
   if (!url || !url.includes('/upload/')) return url
   return url.replace('/upload/', `/upload/w_${w},c_fill,q_auto,f_auto/`)
@@ -12,9 +9,9 @@ function cldThumb(url, w = 300) {
 
 export default function AdminCovers() {
   const { categories } = useCategories()
-  const [covers,   setCovers]   = useState({})   // { slug: url } – szerkesztett
-  const [original, setOriginal] = useState({})   // utolsó mentett (DB) állapot
-  const [lastSnapshot, setLastSnapshot] = useState(null)  // mentés előtti állapot (undo)
+  const [covers,   setCovers]   = useState({})
+  const [original, setOriginal] = useState({})
+  const [lastSnapshot, setLastSnapshot] = useState(null)
   const [saving,   setSaving]   = useState(false)
   const [saved,    setSaved]    = useState(false)
   const [loading,  setLoading]  = useState(true)
@@ -48,7 +45,7 @@ export default function AdminCovers() {
 
   const save = async () => {
     setSaving(true); setSaved(false)
-    const snapshot = { ...original }   // mentés ELŐTTI állapot
+    const snapshot = { ...original }
     const { error } = await upsertCovers(covers)
     setSaving(false)
     if (!error) {

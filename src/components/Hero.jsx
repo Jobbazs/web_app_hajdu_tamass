@@ -2,7 +2,6 @@ import { useLang } from '../LangContext'
 import { useSiteContent } from '../hooks'
 import '../Styles/Hero.css'
 
-// align kulcs → inline stílus a szöveg elemre
 const alignStyle = (align) => {
   switch (align) {
     case 'center':       return { textAlign: 'center',  display: 'block' }
@@ -13,7 +12,6 @@ const alignStyle = (align) => {
   }
 }
 
-// size kulcs → font-size érték
 const sizeStyle = (size) => {
   switch (size) {
     case 'small': return { fontSize: 'clamp(0.85rem, 2vw, 1rem)' }
@@ -26,14 +24,12 @@ export default function Hero() {
   const { lang } = useLang()
   const { content } = useSiteContent()
 
-  // Szövegek
   const line1    = content[`hero_line1_${lang}`]    || (lang === 'hu' ? 'Ahol a fény'   : 'Where the light')
   const line2    = content[`hero_line2_${lang}`]    || (lang === 'hu' ? 'meghal.'       : 'dies.')
   const subtitle = content[`hero_subtitle_${lang}`] || (lang === 'hu' ? 'Rendezvények, underground helyszínek, portrék és urbex — a képek, amelyek megmaradnak.' : 'Events, underground venues, portraits and urbex — images that stay with you.')
   const cta      = content[`hero_cta_${lang}`]      || (lang === 'hu' ? 'Portfólió megtekintése' : 'View Portfolio')
   const eyebrow  = lang === 'hu' ? 'Fotós & Videós' : 'Photographer & Videographer'
 
-  // Igazítás és méret beállítások az adminból
   const line1Align    = content[`hero_line1_${lang}_align`]    || 'left'
   const line2Align    = content[`hero_line2_${lang}_align`]    || 'left'
   const subtitleAlign = content[`hero_subtitle_${lang}_align`] || 'left'

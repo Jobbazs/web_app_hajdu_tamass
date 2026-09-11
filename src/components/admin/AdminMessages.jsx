@@ -4,9 +4,6 @@ import '../../Styles/AdminMessages.css'
 
 const ATTACHMENTS_BUCKET = 'attachments'
 
-// Egy publikus Supabase Storage URL-ből kinyeri a bucketen belüli path-ot
-// (pl. ".../object/public/attachments/contact-attachments/123_abc.jpg"
-//      -> "contact-attachments/123_abc.jpg")
 function urlToStoragePath(url) {
   const marker = `/object/public/${ATTACHMENTS_BUCKET}/`
   const idx = url.indexOf(marker)
@@ -47,7 +44,6 @@ export default function AdminMessages() {
     setMessages(prev => prev.map(m => m.id === id ? { ...m, read: !current } : m))
   }
 
-  // Üzenet törlése + a hozzá tartozó csatolt képek törlése a Storage-ból
   const deleteMessage = async (id, attachmentUrl) => {
     if (!window.confirm('Biztosan törölni szeretnéd ezt az üzenetet? A csatolt képek is törlődnek.')) return
 
@@ -61,7 +57,6 @@ export default function AdminMessages() {
         .remove(paths)
       if (storageError) {
         console.error('Storage törlési hiba:', storageError)
-        // nem akasztjuk meg a folyamatot emiatt, az üzenetet még törölni próbáljuk
       }
     }
 

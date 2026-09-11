@@ -2,14 +2,11 @@ import { useMemo } from 'react'
 import { useLang } from '../LangContext'
 import { cldThumb, alignStyle, sizeClass, prefetchLarge } from '../lib/portfolioPages'
 
-// Hány képet mutat egy szekció (auto módban ennyit fogyaszt a kategória-poolból)
 const IMG_COUNT = { text_images: 4, images_text: 4, images_only: 8, text_only: 0 }
 
 export default function CategorySections({ sections, catItems, onImageClick }) {
   const { lang } = useLang()
 
-  // Hibrid képfeloldás: kézi image_ids, vagy auto a kategória képeiből
-  // (szekciónként a következő adag – így nem ismétlődik minden blokkban).
   const resolved = useMemo(() => {
     const byId = new Map(catItems.map((i) => [i.id, i]))
     let cursor = 0
@@ -93,7 +90,6 @@ export default function CategorySections({ sections, catItems, onImageClick }) {
           )
         }
 
-        // text_images (szöveg + 2x2) vagy images_text (2x2 + szöveg)
         const reversed = s.type === 'images_text'
         return (
           <section key={s.id} className={`cat-section cat-section--split ${reversed ? 'is-reversed' : ''}`}>

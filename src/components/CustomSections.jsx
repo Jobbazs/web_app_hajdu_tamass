@@ -59,7 +59,6 @@ export default function CustomSections() {
         const hasLeft   = leftImgs.length  > 0
         const hasRight  = rightImgs.length > 0
 
-        // Oldalkép oszlop: mindig 35% (fix méret)
         const leftW  = 35
         const rightW = 35
         let gridCols = ''
@@ -108,7 +107,6 @@ export default function CustomSections() {
           </div>
         )
 
-        // Összes nem-fenti kép (bal + jobb + alatti) mobilon 1 sorba, max 5
         const bottomImgs = [...leftImgs, ...rightImgs, ...belowImgs].slice(0, 5)
         const hasBottom  = bottomImgs.length > 0
 
@@ -116,7 +114,6 @@ export default function CustomSections() {
           <section key={s.id} className="custom-section">
             <div className="container">
 
-              {/* Képek FELETT – mindig fent marad */}
               {aboveImgs.length > 0 && (
                 <div className={`cs-img-row cs-img-row--above cs-img-row--${aboveImgs.length}`}>
                   {aboveImgs.map(img => (
@@ -125,7 +122,6 @@ export default function CustomSections() {
                 </div>
               )}
 
-              {/* Fő tartalom: [bal kép] [szöveg] [jobb kép] – csak desktopon */}
               {(hasLeft || hasRight) ? (
                 <div
                   className={`cs-main cs-main--side ${hasLeft ? 'cs-main--left' : ''} ${hasRight ? 'cs-main--right' : ''}`}
@@ -149,7 +145,6 @@ export default function CustomSections() {
                 </div>
               ) : textContent}
 
-              {/* Képek ALATT desktopon (csak ha nincs oldalkép) */}
               {!hasLeft && !hasRight && belowImgs.length > 0 && (
                 <div className={`cs-img-row cs-img-row--below cs-img-row--${belowImgs.length}`}>
                   {belowImgs.map(img => (
@@ -158,7 +153,6 @@ export default function CustomSections() {
                 </div>
               )}
 
-              {/* Mobil/tablet: bal + jobb + alatti képek 1 sorban a szöveg alatt */}
               {hasBottom && (
                 <div className={`cs-bottom-row cs-bottom-row--${bottomImgs.length}`}>
                   {bottomImgs.map(img => (

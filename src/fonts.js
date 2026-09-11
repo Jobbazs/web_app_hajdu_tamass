@@ -1,11 +1,4 @@
-// Önállóan tárolt (self-hosted) betűtípusok – Fontsource csomagokból.
-// Nincs külső Google Fonts kérés (nincs IP-továbbítás a Google felé), és nincs
-// hozzájárulás-köteles süti. A saját domainről töltődnek, így gyorsak is.
-// A súlyok pontosan a korábbi Google Fonts URL-nek felelnek meg.
-//
-// Telepítés (egyszer, a projektben):
-//   npm install @fontsource/bebas-neue @fontsource/space-mono @fontsource/crimson-pro \
-//               @fontsource/barlow-condensed @fontsource/share-tech-mono @fontsource/rajdhani
+
 
 import '@fontsource/bebas-neue/400.css'
 

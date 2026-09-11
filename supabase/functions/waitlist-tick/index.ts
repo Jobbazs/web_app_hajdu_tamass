@@ -1,39 +1,3 @@
-// ============================================================
-// Supabase Edge Function – waitlist-tick
-//
-// A várólista TELJES motorja. Minden futáskor újraszámolja az
-// állapotot, ezért ESEMÉNY-AGNOSZTIKUS: teljesen mindegy, mi
-// szabadított fel helyet (ügyfél- vagy admin-lemondás, no-show,
-// ajánlat elutasítása vagy 30 perces lejárata) – a következő tick
-// megtalálja a szabad kapacitású, várakozóval bíró slotokat és
-// kiküldi a soron következő(k)nek az ajánlatot.
-//
-// Két lépés:
-//   1) a lejárt, megválaszolatlan ajánlatok lezárása ('declined'),
-//   2) MINDEN jövőbeli slotra: ha van szabad hely és várakozó, és
-//      nincs elég élő ajánlat kint, a következő(k) értesítése.
-//
-// Ütemezés: pg_cron hívja percenként (net.http_post + x-cron-secret).
-// A hívó parancsot lásd a projekt dokumentációjában (tartalmazza a
-// CRON_SECRET-et, ezért NEM kerül a repóba).
-//
-// Heartbeat (elhalás-figyelés):
-//   Sikeres futás végén meghívja a HEARTBEAT_URL-t. A figyelő akkor
-//   riaszt, ha a megadott időn belül NEM jön ping – tehát ha a cron
-//   leáll vagy a function összeomlik, arról értesítést kapunk.
-//   Nem kötelező: ha a HEARTBEAT_URL nincs beállítva, kimarad.
-//
-// Deploy:
-//   supabase functions deploy waitlist-tick --no-verify-jwt
-// Secretek:
-//   supabase secrets set CRON_SECRET=valami-hosszu-veletlen-string
-//   supabase secrets set HEARTBEAT_URL=https://app.glitchtip.com/api/heartbeat/...
-//   (RESEND_API_KEY már be van állítva)
-//
-// A --no-verify-jwt azért kell, mert a pg_cron nem tud Supabase
-// munkamenetet felmutatni. Helyette saját megosztott titokkal
-// védjük: x-cron-secret fejléc.
-// ============================================================
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -53,7 +17,6 @@ const OFFER_MINUTES = 30
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } })
 
-// ── Ajánlat email a következő várólistásnak ────────────────
 async function sendOffer(row: any, slot: any, token: string) {
   const acceptUrl  = `${SITE_URL}/confirm?waitlist=${token}&action=accept`
   const declineUrl = `${SITE_URL}/confirm?waitlist=${token}&action=decline`
@@ -105,21 +68,14 @@ async function sendOffer(row: any, slot: any, token: string) {
   return res.ok
 }
 
-// Életjel a figyelőnek. Szándékosan "best-effort":
-//  - ha nincs beállítva URL, csendben kimarad,
-//  - ha a ping elhasal vagy lassú, azt csak logoljuk – a várólista
-//    működése SEMMILYEN körülmények között nem függhet tőle,
-//  - 5 másodperc után elvágjuk, hogy ne akassza meg a futást.
 async function pingHeartbeat() {
   if (!HEARTBEAT_URL) {
-    // Ezt szándékosan logoljuk: enélkül a csendes kimaradás és a sikeres
-    // ping a naplóban megkülönböztethetetlen lenne.
+
     console.warn('heartbeat: a HEARTBEAT_URL nincs beállítva – életjel kimarad')
     return
   }
   try {
-    // POST kell: a GlitchTip heartbeat-végpontja GET-re 405-öt ad
-    // (Method Not Allowed).
+
     const res = await fetch(HEARTBEAT_URL, {
       method: 'POST',
       signal: AbortSignal.timeout(5000),
@@ -132,20 +88,17 @@ async function pingHeartbeat() {
 }
 
 serve(async (req) => {
-  // ── Megosztott titok ellenőrzése (fail-closed) ──
-  // Ha a CRON_SECRET nincs beállítva, a végpont ZÁRVA van – korábban
-  // ilyenkor bárki futtathatta (service_role-lal, emailküldéssel).
+
   if (!CRON_SECRET || req.headers.get('x-cron-secret') !== CRON_SECRET) {
     return json({ error: 'Jogosulatlan' }, 401)
   }
 
   const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
   const now   = new Date().toISOString()
-  const today = now.slice(0, 10) // 'YYYY-MM-DD' – csak mai/jövőbeli slotokra ajánlunk
+  const today = now.slice(0, 10)
   const report = { expired: 0, notified: 0, slotsChecked: 0, errors: [] as string[] }
 
   try {
-    // ── 1. Lejárt, megválaszolatlan ajánlatok lezárása ('declined') ──
     const { data: expired, error: e1 } = await db
       .from('appointment_waitlist')
       .select('id')
@@ -164,10 +117,6 @@ serve(async (req) => {
       report.expired = ids.length
     }
 
-    // ── 2. Esemény-agnosztikus értesítés ──
-    // NEM csak a lejárt ajánlatokból indulunk: minden slotot megnézünk,
-    // amelyre van még nem értesített várakozó. Így bármi szabadított fel
-    // helyet (lemondás/no-show/elutasítás/lejárat), itt derül ki.
     const { data: waitingRows, error: e3 } = await db
       .from('appointment_waitlist')
       .select('slot_id')
@@ -179,7 +128,6 @@ serve(async (req) => {
     report.slotsChecked = slotIds.length
 
     for (const slotId of slotIds) {
-      // Csak mai/jövőbeli, létező slot
       const { data: slot } = await db
         .from('appointment_slots')
         .select('id, title, slot_date, start_time, end_time, capacity, booked_count')
@@ -191,7 +139,6 @@ serve(async (req) => {
       const free = slot.capacity - slot.booked_count
       if (free <= 0) continue
 
-      // Hány élő (még nem lejárt), megválaszolatlan ajánlat van már kint erre a slotra?
       const { count: activeOffers } = await db
         .from('appointment_waitlist')
         .select('id', { count: 'exact', head: true })
@@ -203,7 +150,6 @@ serve(async (req) => {
       const toOffer = free - (activeOffers ?? 0)
       if (toOffer <= 0) continue
 
-      // A soron következő 'toOffer' várakozó (pozíció szerint)
       const { data: nexts } = await db
         .from('appointment_waitlist')
         .select('id, name, email')
@@ -218,8 +164,6 @@ serve(async (req) => {
         const token     = crypto.randomUUID()
         const expiresAt = new Date(Date.now() + OFFER_MINUTES * 60_000).toISOString()
 
-        // A .is('notified_at', null) feltétel véd a párhuzamos futás ellen:
-        // csak akkor foglaljuk le a sort, ha még tényleg nincs értesítve.
         const { data: claimed, error: e4 } = await db
           .from('appointment_waitlist')
           .update({ notified_at: now, offer_token: token, offer_expires_at: expiresAt })
@@ -227,7 +171,7 @@ serve(async (req) => {
           .is('notified_at', null)
           .select('id')
         if (e4) { report.errors.push(`${next.email}: ${e4.message}`); continue }
-        if (!claimed?.length) continue // időközben más futás elvitte
+        if (!claimed?.length) continue
 
         const sent = await sendOffer(next, slot, token)
         if (sent) report.notified++
@@ -236,11 +180,6 @@ serve(async (req) => {
     }
 
     console.log('waitlist-tick:', JSON.stringify(report))
-
-    // A motor lefutott – életjel a figyelőnek.
-    // Az egyes ajánlatoknál keletkezett hibák (report.errors) NEM akadályozzák
-    // a pinget: azok email-szintű gondok, a cron maga működik. Ha viszont a
-    // function összeomlik, a catch-ág fut, ahol NINCS ping – így a figyelő riaszt.
     await pingHeartbeat()
 
     return json({ ok: true, ...report })

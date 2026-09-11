@@ -4,11 +4,6 @@ import './fonts'
 import App from './App.jsx'
 import { Analytics } from '@vercel/analytics/react'
 
-//asd
-
-// A hibafigyelést (Sentry / @sentry/react) NEM a fő csomagba tesszük: tétlen
-// időben, KÜLÖN chunk-ként töltjük be és inicializáljuk, hogy ne lassítsa a
-// kezdeti betöltést. A renderhez nem kell – lásd a saját ErrorBoundary-t lent.
 function initMonitoringWhenIdle() {
   const start = () =>
     import('./errorMonitoring').then((m) => m.initErrorMonitoring()).catch(() => {})
@@ -16,9 +11,6 @@ function initMonitoringWhenIdle() {
   else setTimeout(start, 1500)
 }
 
-// Ha a React renderelés közben hiba történik, a felhasználó fehér lapot
-// látna. Az ErrorBoundary ezt elkapja, jelenti, és értelmes tartalék
-// felületet mutat. Inline stílus, hogy CSS-hiba esetén is olvasható legyen.
 function Fallback() {
   return (
     <div
@@ -65,8 +57,6 @@ function Fallback() {
   )
 }
 
-// Saját ErrorBoundary: a rendereléshez NEM kell Sentry (az lazy). Hiba esetén
-// megmutatja a Fallback-et, és a hibát a lazy betöltött Sentrynek jelenti.
 class ErrorBoundary extends Component {
   state = { hasError: false }
   static getDerivedStateFromError() {
@@ -91,5 +81,4 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>
 )
 
-// A hibafigyelés indítása a renderelés UTÁN, tétlen időben.
 initMonitoringWhenIdle()

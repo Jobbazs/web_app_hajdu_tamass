@@ -1,6 +1,4 @@
-// ============================================================
-// PORTFÓLIÓ ADATOK – itt cseréld le a Cloudinary URL-eket
-// ============================================================
+
 
 export const OWNER = {
   name: "Hajdu Tamás",
@@ -13,11 +11,10 @@ export const OWNER = {
   email: "tamasshajdu@gmail.com",
   instagram: "https://www.instagram.com/hajdutamass/",
   facebook: "https://www.facebook.com/HajduNOXTamas",
-  // tiktok: "https://tiktok.com/",
-  // behance: "https://behance.net/",
+
   portraitUrl:
-    "https://res.cloudinary.com/dpeavk0xh/image/upload/f_auto,q_auto/My%20Brand/DSC_6589_urvqzb", // Cloudinary URL a portréhoz
-  // Cloudinary URL a portréhoz
+    "https://res.cloudinary.com/dpeavk0xh/image/upload/f_auto,q_auto/My%20Brand/DSC_6589_urvqzb",
+  
 };
 
 export const SERVICES = [

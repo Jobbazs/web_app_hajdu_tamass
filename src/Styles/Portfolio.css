@@ -1,6 +1,4 @@
-/* ============================================================
-   PORTFOLIO
-   ============================================================ */
+
 .portfolio-header {
   display: flex;
   justify-content: space-between;
@@ -10,10 +8,6 @@
   flex-wrap: wrap;
 }
 
-/* ============================================================
-   PORTFOLIO – Kategória cover grid
-   ============================================================ */
-
 .port-cat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -21,14 +15,12 @@
   width: 100%;
 }
 
-/* (4 oszlopnál nincs külön középre-igazítás az utolsó elemre) */
 .port-cat-card:nth-child(odd):last-child {
   grid-column: auto;
   max-width: none;
   margin: 0;
 }
 
-/* Kártya */
 .port-cat-card {
   position: relative;
   cursor: pointer;
@@ -46,7 +38,6 @@
   opacity: 0.35;
 }
 
-/* Kép wrapper – fix arány */
 .port-cat-img-wrap {
   position: relative;
   aspect-ratio: 3 / 2;
@@ -54,7 +45,6 @@
   background: var(--bg-card);
 }
 
-/* Cover kép */
 .port-cat-img {
   width: 100%;
   height: 100%;
@@ -68,7 +58,6 @@
   filter: brightness(1.1);
 }
 
-/* Placeholder ha nincs kép */
 .port-cat-placeholder {
   width: 100%;
   height: 100%;
@@ -80,7 +69,6 @@
   color: var(--text-muted);
 }
 
-/* Kategória neve – a képre helyezve, doboz nélkül (csak finom scrim az olvashatóságért) */
 .port-cat-label {
   position: absolute;
   left: 0; right: 0; bottom: 0;
@@ -100,7 +88,6 @@
   color: var(--accent-pale, #D4845A);
 }
 
-/* Portfólió betöltés */
 .port-loading {
   font-family: 'Space Mono', monospace;
   font-size: 0.65rem;
@@ -110,19 +97,15 @@
   padding: 4rem;
 }
 
-/* ── Reszponzív ── */
 
-/* Nagy tablet (max 1100px): 3 oszlop */
 @media (max-width: 1100px) {
   .port-cat-grid { grid-template-columns: repeat(3, 1fr); gap: 9px; }
 }
 
-/* Tablet / nagy mobil (max 720px): 2 oszlop */
 @media (max-width: 720px) {
   .port-cat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
 }
 
-/* Kis mobil (max 420px): 2 oszlop marad, kisebb rés */
 @media (max-width: 420px) {
   .port-cat-grid { gap: 7px; }
 }

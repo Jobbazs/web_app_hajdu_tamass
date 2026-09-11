@@ -11,8 +11,6 @@ function overlaps(a, b, pad = 0) {
   )
 }
 
-// Zóna + jitter + elutasításos mintavétel: a szavak a negatív térbe kerülnek,
-// a szövegblokkot (keep-out), a széleket és egymást elkerülve.
 function computePositions(W, H, keep, words) {
   const EDGE = 20
   const GAP = 22
@@ -38,12 +36,12 @@ function computePositions(W, H, keep, words) {
       ...spot,
       word,
       fs,
-      rot0: (base - rand(3, 6)).toFixed(2),   // szélesebb dőlés a láthatóságért
+      rot0: (base - rand(3, 6)).toFixed(2),
       rot1: (base + rand(3, 6)).toFixed(2),
-      s0: rand(0.72, 0.9).toFixed(3),          // NAGY méret-pulzálás
+      s0: rand(0.72, 0.9).toFixed(3),
       s1: rand(1.2, 1.45).toFixed(3),
-      durR: rand(0.9, 1.5).toFixed(2),         // dőlés tempó ≤ 1.5s
-      durS: rand(1.3, 2.0).toFixed(2),         // méret tempó ≤ 2s
+      durR: rand(0.9, 1.5).toFixed(2),
+      durS: rand(1.3, 2.0).toFixed(2),
       delayR: (-rand(0, 1.5)).toFixed(2),
       delayS: (-rand(0, 2)).toFixed(2),
     })
@@ -82,7 +80,6 @@ export default function HeroWords({ words, keepOutRef }) {
       window.removeEventListener('resize', onResize)
       clearTimeout(tid)
     }
-    // szándékosan csak mountkor + words változásra szóródik újra
   }, [words, keepOutRef])
 
   return (

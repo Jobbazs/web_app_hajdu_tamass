@@ -3,8 +3,6 @@ import { supabase } from '../../supabaseClient'
 import { useCategories } from '../../hooks'
 import '../../Styles/Poll.css'
 
-// Több felugró ablak kezelése lenyíló (táblázatos) listában. Mindegyik: név +
-// Kiemelt, elhelyezés (első látogatás / aloldalak), tartalom HU/EN. Mentésre becsukódik.
 const emptyPopup = () => ({
   id: null, name: '', enabled: false, featured: false,
   trigger: 'first_visit', pages: [],
@@ -74,7 +72,7 @@ export default function AdminPromoPopup() {
     if (pop.id) { const r = await supabase.from('site_popups').update(payload).eq('id', pop.id); err = r.error }
     else { const r = await supabase.from('site_popups').insert(payload).select('id').single(); err = r.error }
     setSaving(false)
-    if (!err) { await loadList(); closeEditor() }   // mentésre becsukódik
+    if (!err) { await loadList(); closeEditor() }
   }
 
   const deletePopup = async () => {

@@ -3,10 +3,6 @@ import Navbar from './Navbar'
 import Footer from './Footer'
 import '../Styles/Termekismerteto.css'
 
-/* Nem publikus termékismertető aloldal.
-   – Nincs a navigációban/footerben, nincs a sitemapben.
-   – noindex/nofollow: a keresők nem indexelik.
-   – Csak az tudja megnyitni, aki ismeri a pontos URL-t. */
 
 const UGYFEL = [
   ['Egyedi, igényes dizájn', 'a márkádhoz igazított, elegáns arculat'],
@@ -96,7 +92,6 @@ export default function Termekismerteto() {
   useEffect(() => {
     const prevTitle = document.title
     document.title = 'Termékismertető — Modern weboldal + online foglalási rendszer'
-    // noindex: a keresők ne indexeljék ezt a nem publikus oldalt
     const meta = document.createElement('meta')
     meta.name = 'robots'
     meta.content = 'noindex, nofollow'

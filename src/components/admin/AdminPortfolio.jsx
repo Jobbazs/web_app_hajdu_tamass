@@ -39,17 +39,14 @@ export default function AdminPortfolio() {
   const [catSaving,  setCatSaving]  = useState(false)
   const [catError,   setCatError]   = useState('')
 
-  // Kategória szűrő
   const [filterCat, setFilterCat] = useState('all')
 
-  // Törlés-modal + tömeges kijelölés
   const [deleteCat,   setDeleteCat]   = useState(null)
   const [selectMode,  setSelectMode]  = useState(false)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [assignTo,    setAssignTo]    = useState('')
   const [undoStack,   setUndoStack]   = useState([])
 
-  // Normalizált elemek kategória szerint csoportosítva
   const normalized = useMemo(() => items.map(item => ({
     ...item,
     categorySlug: item.portfolio_categories?.slug || '',
@@ -64,8 +61,6 @@ export default function AdminPortfolio() {
       ? normalized.filter(i => !i.category_id)
       : normalized.filter(i => i.category_id === filterCat)
 
-  // Kategórián belüli kép-sorrend (drag-and-drop). Csak akkor aktív, ha egy
-  // konkrét kategória van kiválasztva a szűrőben.
   const [pendingImgOrder, setPendingImgOrder] = useState(null)
   const canReorderImages = filterCat !== 'all'
   const displayItems = pendingImgOrder
@@ -106,7 +101,6 @@ export default function AdminPortfolio() {
     </div>
   )
 
-  // ── Portfolio item műveletek ─────────────────────────────────
   const openNew = () => {
     setEditing(null)
     setForm({ ...EMPTY_ITEM, category_id: categories[0]?.id || '' })
@@ -145,8 +139,7 @@ export default function AdminPortfolio() {
       video_url:      form.video_url.trim() || null,
       visible:        form.visible,
     }
-    // Új kép: a kiválasztott kategória VÉGÉRE kerül (utána húzással rendezhető).
-    // Szerkesztésnél a meglévő sort_order marad (nincs a payloadban).
+  
     if (!editing) {
       payload.sort_order = normalized.filter(i => i.category_id === form.category_id).length
     }
@@ -170,7 +163,6 @@ export default function AdminPortfolio() {
     await refetch()
   }
 
-  // ── Kategória műveletek ──────────────────────────────────────
   const openNewCat  = () => { setEditingCat(null); setCatForm(EMPTY_CAT); setCatError('') }
   const openEditCat = (cat) => {
     setEditingCat(cat.id)
@@ -211,7 +203,6 @@ export default function AdminPortfolio() {
     setDeleteCat(null); await refetchCats(); await refetch()
   }
 
-  // Tömeges kijelölés + kategóriához rendelés + univerzális visszavonás
   const pushUndo      = (entry) => setUndoStack(s => [...s, entry])
   const snapSelection = () => pushUndo({ type: 'selection', prev: new Set(selectedIds) })
 
@@ -230,7 +221,6 @@ export default function AdminPortfolio() {
   }
   const clearSelection = () => { setSelectMode(false); setSelectedIds(new Set()); setAssignTo(''); setUndoStack([]) }
 
-  // Visszavonás: kijelölés VAGY áthelyezés (a legutolsó művelettől visszafelé)
   const undo = async () => {
     const entry = undoStack[undoStack.length - 1]
     if (!entry) return
@@ -268,7 +258,6 @@ export default function AdminPortfolio() {
     await refetch()
   }
 
-  // Tömeges rejtés / megjelenítés a kijelölt képeknél
   const bulkSetVisible = async (vis) => {
     if (selectedIds.size === 0) return
     const ids = [...selectedIds]
@@ -280,7 +269,6 @@ export default function AdminPortfolio() {
 
   return (
     <div className="acms-section acms-section--wide">
-      {/* Fejléc */}
       <div className="acms-section-header">
         <div>
           <div className="acms-section-title">Portfólió elemek</div>
@@ -294,7 +282,6 @@ export default function AdminPortfolio() {
         </div>
       </div>
 
-      {/* ── KATEGÓRIA KEZELŐ ── */}
       {showCats && (
         <div className="acms-cat-panel">
           <div className="acms-cat-panel-title">Kategóriák kezelése</div>
@@ -340,10 +327,8 @@ export default function AdminPortfolio() {
         </div>
       )}
 
-      {/* ── PORTFÓLIÓ GRID ── */}
       {!showCats && (
         <>
-          {/* Kategória szűrő legördülő */}
           <div className="acms-port-filter-row">
             <select
               className="acms-input acms-port-cat-filter"
@@ -397,7 +382,6 @@ export default function AdminPortfolio() {
           ) : filtered.length === 0 ? (
             <div className="admin-empty">Nincs elem ebben a kategóriában.</div>
           ) : canReorderImages ? (
-            /* Egy kategória kiválasztva → húzható rács */
             <>
               <div className="acms-hint" style={{ marginBottom: '0.7rem' }}>
                 Húzd a képeket a ⠿ fogantyúval a kívánt sorrendbe (ebben a kategóriában).
@@ -413,7 +397,6 @@ export default function AdminPortfolio() {
               </SortableList>
             </>
           ) : (
-            /* "Összes" nézet → nincs húzás (a sorrend kategóriánként értelmezett) */
             <>
               <div className="acms-hint" style={{ marginBottom: '0.7rem' }}>
                 A képek sorrendjének húzásához válassz egy kategóriát a fenti szűrőben.
@@ -426,7 +409,6 @@ export default function AdminPortfolio() {
         </>
       )}
 
-      {/* ── ITEM FORM MODAL ── */}
       {showForm && (
         <div className="acms-modal-backdrop" onClick={() => setShowForm(false)}>
           <div className="acms-modal" onClick={e => e.stopPropagation()}>
@@ -475,7 +457,6 @@ export default function AdminPortfolio() {
         </div>
       )}
 
-      {/* ── KATEGÓRIA TÖRLÉS: 2 opció ── */}
       {deleteCat && (() => {
         const imgCount = normalized.filter(i => i.category_id === deleteCat.id).length
         return (

@@ -53,7 +53,7 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
   const [form, setForm] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [lastSnapshot, setLastSnapshot] = useState(null)  // egy lépés visszaállítás
+  const [lastSnapshot, setLastSnapshot] = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -111,7 +111,6 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
     load()
   }
 
-  // Előző verzió visszaállítása: a legutóbbi mentés előtti szekció-értékek.
   const restorePrev = async () => {
     if (!lastSnapshot) return
     if (!window.confirm('Visszaállítod a szekció mentés előtti állapotát?')) return
@@ -129,7 +128,6 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
   }
 
   const persistOrder = async (orderedIds) => {
-    // optimista UI + minden sor sort_order-ének újraszámozása
     const byId = new Map(sections.map((s) => [s.id, s]))
     setSections(orderedIds.map((id, i) => ({ ...byId.get(id), sort_order: i })))
     await Promise.all(
@@ -151,9 +149,6 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
       image_ids: f.image_ids.includes(id) ? f.image_ids.filter((x) => x !== id) : [...f.image_ids, id],
     }))
 
-  // Kép feltöltése közvetlenül a szekcióból: a kategória képkészletébe kerül
-  // (portfolio_items), és RÖGTÖN ehhez a szekcióhoz rendelődik (image_ids),
-  // tehát nem "auto" – nem tolja el a többi szekció képeit.
   const uploadToSection = async (url) => {
     const { data, error: err } = await supabase
       .from('portfolio_items')
@@ -223,7 +218,6 @@ export default function AdminCategorySections({ categoryId, categoryItems, lang 
         </SortableList>
       )}
 
-      {/* Szerkesztő panel */}
       {form && (
         <div className="acms-sec-editor">
           <div className="acms-sec-editor-head">

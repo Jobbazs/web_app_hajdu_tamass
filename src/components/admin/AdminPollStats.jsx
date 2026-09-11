@@ -3,8 +3,6 @@ import { supabase } from '../../supabaseClient'
 import '../../Styles/Poll.css'
 import PollPie, { PIE_COLORS } from '../PollPie'
 
-// Statisztika / összehasonlítás: max 4 szavazás egyszerre, táblánként külön
-// darab/százalék nézet, reszponzív (fektetve 2, állítva 1), PNG export.
 function cellsFor(cells, columns) {
   const n = (columns || []).length || 0
   const c = Array.isArray(cells) ? cells : []
@@ -14,7 +12,6 @@ function cellsFor(cells, columns) {
 }
 
 function csvCell(s) { return `"${String(s ?? '').replace(/"/g, '""')}"` }
-// Web Share csak iOS-en (ott a sima letöltés megbízhatatlan); máshol egyszerű letöltés.
 function isIOS() {
   const ua = navigator.userAgent || ''
   const classic = /iPad|iPhone|iPod/.test(ua)
@@ -39,7 +36,7 @@ function download(name, text, mime) {
 
 export default function AdminPollStats() {
   const [allPolls, setAllPolls] = useState([])
-  const [selected, setSelected] = useState([])   // [{poll, options, view}]
+  const [selected, setSelected] = useState([])
   const gridRef = useRef(null)
 
   useEffect(() => {
@@ -61,14 +58,12 @@ export default function AdminPollStats() {
   const setView = (id, v) => setSelected(s => s.map(x => (x.poll.id === id ? { ...x, view: v } : x)))
   const setMode = (id, m) => setSelected(s => s.map(x => (x.poll.id === id ? { ...x, mode: m } : x)))
 
-  // PNG export – kézi canvas-rajz (nincs külső függőség)
   const exportPNG = () => {
     if (selected.length === 0) return
     const scale = 2, W = 760, PAD = 24, ROWH = 30, TITLEH = 40, COLGAP = 24
-    // magasság előszámítása
     let totalH = PAD
     for (const { poll, options } of selected) {
-      totalH += TITLEH + ROWH /*fejléc*/ + Math.max(options.length, 1) * ROWH + 28
+      totalH += TITLEH + ROWH + Math.max(options.length, 1) * ROWH + 28
     }
     const canvas = document.createElement('canvas')
     canvas.width = W * scale; canvas.height = totalH * scale
@@ -82,15 +77,12 @@ export default function AdminPollStats() {
       const nCols = cols.length + (poll.has_votes ? 1 : 0)
       const colW = (W - PAD * 2) / Math.max(nCols, 1)
       const x0 = PAD
-      // cím
       ctx.fillStyle = '#FF3B30'; ctx.font = "700 20px 'Bebas Neue', sans-serif"
       ctx.fillText(poll.title_hu || '(cím nélkül)', x0, y + 24); y += TITLEH
-      // fejléc
       ctx.font = "700 12px monospace"; ctx.fillStyle = '#C8B89A'
       cols.forEach((c, i) => ctx.fillText(String(c).slice(0, 18), x0 + i * colW + 4, y + 20))
       if (poll.has_votes) ctx.fillText(view === 'percent' ? '%' : '▲/▼', x0 + cols.length * colW + 4, y + 20)
       y += ROWH
-      // sorok (nettó szerint csökkenő)
       const sorted = poll.has_votes
         ? [...options].sort((a, b) => (b.up_votes - b.down_votes) - (a.up_votes - a.down_votes)) : options
       const totalNet = options.reduce((s, o) => s + Math.max(0, o.up_votes - o.down_votes), 0)
@@ -109,8 +101,6 @@ export default function AdminPollStats() {
       })
       y += 28
     }
-    // iOS-barát: a data URL-t SZINKRON Blob-bá alakítjuk (a kattintáson belül
-    // maradva), majd Web Share (menthető Fotókba/Fájlokba) vagy letöltés.
     const blob = dataURLtoBlob(canvas.toDataURL('image/png'))
     const file = new File([blob], 'szavazas-osszehasonlitas.png', { type: 'image/png' })
     if (isIOS() && navigator.canShare && navigator.canShare({ files: [file] })) {

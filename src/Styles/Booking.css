@@ -1,6 +1,4 @@
-/* ============================================================
-   BOOKING – Időpontfoglalás
-   ============================================================ */
+
 
 #booking {
   padding: 5rem 2rem;
@@ -8,7 +6,6 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-/* Betöltés / üres állapot */
 .booking-empty {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
   font-size: 0.72rem;
@@ -19,7 +16,6 @@
   border: 1px dashed var(--border-subtle);
 }
 
-/* Nap csoport */
 .booking-groups { display: flex; flex-direction: column; gap: 2.5rem; }
 
 .booking-day-label {
@@ -33,7 +29,6 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
-/* Slot kártyák */
 .booking-slots {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -56,7 +51,7 @@
 .booking-slot--full {
   opacity: 0.6;
   border-style: dashed;
-  cursor: pointer; /* várólistára lehet feliratkozni */
+  cursor: pointer;
 }
 
 .booking-slot-time {
@@ -97,7 +92,6 @@
 .booking-slot-status.almost { color: #e09050; border-color: #e09050; }
 .booking-slot-status.full   { color: var(--text-muted); border-color: var(--border-mid); }
 
-/* Form wrapper */
 .booking-form-wrap { max-width: 640px; }
 
 .booking-back {
@@ -115,7 +109,6 @@
 }
 .booking-back:hover { color: var(--accent); }
 
-/* Kiválasztott slot info */
 .booking-selected-info {
   border-left: 3px solid var(--accent);
   padding: 0.8rem 1.2rem;
@@ -146,7 +139,6 @@
   margin-top: 0.3rem;
 }
 
-/* Megerősítő megjegyzés */
 .booking-confirm-note {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
   font-size: 0.6rem;
@@ -163,7 +155,6 @@
   line-height: 1.7;
 }
 
-/* Siker üzenet */
 .booking-success-wrap { max-width: 560px; }
 
 .booking-success {
@@ -194,7 +185,6 @@
   margin-bottom: 1.5rem;
 }
 
-/* Reszponzív */
 @media (max-width: 767px) {
   .booking-slots { grid-template-columns: 1fr; }
   .booking-slot-time { font-size: 1.4rem; }

@@ -33,8 +33,7 @@ export default function Portfolio() {
     normalized.filter(i => i.categorySlug === slug)
   , [normalized])
 
-  // Cover kép – site_content-ből választott ID, fallback: első kép a kategóriában
-  const getCoverItem = (slug) => {
+    const getCoverItem = (slug) => {
     const coverId = content[`portfolio_cover_${slug}`]
     const catItems = getItemsForCat(slug)
     if (coverId) {
@@ -69,9 +68,7 @@ export default function Portfolio() {
     setSelected(modalItems[(idx - 1 + modalItems.length) % modalItems.length])
   }, [selected, modalItems])
 
-  // A kategóriák a DB-ből jönnek (sort_order szerint), így a CMS-ben felvett
-  // ÚJ kategória a főoldalon is megjelenik. A FIXED_CATEGORIES csak tartalék
-  // az első betöltés pillanatára, hogy ne villanjon üres rács.
+ű
   const displayCats = (categories.length ? categories : FIXED_CATEGORIES).map(cat => ({
     ...cat,
     cover: getCoverItem(cat.slug),

@@ -1,6 +1,4 @@
-/* ============================================================
-   MEDIA MODAL
-   ============================================================ */
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -13,7 +11,6 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   animation: modalFadeIn 0.2s ease;
-  /* iOS safe area */
   padding-top: env(safe-area-inset-top, 0.5rem);
   padding-bottom: env(safe-area-inset-bottom, 0.5rem);
 }
@@ -26,7 +23,6 @@
 .modal-box {
   width: 100%;
   max-width: 1100px;
-  /* Teljes viewport felhasználása mobilon */
   height: 100%;
   max-height: calc(100vh - 1rem);
   display: flex;
@@ -82,7 +78,6 @@
   color: var(--text-muted);
   background: none;
   border: 1px solid var(--border-subtle);
-  /* Nagy touch target */
   width: 2.5rem;
   height: 2.5rem;
   min-width: 2.5rem;
@@ -106,7 +101,7 @@
   min-height: 0;
   cursor: pointer;
   position: relative;
-  -webkit-user-select: none;   /* Safari <17 */
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -121,12 +116,11 @@
   z-index: 1;
   opacity: 0;
   transition: opacity .3s ease;
-  -webkit-user-select: none;   /* Safari <17 */
+  -webkit-user-select: none;
   user-select: none;
 }
 .modal-image.is-loaded { opacity: 1; }
 
-/* LQIP: rácsból cache-elt kis kép, elmosva a nagy kép mögött – azonnal látszik */
 .modal-image-ph {
   position: absolute;
   inset: 0;
@@ -142,7 +136,7 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity .2s ease;
-  -webkit-user-select: none;   /* Safari <17 */
+  -webkit-user-select: none;
   user-select: none;
 }
 .modal-image-ph.is-shown { opacity: 1; }
@@ -249,11 +243,6 @@
   font-size: 0.7rem; color: var(--text-muted);
 }
 
-/* ============================================================
-   MODAL – tap zónák (bal/jobb navigáció)
-   ============================================================ */
-
-/* Bal/jobb nyíl hint – alapból alig látható, hover-re/focus-ra erősebb */
 .modal-tap-prev,
 .modal-tap-next {
   position: absolute;
@@ -266,22 +255,18 @@
   transition: color 0.2s, opacity 0.2s;
   line-height: 1;
   padding: 1rem;
-  /* Háttér gradiens a széleken */
   background: transparent;
 }
 
 .modal-tap-prev { left: 0; }
 .modal-tap-next { right: 0; }
 
-/* Hover-re erősebb – desktopra */
 .modal-media:hover .modal-tap-prev,
 .modal-media:hover .modal-tap-next {
   color: rgba(255,255,255,0.55);
 }
 
-/* ── Reszponzív ── */
 
-/* Modal: teljes képernyő mobilon */
 @media (max-width: 767px) {
   .modal-backdrop { padding: 0; }
   .modal-box {
@@ -293,7 +278,6 @@
   .modal-nav-btn { font-size: 0.55rem; padding: 0.5rem 0.7rem; }
   .modal-title { font-size: 1rem; }
 
-  /* Mobilon mindig láthatóbbak – touch nem tud hover-elni */
   .modal-tap-prev,
   .modal-tap-next {
     color: rgba(255,255,255,0.3);
@@ -301,7 +285,6 @@
   }
 }
 
-/* dvh finomítás – csak ahol támogatott (a 100vh a tartalék) */
 @supports (height: 100dvh) {
   .modal-box { max-height: calc(100dvh - 1rem); }
   @media (max-width: 767px) {

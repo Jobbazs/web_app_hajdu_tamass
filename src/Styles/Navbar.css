@@ -1,40 +1,12 @@
-/* ============================================================
-   NAVBAR
-   ------------------------------------------------------------
-   Felépítés:
-     1. Változók
-     2. .navbar – a rögzített sáv és a felfelé nyúló háttér
-     3. Desktop: sötétedő sáv · Mobil: kör alakú glória
-     4. .nav-logo
-     5. .nav-links – desktop menüpontok
-     6. .nav-right + .lang-switcher
-     7. Hamburger + mobil menü   (VÁLTOZATLAN)
-     8. Mobil fekvő nézet
-
-   A navbarnak NINCS háttere: a logó és a hamburger saját glóriát kap.
-   Így nincs olyan sáv, amit iOS-en a görgetéskor összehúzódó URL-cím
-   környékén le kellene takarni.
-   ============================================================ */
-
 :root {
-  /* A navbarnak NINCS háttere. Helyette a logó és a hamburger kap egy-egy
-     lágy, kör alakú sötét glóriát, ami bármilyen kép fölött olvashatóvá
-     teszi őket. Így nincs sáv, amit iOS-en le kellene takarni. */
-  --nav-halo-size: 165%;                       /* az elem méretéhez képest */
-  --nav-halo-color: 26, 21, 16;                /* --ash-deep RGB komponensei */
+ 
+  --nav-halo-size: 165%;
+  --nav-halo-color: 26, 21, 16;
 
-  /* A logó/hamburger körüli függőleges bélés (ez adja a sáv magasságát) */
   --nav-pad-y: 1.1rem;
   --nav-pad-x: 2rem;
 }
 
-/* ============================================================
-   2. A RÖGZÍTETT SÁV
-   A negatív `top` és a vele azonos mértékű extra `padding-top`
-   együtt azt eredményezi, hogy a doboz FELFELÉ nagyobb lesz
-   (a háttere takar), de a látható tartalom és az alsó él pontosan
-   ott marad, ahol enélkül lenne.
-   ============================================================ */
 .navbar {
   position: fixed;
   top: 0;
@@ -56,8 +28,6 @@
   transition: background 0.4s ease, border-color 0.4s ease;
 }
 
-/* Desktop (≥1024px): marad a klasszikus, görgetésre sötétedő sáv – itt a
-   teljes menüsor is a navbarban van, annak kell a háttér. */
 @media (min-width: 1024px) {
   .navbar.scrolled {
     background: var(--bg-primary, #1a1510);
@@ -65,8 +35,7 @@
   }
 }
 
-/* iOS: a notch / Dynamic Island alá ne csússzon a tartalom, és a
-   bal/jobb oldali biztonságos sávot is tartsuk tiszteletben. */
+
 @supports (padding-top: env(safe-area-inset-top)) {
   .navbar {
     padding-top: max(var(--nav-pad-y), env(safe-area-inset-top));
@@ -75,29 +44,20 @@
   }
 }
 
-/* ============================================================
-   3. KÖR ALAKÚ GLÓRIA A LOGÓ ÉS A HAMBURGER MÖGÖTT
-   Lágyan kifutó sugaras átmenet – nincs kemény pereme, ezért bármilyen
-   kép fölött természetesen néz ki. Ez váltja ki a navbar hátterét.
-   ============================================================ */
+
 @media (max-width: 1023px) {
 
-/* A sáv itt teljesen láthatatlan, ezért NEM nyelheti el a kattintásokat a
-   felső sávban – csak a benne lévő valódi vezérlők kapnak eseményt. */
 .navbar { pointer-events: none; }
 .nav-logo,
 .nav-hamburger { pointer-events: auto; }
 
 
 
-/* Nyitott mobil menüben nem kell – ott úgyis sötét a panel */
 .nav-hamburger.open::before { opacity: 0; }
 
-}   /* /max-width: 1023px */
+}
 
-/* ============================================================
-   4. LOGÓ
-   ============================================================ */
+
 .nav-logo {
   position: relative;
   z-index: 1001;
@@ -108,11 +68,14 @@
   color: var(--text-primary);
   cursor: pointer;
   white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 .nav-logo .logo-accent { color: var(--accent); }
 
-/* Bal oldali csoport: teljes név + social ikonok, közöttük gap */
+
 .nav-brand {
   display: flex;
   align-items: center;
@@ -120,8 +83,6 @@
   min-width: 0;
 }
 
-
-/* Social ikonok a navbar sávban (desktop) */
 .nav-socials {
   display: flex;
   align-items: center;
@@ -147,9 +108,6 @@
   display: block;
 }
 
-/* ============================================================
-   5. DESKTOP MENÜPONTOK
-   ============================================================ */
 .nav-links {
   display: flex;
   gap: 2.5rem;
@@ -159,7 +117,7 @@
 .nav-links a {
   display: inline-block;
   position: relative;
-  padding: 0.5rem 0;                       /* érintési célterület */
+  padding: 0.5rem 0;
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
   font-size: 0.68rem;
   letter-spacing: 0.2em;
@@ -182,18 +140,12 @@
 .nav-links a:hover { color: var(--text-primary); }
 .nav-links a:hover::after { width: 100%; }
 
-/* ============================================================
-   6. JOBB OLDALI CSOPORT + NYELVVÁLTÓ
-   ============================================================ */
 .nav-right {
   display: flex;
   align-items: center;
   gap: 2rem;
 }
 
-/* Tableten/mobilon nincs desktop menü – csak a hamburger.
-   A social ikonok és a hosszú név is elrejtőznek a sávból (a név egy
-   háttérkép fölött nehezen olvasható) – a socialok a mobil menüben. */
 @media (max-width: 1023px) {
   .nav-right   { display: none !important; }
   .nav-socials { display: none !important; }
@@ -229,9 +181,6 @@
   margin-top: 0.5rem;
 }
 
-/* ============================================================
-   7. HAMBURGER + MOBIL MENÜ   — VÁLTOZATLAN
-   ============================================================ */
 .nav-hamburger {
   display: none;
   flex-direction: column;
@@ -256,12 +205,10 @@
   transform-origin: center;
 }
 
-/* Hamburger → X animáció */
 .nav-hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
 .nav-hamburger.open span:nth-child(2) { opacity: 0; }
 .nav-hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
-/* Mobil menü panel */
 .nav-mobile {
   display: none;
   position: fixed;
@@ -289,7 +236,6 @@
 
 .nav-mobile a:hover { color: var(--accent); }
 
-/* Social ikonok a nyitott mobil menü alján */
 .nav-mobile-socials {
   display: flex;
   gap: 2rem;
@@ -315,15 +261,6 @@
   display: block;
 }
 
-/* Megjegyzés: a hamburger megjelenítése (.nav-hamburger { display: flex })
-   és a desktop menü elrejtése a global.css töréspont-blokkjában történik
-   (@media max-width: 1023px) – itt szándékosan nincs duplikálva. */
-
-/* ============================================================
-   8. MOBIL FEKVŐ NÉZET – feleakkora sáv
-   Oldalra fordított telefonon kevés a függőleges hely, ezért a
-   látható sáv ~70px helyett ~45px. Álló nézetet nem érinti.
-   ============================================================ */
 @media (orientation: landscape) and (max-height: 500px) {
   .navbar {
     --nav-pad-y: 0.6rem;
@@ -333,10 +270,8 @@
   .nav-hamburger.open span:nth-child(1) { transform: translateY(5px)  rotate(45deg); }
   .nav-hamburger.open span:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
 
-  /* Nyitott mobil menü: elférjen az alacsony képernyőn */
   .nav-mobile { gap: 0.9rem; padding: 2.5rem 1rem; overflow-y: auto; }
   .nav-mobile a { font-size: 1.5rem; }
   .nav-mobile-socials { margin-top: 0.4rem; }
   .nav-mobile-socials svg { width: 22px; height: 22px; }
 }
-

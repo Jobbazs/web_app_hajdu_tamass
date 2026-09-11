@@ -26,12 +26,12 @@ export default function Contact() {
   const [errMsg,     setErrMsg]    = useState('')
   const [showThanks, setThanks]    = useState(false)
   const [senderName, setSender]    = useState('')
-  const [files,      setFiles]     = useState([])        // max 5 File object
+  const [files,      setFiles]     = useState([])
   const [fileErr,    setFileErr]   = useState('')
   const [uploading,  setUploading] = useState(false)
   const fileInputRef = useRef(null)
-  const renderedAt = useRef(Date.now())   // idő-csapda: mikor töltődött be az űrlap
-  const [hp, setHp] = useState('')         // honeypot – embernek láthatatlan
+  const renderedAt = useRef(Date.now())
+  const [hp, setHp] = useState('')
 
   const { t, lang } = useLang()
   const c = t.contact
@@ -40,7 +40,6 @@ export default function Contact() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  // Fájl kiválasztás – max 5 db
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files || [])
     if (!selected.length) return
@@ -65,7 +64,7 @@ export default function Contact() {
     }
 
     setFiles(prev => [...prev, ...toAdd])
-    e.target.value = ''   // reset hogy ugyanazt újra lehessen választani
+    e.target.value = ''
   }
 
   const removeFile = (idx) => {
@@ -88,11 +87,8 @@ export default function Contact() {
     setStatus('sending')
     setErrMsg('')
 
-    // 1. Fájlok feltöltése – IDEIGLENESEN a Storage-ba. A kép csak akkor MARAD
-    //    meg, ha a beküldés sikeres; hiba vagy spam-szűrés esetén rögtön a KUKÁBA
-    //    kerül (lásd trashUploads), így nem képződik árva fájl.
     const attachmentUrls  = []
-    const attachmentPaths = []   // a feltöltött fájlok elérési útjai a törléshez
+    const attachmentPaths = []
     const trashUploads = async () => {
       if (!attachmentPaths.length) return
       try { await supabase.storage.from('attachments').remove(attachmentPaths) } catch {}
@@ -110,7 +106,7 @@ export default function Contact() {
 
         if (uploadError) {
           console.error('Upload error:', uploadError)
-          await trashUploads()            // a már feltöltött fájlok eltakarítása
+          await trashUploads()
           setErrMsg(c.errUpload)
           setStatus('error')
           setUploading(false)
@@ -126,7 +122,6 @@ export default function Contact() {
       setUploading(false)
     }
 
-    // 2. Supabase DB – üzenet mentése
     const payload = {
       name:            form.name.trim(),
       email:           form.email.trim(),
@@ -136,7 +131,6 @@ export default function Contact() {
       attachment_url:  attachmentUrls.length > 0 ? attachmentUrls.join(', ') : null,
     }
 
-    // 2. Beküldés az Edge Function-ön keresztül (honeypot + idő-csapda + IP-limit + beszúrás)
     const { data: result, error: fnError } = await supabase.functions.invoke('submit-contact', {
       body: {
         name:           payload.name,
@@ -150,7 +144,7 @@ export default function Contact() {
     })
 
     if (fnError || !result?.ok) {
-      await trashUploads()   // sikertelen beküldés → a kép a kukába
+      await trashUploads()
       const rateLimited = result?.error === 'rate_limited' || fnError?.context?.status === 429
       setErrMsg(
         rateLimited
@@ -163,15 +157,10 @@ export default function Contact() {
       return
     }
 
-    // delivered:false = honeypot/idő-csapda kiszűrte (a felhasználónak sikert mutatunk,
-    // de nem szúrtunk be és nem küldünk értesítő emailt)
     const delivered = result?.delivered !== false
 
-    // Spam-szűrő kiszűrte: nincs mentett üzenet, ami a képre hivatkozna → a
-    // feltöltött fájl a kukába, hogy ne maradjon árva a tárhelyen.
     if (!delivered) await trashUploads()
 
-    // 3. EmailJS
     if (delivered && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
       try {
         await emailjs.send(
@@ -214,7 +203,6 @@ export default function Contact() {
 
         <form onSubmit={handleSubmit} noValidate>
 
-          {/* Honeypot – emberek nem látják; ha kitöltött, a beküldést eldobjuk */}
           <input
             type="text"
             name="website"
@@ -275,7 +263,6 @@ export default function Contact() {
             />
           </div>
 
-          {/* ── Fájl csatolás – max 5 db ── */}
           <div className="form-group">
             <input
               ref={fileInputRef}
@@ -287,7 +274,6 @@ export default function Contact() {
               style={{ display: 'none' }}
             />
 
-            {/* Meglévő fájlok */}
             {files.length > 0 && (
               <div className="attach-list">
                 {files.map((f, idx) => (
@@ -316,7 +302,6 @@ export default function Contact() {
               </div>
             )}
 
-            {/* Hozzáadás gomb – csak ha van még hely */}
             {files.length < MAX_FILES && (
               <button
                 type="button"
@@ -595,7 +580,7 @@ export default function Contact() {
 
 //         <form onSubmit={handleSubmit} noValidate>
 
-//           {/* Honeypot – emberek nem látják; ha kitöltött, a beküldést eldobjuk */}
+//           
 //           <input
 //             type="text"
 //             name="website"
@@ -661,7 +646,7 @@ export default function Contact() {
 //             />
 //           </div>
 
-//           {/* ── Fájl csatolás – max 5 db ── */}
+//           
 //           <div className="form-group">
 //             <input
 //               ref={fileInputRef}
@@ -673,7 +658,6 @@ export default function Contact() {
 //               style={{ display: 'none' }}
 //             />
 
-//             {/* Meglévő fájlok */}
 //             {files.length > 0 && (
 //               <div className="attach-list">
 //                 {files.map((f, idx) => (
@@ -702,7 +686,6 @@ export default function Contact() {
 //               </div>
 //             )}
 
-//             {/* Hozzáadás gomb – csak ha van még hely */}
 //             {files.length < MAX_FILES && (
 //               <button
 //                 type="button"

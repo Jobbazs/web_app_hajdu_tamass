@@ -1,12 +1,10 @@
-/* ============================================================
-   SERVICES
-   ============================================================ */
+
 .services-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
   margin-top: 3rem;
-  overflow: hidden; /* sor utolsó kártyájának scale ne tágítsa az oldalt */
+  overflow: hidden;
 }
 
 .service-name {
@@ -17,7 +15,6 @@
   text-transform: uppercase;
   color: var(--text-primary);
   margin-bottom: 0.8rem;
-  /* transform: scale() nem érinti a layout-ot → más kártyák nem mozdulnak */
   display: inline-block;
   transform-origin: left center;
   transition:
@@ -38,9 +35,6 @@
   hyphens: none;
 }
 
-/* ============================================================
-   SERVICE CARD – DollyZoom hover effect
-   ============================================================ */
 
 .service-card {
   position: relative;
@@ -57,14 +51,12 @@
   flex-direction: column;
 }
 
-/* Hover: kártya overflow visible hogy a scaled cím ne legyen levágva */
 .service-card:hover {
   overflow: visible;
   z-index: 2;
   border-color: rgba(var(--rust-light-rgb), 0.4) !important;
 }
 
-/* Szám eltűnik hover-re */
 .service-number {
   transition:
     opacity 0.3s ease,
@@ -80,13 +72,11 @@
   color: rgb(182, 182, 182);
 }
 
-/* Cím scale-el nő – 1.7rem × 1.76 ≈ 3rem vizuálisan */
 .service-card:hover .service-name {
   transform: scale(1.2);
   letter-spacing: 0.04em;
 }
 
-/* Glow vonal a tetején hover-re */
 .service-card::after {
   content: "";
   position: absolute;
@@ -106,10 +96,6 @@
   width: 100%;
 }
 
-/* ============================================================
-   SERVICES – reszponzív finomhangolás
-   ============================================================ */
-
 @media (max-width: 1250px) {
   .services-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -128,7 +114,7 @@
 @media (max-width: 767px) {
   .services-grid {
     grid-template-columns: 1fr;
-    overflow-x: hidden; /* scale transition ne okozzon oldalsó scrollt */
+    overflow-x: hidden;
   }
 
   .service-card {
@@ -136,8 +122,6 @@
     clip-path: none;
   }
 
-  /* Mobilon a hover overflow visszaáll hidden-re –
-     a desktop overflow:visible itt okozna oldalsó scrollt */
   .service-card:hover {
     overflow: hidden;
   }

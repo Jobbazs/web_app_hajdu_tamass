@@ -1,8 +1,5 @@
 import LegalPage from './LegalPage'
 
-// Adatkezelési tájékoztató – a szöveg a GDPR 13. cikkét követi.
-// FONTOS: töltsd ki a [KITÖLTENDŐ] helyeket, és élesítés előtt nézesd át
-// adatvédelmi szakértővel/ügyvéddel.
 export default function Adatkezeles() {
   return (
     <LegalPage title="Adatkezelési tájékoztató">

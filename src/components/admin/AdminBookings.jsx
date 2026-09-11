@@ -29,12 +29,12 @@ const FILTER_TABS = [
 
 export default function AdminBookings() {
   const [filter,    setFilter]    = useState('all')
-  const [subTab,    setSubTab]    = useState('appointments') // appointments | slots | reliability
+  const [subTab,    setSubTab]    = useState('appointments')
   const [editSlot,  setEditSlot]  = useState(null)
   const [slotForm,  setSlotForm]  = useState({})
   const [slotSaving, setSlotSaving] = useState(false)
   const [slotError,  setSlotError]  = useState('')
-  const [lastSlotAction, setLastSlotAction] = useState(null)  // egy lépés visszaállítás (időpont)
+  const [lastSlotAction, setLastSlotAction] = useState(null)
   const [showNewSlot, setShowNewSlot] = useState(false)
   const [editReliability, setEditReliability] = useState(null)
   const [reliabilityNote, setReliabilityNote] = useState('')
@@ -43,13 +43,11 @@ export default function AdminBookings() {
   const [manualName,  setManualName]  = useState('')
   const [showManual,  setShowManual]  = useState(false)
 
-  // ── Táblázat állapot ──────────────────────────────────────
   const [search,    setSearch]    = useState('')
-  const [expanded,  setExpanded]  = useState(null)   // melyik sor részletei nyitva
-  const [copiedId,  setCopiedId]  = useState(null)   // melyik lemondó link lett most másolva
+  const [expanded,  setExpanded]  = useState(null)
+  const [copiedId,  setCopiedId]  = useState(null)
 
-  // Időpont-törlés indokkal (ha van rá foglalás)
-  const [delSlot,    setDelSlot]    = useState(null)  // a törlendő slot (modal nyitva ha nem null)
+  const [delSlot,    setDelSlot]    = useState(null)
   const [delReason,  setDelReason]  = useState('')
   const [delSending, setDelSending] = useState(false)
   const [delError,   setDelError]   = useState('')
@@ -58,7 +56,6 @@ export default function AdminBookings() {
   const { slots,        loading: slotsLoading, refetch: refetchSlots } = useAllSlots()
   const { clients,      loading: relLoading,   refetch: refetchRel }   = useClientReliability()
 
-  // ── Keresés (kliensoldali, a státusz-szűrő tetején) ──────
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return appointments
@@ -69,11 +66,7 @@ export default function AdminBookings() {
     )
   }, [appointments, search])
 
-  // ── Foglalás státusz változtatás ─────────────────────────
   const updateStatus = async (id, status) => {
-    // A 'cancelled' státusz ugyanazon az úton megy, mint az ügyfél lemondása
-    // (a link is csak status='cancelled'-re állít) → a várólista-trigger lefut,
-    // a hely felszabadul, a következő várólistást a rendszer értesíti.
     await supabase.from('appointments').update({ status }).eq('id', id)
     refetchAppts()
     if (status === 'no_show') {
@@ -82,7 +75,6 @@ export default function AdminBookings() {
     }
   }
 
-  // ── Lemondó link vágólapra ───────────────────────────────
   const copyCancelLink = async (a) => {
     if (!a.cancellation_token) {
       window.alert('Ehhez a foglaláshoz nincs lemondó token. (Régi rekord?)')
@@ -92,7 +84,6 @@ export default function AdminBookings() {
     try {
       await navigator.clipboard.writeText(url)
     } catch {
-      // fallback régi böngészőkre
       const ta = document.createElement('textarea')
       ta.value = url; document.body.appendChild(ta); ta.select()
       document.execCommand('copy'); document.body.removeChild(ta)
@@ -101,7 +92,6 @@ export default function AdminBookings() {
     setTimeout(() => setCopiedId(c => (c === a.id ? null : c)), 2000)
   }
 
-  // ── CSV export (a jelenleg szűrt/keresett lista) ─────────
   const exportCsv = () => {
     const rows = filtered
     const header = ['Dátum','Kezdés','Vége','Cím','Név','Email','Telefon','Státusz','Üzenet','Létrehozva','Megerősítve']
@@ -127,7 +117,6 @@ export default function AdminBookings() {
     URL.revokeObjectURL(url)
   }
 
-  // ── Reliability növelés ───────────────────────────────────
   const bumpReliability = async (email, name, type) => {
     const { data } = await supabase
       .from('client_reliability')
@@ -158,7 +147,6 @@ export default function AdminBookings() {
     refetchRel()
   }
 
-  // ── Manuális reliability hozzáadás ───────────────────────
   const addManual = async () => {
     if (!manualEmail.trim()) return
     await supabase.from('client_reliability').upsert({
@@ -171,7 +159,6 @@ export default function AdminBookings() {
     refetchRel()
   }
 
-  // ── Slot mentés ───────────────────────────────────────────
   const EMPTY_SLOT = {
     title: '', description: '', service_type: 'portrait',
     slot_date: '', start_time: '', end_time: '',
@@ -234,7 +221,6 @@ export default function AdminBookings() {
       error = res.error
     }
     if (error) { setSlotError('Hiba: ' + error.message); setSlotSaving(false); return }
-    // Egy lépés visszaállítás – csak a slot beállításait érinti, a foglalásokat NEM
     if (editSlot !== 'new' && prevSlot) {
       setLastSlotAction({
         type: 'update', id: editSlot,
@@ -252,8 +238,6 @@ export default function AdminBookings() {
     setShowNewSlot(false); setSlotSaving(false)
   }
 
-  // Előző verzió visszaállítása (időpont): frissítésnél a régi beállítások,
-  // új időpontnál a létrehozott slot törlése. A foglalásokat/státuszokat nem érinti.
   const restoreSlot = async () => {
     if (!lastSlotAction) return
     const msg = lastSlotAction.type === 'insert'
@@ -275,8 +259,6 @@ export default function AdminBookings() {
     refetchSlots()
   }
 
-  // Törlés indítása: ha van rá foglalás, indok-popup + értesítő emailek;
-  // ha nincs, a sima törlés megy (nincs kit értesíteni).
   const openDeleteSlot = (slot) => {
     if (slot.booked_count > 0) {
       setDelSlot(slot); setDelReason(''); setDelError('')
@@ -284,10 +266,6 @@ export default function AdminBookings() {
       deleteSlot(slot.id)
     }
   }
-
-  // Értesítés + törlés az Edge Functionön keresztül (admin JWT-vel).
-  // A függvény kiküldi minden aktív foglalónak az emailt az okkal, majd
-  // törli a slotot (cascade viszi a foglalásokat + várólistát).
   const confirmDeleteWithNotify = async () => {
     if (!delSlot) return
     setDelSending(true); setDelError('')
@@ -330,7 +308,6 @@ export default function AdminBookings() {
         )}
       </div>
 
-      {/* Sub-tabok */}
       <div className="acms-subtabs">
         <button className={`acms-subtab ${subTab === 'appointments' ? 'active' : ''}`}
           onClick={() => setSubTab('appointments')}>
@@ -346,7 +323,6 @@ export default function AdminBookings() {
         </button>
       </div>
 
-      {/* ── FOGLALÁSOK (táblázat) ── */}
       {subTab === 'appointments' && (
         <>
           <div className="acms-booking-toolbar">
@@ -518,7 +494,6 @@ export default function AdminBookings() {
         </>
       )}
 
-      {/* ── IDŐPONTOK ── */}
       {subTab === 'slots' && (
         <>
           {slotsLoading ? <div className="admin-empty">Betöltés...</div>
@@ -554,7 +529,6 @@ export default function AdminBookings() {
         </>
       )}
 
-      {/* ── MEGBÍZHATÓSÁG ── */}
       {subTab === 'reliability' && (
         <>
           {showManual && (
@@ -640,7 +614,6 @@ export default function AdminBookings() {
         </>
       )}
 
-      {/* ── IDŐPONT TÖRLÉSE INDOKKAL (ha van rá foglalás) ── */}
       {delSlot && (
         <div className="acms-modal-backdrop" onClick={() => !delSending && setDelSlot(null)}>
           <div className="acms-modal" onClick={e => e.stopPropagation()}>
@@ -667,7 +640,6 @@ export default function AdminBookings() {
                   placeholder="pl. Sajnos közbejött egy elkerülhetetlen elfoglaltság…" />
               </div>
 
-              {/* Előnézet – mit kap az ügyfél */}
               <div className="acms-sect-live-preview" style={{marginBottom:'1rem'}}>
                 <div style={{fontSize:'0.9rem', lineHeight:1.7, color:'var(--text-secondary)'}}>
                   Kedves <strong>[Név]</strong>,<br />
@@ -694,7 +666,6 @@ export default function AdminBookings() {
         </div>
       )}
 
-      {/* ── SLOT FORM MODAL ── */}
       {showNewSlot && (
         <div className="acms-modal-backdrop" onClick={() => setShowNewSlot(false)}>
           <div className="acms-modal acms-modal--wide" onClick={e => e.stopPropagation()}>
@@ -752,7 +723,6 @@ export default function AdminBookings() {
                 </div>
               </div>
 
-              {/* Ismétlődés */}
               <div className="acms-form-group acms-form-group--check">
                 <label>
                   <input type="checkbox" checked={slotForm.is_recurring || false}

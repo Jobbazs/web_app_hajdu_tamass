@@ -5,7 +5,6 @@ import { usePortfolio } from '../../hooks'
 import AdminCategorySections from './AdminCategorySections'
 import CloudinaryUpload from './CloudinaryUpload'
 
-// 3 igazítási preset (a spec szerint: bal 0-75%, közép 0-100%, jobb 25-100%)
 const ALIGN_OPTIONS = [
   { value: 'left',   label: '← Bal' },
   { value: 'center', label: '↔ Közép' },
@@ -17,7 +16,6 @@ const SIZE_OPTIONS = [
   { value: 'large',  label: 'Nagy' },
 ]
 
-// A szerkeszthető mezők – csak ezeket írjuk a DB-be
 const editableFields = (cat) => ({
   hero_subtitle_hu:   cat.hero_subtitle_hu   || '',
   hero_subtitle_en:   cat.hero_subtitle_en   || '',
@@ -32,7 +30,6 @@ const editableFields = (cat) => ({
   hero_words:         (cat.hero_words || []).join(', '),
 })
 
-// Előnézet-segédek (a Category.css logikájával egyezőek)
 const alignStyle = (a) =>
   a === 'left'  ? { textAlign: 'left',  marginRight: 'auto', maxWidth: '75%' } :
   a === 'right' ? { textAlign: 'right', marginLeft: 'auto', maxWidth: '75%' } :
@@ -71,9 +68,8 @@ export default function AdminCategories() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
-  const [lastSnapshot, setLastSnapshot] = useState(null)  // egy lépés visszaállítás
+  const [lastSnapshot, setLastSnapshot] = useState(null)
 
-  // első kategória kiválasztása betöltéskor
   useEffect(() => {
     if (!activeId && categories.length) setActiveId(categories[0].id)
   }, [activeId, categories])
@@ -93,7 +89,6 @@ export default function AdminCategories() {
     [items, activeCat]
   )
 
-  // kategóriaváltáskor a mezők betöltése
   useEffect(() => {
     if (activeCat) {
       setForm(editableFields(activeCat))
@@ -118,7 +113,6 @@ export default function AdminCategories() {
         .map((s) => s.trim())
         .filter(Boolean),
     }
-    // Undo-hoz: a mentés ELŐTTI értékek a payload kulcsaira
     const prev = {}
     for (const k of Object.keys(payload)) prev[k] = activeCat[k]
 
@@ -136,7 +130,6 @@ export default function AdminCategories() {
     refetch()
   }
 
-  // Előző verzió visszaállítása: a legutóbbi mentés előtti értékeket írja vissza.
   const restorePrev = async () => {
     if (!lastSnapshot) return
     if (!window.confirm('Visszaállítod a kategória mentés előtti értékeit?')) return
@@ -176,7 +169,6 @@ export default function AdminCategories() {
         </div>
       </div>
 
-      {/* Kategória-választó */}
       <div className="acms-cat-tabs">
         {categories.map((c) => (
           <button
@@ -190,7 +182,6 @@ export default function AdminCategories() {
       </div>
 
       <div className="acms-cat-editor">
-        {/* BAL: szerkesztő */}
         <div className="acms-cat-fields">
           <div className="acms-form-group">
             <label className="acms-label">Hero alcím ({lang.toUpperCase()})</label>
@@ -280,7 +271,6 @@ export default function AdminCategories() {
           </div>
         </div>
 
-        {/* JOBB: élő előnézet */}
         <div className="acms-cat-preview">
           <div className="acms-cat-preview-label">Élő előnézet ({lang.toUpperCase()})</div>
           <div className="acms-cat-preview-box">

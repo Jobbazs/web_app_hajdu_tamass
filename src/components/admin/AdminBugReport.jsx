@@ -3,8 +3,6 @@ import { supabase } from '../../supabaseClient'
 import { getLog, clearLog } from '../../lib/adminLog'
 import { useAdminRole } from '../../hooks'
 
-// Hibajegy: beküldő űrlap + jegylista. A lista tartalmát az RLS szűri
-// (superadmin MINDET látja, más admin CSAK a saját beküldéseit).
 function fmt(iso) {
   if (!iso) return ''
   try {
@@ -14,7 +12,6 @@ function fmt(iso) {
   } catch { return iso }
 }
 
-// Státuszok: reported = Bejelentve, in_progress = Folyamatban, closed = Lezárva
 function statusLabel(s) {
   if (s === 'closed') return 'Lezárva'
   if (s === 'in_progress') return 'Folyamatban'
@@ -25,7 +22,7 @@ export default function AdminBugReport() {
   const { isSuperadmin } = useAdminRole()
   const [description, setDescription] = useState('')
   const [cause,       setCause]       = useState('')
-  const [status,      setStatus]      = useState('idle')  // idle | sending | done | error
+  const [status,      setStatus]      = useState('idle')
   const [logCount,    setLogCount]    = useState(0)
   const [tickets,     setTickets]     = useState([])
   const [loading,     setLoading]     = useState(true)
@@ -61,13 +58,12 @@ export default function AdminBugReport() {
     setStatus('done')
     setDescription('')
     setCause('')
-    clearLog()          // tiszta lap a következő jegyhez
-    load()              // lista frissítése
+    clearLog()
+    load()
   }
 
   return (
     <div className="acms-section">
-      {/* Beküldő űrlap */}
       <div className="acms-content-group">
         <div className="acms-content-group-label">Hibajegy beküldése</div>
 
@@ -119,7 +115,6 @@ export default function AdminBugReport() {
         </div>
       </div>
 
-      {/* Jegylista */}
       <div className="acms-content-group">
         <div className="acms-content-group-label">
           {isSuperadmin ? 'Összes hibajegy' : 'Beküldött hibajegyeim'}

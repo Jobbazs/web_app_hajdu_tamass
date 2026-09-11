@@ -1,9 +1,6 @@
-/* ============================================================
-   HERO
-   ============================================================ */
+
 #hero {
-  /* Alap: 100vh (mindenhol működik). Az svh finomítás @supports-ban,
-     mert a minifier az egymás utáni azonos property-t eldobná. */
+
   height: 100vh;
   min-height: 600px;
   position: relative;
@@ -32,7 +29,6 @@
   position: relative;
   z-index: 2;
   max-width: 820px;
-  /* Megakadályozza hogy a forgó felirat alá csússzon */
   padding-right: 3rem;
 }
 
@@ -60,7 +56,6 @@
   text-transform: uppercase;
   padding: 0.95rem 2.2rem;
   border: none;
-  /* min touch target */
   min-height: 44px;
 }
 
@@ -79,7 +74,7 @@
   color: var(--text-muted);
   animation: scrollBounce 2.2s ease-in-out infinite;
   pointer-events: none;
-  z-index: 1; /* below hero-content (z-index:2) so button is never obscured */
+  z-index: 1;
 }
 
 .scroll-hint::after {
@@ -94,10 +89,6 @@
   50%       { opacity: 1;   transform: translateX(-50%) translateY(7px); }
 }
 
-/* ============================================================
-   HERO GLOW FIX – telefon nézet
-   ============================================================ */
-
 @media (max-width: 1023px) {
   #hero {
     height: 99vh;
@@ -111,7 +102,7 @@
   #hero {
     
     min-height: 480px;
-    align-items: center;        /* tartalom középre, nem az aljára */
+    align-items: center;
     padding: 0 1.2rem 3rem;
   }
 
@@ -139,11 +130,6 @@
   }
 }
 
-/* ============================================================
-   svh finomítás – csak ahol támogatott (Safari 15.4+ / Chrome 108+).
-   Az svh a mobil URL-sáv miatt stabilabb, mint a vh; a fenti 100vh
-   marad tartaléknak a régebbi böngészőkön.
-   ============================================================ */
 @supports (height: 100svh) {
   #hero { height: 100svh; }
   @media (max-width: 1023px) {

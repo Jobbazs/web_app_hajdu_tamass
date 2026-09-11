@@ -1,18 +1,3 @@
-// ============================================================
-// Supabase Edge Function – trigger-deploy
-//
-// Miért Edge Function és nem frontend fetch:
-// a Vercel deploy hook URL-jével bárki korlátlanul deployt indíthat.
-// Ha VITE_ env változóba tennénk, belefordulna a publikus JS bundle-be.
-// Így a URL szerveroldalon marad, és csak bejelentkezett admin hívhatja.
-//
-// A deploy indítása mellett IndexNow-értesítést is küld (Bing, Yandex,
-// Seznam, Naver): "ezek az URL-ek megváltoztak, gyere és nézd meg".
-// A kulcsfájlnak elérhetőnek kell lennie: https://hajdutamas.hu/<KULCS>.txt
-//
-// Deploy:  supabase functions deploy trigger-deploy
-// Secret:  supabase secrets set VERCEL_DEPLOY_HOOK=https://api.vercel.com/v1/integrations/deploy/prj_XXX/YYY
-// ============================================================
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -20,10 +5,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const VERCEL_HOOK  = Deno.env.get('VERCEL_DEPLOY_HOOK') ?? ''
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-// Admin-allowlist (opcionális): ha be van állítva, csak ezek az e-mailek hívhatják.
 const ADMIN_EMAILS = (Deno.env.get('ADMIN_EMAILS') ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
 
-// ── IndexNow ──
 const SITE          = 'https://hajdutamas.hu'
 const INDEXNOW_KEY  = '14818e802e384191a2fe0ba65ac22eaf'
 const INDEXNOW_HOST = 'hajdutamas.hu'
@@ -39,8 +22,6 @@ const json = (body: unknown, status = 200) =>
     headers: { ...cors, 'Content-Type': 'application/json' },
   })
 
-// Az értesítendő URL-ek listája: főoldal + hub + minden kategória aloldal.
-// A kategóriákat a DB-ből olvassuk, így egy új kategória automatikusan
 // bekerül – nem kell kézzel bővíteni a listát.
 async function buildUrlList(supabase: any): Promise<string[]> {
   const urls = [`${SITE}/`, `${SITE}/portfolio`]
@@ -100,7 +81,6 @@ serve(async (req) => {
       return json({ error: 'VERCEL_DEPLOY_HOOK nincs beállítva' }, 500)
     }
 
-    // ── Hitelesítés: csak bejelentkezett admin indíthat deployt ──
     const authHeader = req.headers.get('Authorization') ?? ''
     if (!authHeader.startsWith('Bearer ')) {
       return json({ error: 'Hiányzó hitelesítés' }, 401)
@@ -117,7 +97,6 @@ serve(async (req) => {
     if (ADMIN_EMAILS.length && !ADMIN_EMAILS.includes((user.email ?? '').toLowerCase()))
       return json({ error: 'Nincs jogosultság' }, 403)
 
-    // ── Deploy indítása ──
     const res = await fetch(VERCEL_HOOK, { method: 'POST' })
     if (!res.ok) {
       const detail = await res.text()
@@ -128,7 +107,6 @@ serve(async (req) => {
     const data = await res.json().catch(() => ({}))
     console.log(`Deploy indítva – kérte: ${user.email}`)
 
-    // ── IndexNow értesítés (best-effort, nem befolyásolja a deployt) ──
     const urlList  = await buildUrlList(supabase)
     const indexNow = await pingIndexNow(urlList)
 

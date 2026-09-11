@@ -1,8 +1,5 @@
 import { supabase } from '../supabaseClient'
 
-// Cloudinary asset(ek) törlése a 'delete-cloudinary' Edge Functionön át.
-// Best-effort: ha hibázik, csak logolunk — a DB-törlés már megtörtént, a
-// felhasználó elsődleges művelete (eltávolítás az oldalról) így is sikeres.
 export async function deleteCloudinaryAssets(urls) {
   const list = (Array.isArray(urls) ? urls : [urls]).filter(Boolean)
   if (list.length === 0) return { ok: true, deleted: {} }

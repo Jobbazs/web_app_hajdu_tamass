@@ -1,5 +1,3 @@
-// Újrahasznált SVG kördiagram. slices: [{ label, value, color }].
-// A cikkeken KÍVÜL felirat: darabszám vagy százalék az aktív nézet szerint.
 export const PIE_COLORS = [
   '#B5231E', '#E0A800', '#2E7D32', '#1565C0', '#6A1B9A',
   '#00838F', '#EF6C00', '#5D4037', '#546E7A', '#C2185B',
@@ -23,7 +21,6 @@ export default function PollPie({ slices, view = 'percent', size = 220 }) {
     const large = (a1 - a0) > Math.PI ? 1 : 0
     const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0)
     const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1)
-    // teljes kör esetén (1 szelet) rajzoljunk kört, ne 0 hosszú ívet
     const d = frac >= 0.999
       ? `M ${cx} ${(cy - r).toFixed(2)} A ${r} ${r} 0 1 1 ${cx} ${(cy + r).toFixed(2)} A ${r} ${r} 0 1 1 ${cx} ${(cy - r).toFixed(2)} Z`
       : `M ${cx} ${cy} L ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z`

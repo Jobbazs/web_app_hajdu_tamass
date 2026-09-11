@@ -17,7 +17,7 @@ export default function Login() {
 
     if (error) {
       setError('Hibás email vagy jelszó.')
-      setPassword('')   // hibás adatoknál a jelszó törlődik, hogy tisztán újraírható legyen
+      setPassword('')
     }
     setLoading(false)
   }
@@ -26,7 +26,6 @@ export default function Login() {
     <div className="login-page">
       <div className="login-box">
         <div className="login-title">Admin</div>
-        {/* <div className="login-sub">Csak a tulajdonos számára</div> */}
         
 
         <form onSubmit={handleLogin} noValidate>
@@ -43,7 +42,7 @@ export default function Login() {
               onFocus={e => {
                 const el = e.target
                 requestAnimationFrame(() => {
-                  try { el.setSelectionRange(el.value.length, el.value.length) } catch { /* egyes típusok nem támogatják */ }
+                  try { el.setSelectionRange(el.value.length, el.value.length) } catch {}
                 })
               }}
               autoComplete="email"

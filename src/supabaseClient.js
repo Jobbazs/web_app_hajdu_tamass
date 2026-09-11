@@ -6,9 +6,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    // Session-alapú bejelentkezés: a munkamenet a sessionStorage-ban él, így az
-    // ablak/tab bezárásakor a felhasználó automatikusan kijelentkezik (nem marad
-    // bent a gépen). Lapfrissítés (F5) ugyanabban a tabban megtartja a belépést.
+
     storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,

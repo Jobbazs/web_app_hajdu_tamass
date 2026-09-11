@@ -1,6 +1,4 @@
-/* ============================================================
-   CONTACT
-   ============================================================ */
+
 .contact-inner { max-width: 760px; }
 
 .contact-intro {
@@ -33,10 +31,9 @@
   color: var(--text-muted);
 }
 
-/* Touch barát input magasság */
 .form-input {
   min-height: 44px;
-  font-size: 16px; /* iOS: <16px fókuszkor auto-zoomolna – 16px kikapcsolja */
+  font-size: 16px;
 }
 
 .form-hint {
@@ -48,9 +45,6 @@
   margin-top: 0.4rem;
 }
 
-/* ============================================================
-   CONTACT – fájl csatolás
-   ============================================================ */
 
 .attach-btn {
   display: flex;
@@ -82,7 +76,6 @@
   flex-shrink: 0;
 }
 
-/* Előnézet csatolás után */
 .attach-preview {
   display: flex;
   align-items: center;
@@ -146,7 +139,6 @@
   color: var(--accent);
 }
 
-/* ── Több fájl lista ── */
 .attach-list {
   display: flex;
   flex-direction: column;
@@ -162,7 +154,6 @@
   padding: 0.5rem 0;
 }
 
-/* Mobilon */
 @media (max-width: 767px) {
   .attach-btn { font-size: 0.62rem; padding: 1rem 1rem; }
 
@@ -173,22 +164,21 @@
 
   .attach-preview-img {
     width: 56px;
-    height: 56px;  /* square on mobile, cleaner */
+    height: 56px;
   }
 
   .attach-remove-btn {
-    width: 36px;   /* bigger touch target */
+    width: 36px;
     height: 36px;
     font-size: 0.9rem;
   }
 
   .attach-list {
     gap: 8px;
-    margin-bottom: 14px; /* more breathing room before the add button */
+    margin-bottom: 14px;
   }
 }
 
-/* GDPR hozzájárulás-checkbox */
 .form-consent {
   display: flex;
   align-items: flex-start;

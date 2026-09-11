@@ -1,8 +1,3 @@
-// Supabase Edge Function – send-booking-email
-// Deploy parancs:
-//   supabase functions deploy send-booking-email
-// API kulcs beállítás (egyszer kell):
-//   supabase secrets set RESEND_API_KEY=re_xxxxxxxxx
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -13,7 +8,6 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const FROM_EMAIL = "noreply@hajdutamas.hu";
 const FROM_NAME = "Hajdu Tamás — NOX";
 
-// Service-role kliens: csak a token-ellenőrző lekérdezésekhez (RLS-t megkerüli)
 const db = createClient(SUPABASE_URL, SERVICE_ROLE);
 
 const corsHeaders = {
@@ -28,9 +22,6 @@ serve(async (req) => {
   }
 
   try {
-    // A hívó CSAK egy tokent ad meg. A címzettet és minden adatot a
-    // szerver a DB-ből olvas ki a token alapján → nem lehet a függvényt
-    // nyílt email-relay-ként használni tetszőleges címre / tartalommal.
     const {
       confirmToken,
       isWaitlist,
@@ -39,18 +30,13 @@ serve(async (req) => {
       cancelToken: acceptCancelToken,
     } = await req.json();
 
-    // A linkek domainjét fix, szerveroldali beállításból vesszük (nem az
-    // Origin fejlécből → nincs NOX-brandinggel támadó domainre mutató link).
     const origin = Deno.env.get("SITE_URL") ?? "https://hajdutamas.hu";
 
-    // ── Token → valódi rekord (service-role) ──
     let to: string, name: string;
     let slotTitle: string, slotDate: string, startTime: string, endTime: string;
     let cancelToken: string | null = null;
 
     if (accepted) {
-      // Várólista-elfogadás után: a most létrejött, megerősített foglalás
-      // adatait a lemondó (cancellation) token alapján olvassuk ki.
       if (!acceptCancelToken) {
         return new Response(JSON.stringify({ error: "Hiányzó cancelToken" }), {
           status: 400,

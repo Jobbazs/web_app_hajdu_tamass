@@ -21,7 +21,6 @@ const RELIABILITY = [
 
 const todayStr = () => new Date().toISOString().slice(0, 10)
 
-// Tooltip: hoverre (desktop) és tapre (mobil) is megjelenik
 function InfoTip({ text }) {
   const [open, setOpen] = useState(false)
   return (
@@ -85,7 +84,6 @@ export default function AdminDashboard() {
 
   const today = todayStr()
 
-  // Elérhető évek (a legkorábbi foglalástól az idei évig)
   const years = useMemo(() => {
     const curYear = new Date().getFullYear()
     const ys = appointments.map((a) => Number((a.created_at || '').slice(0, 4))).filter(Boolean)
@@ -96,33 +94,28 @@ export default function AdminDashboard() {
   }, [appointments])
 
   const stats = useMemo(() => {
-    // Státusz szerinti bontás
     const byStatus = {}
     appointments.forEach((a) => { byStatus[a.status] = (byStatus[a.status] || 0) + 1 })
 
-    // Közelgő aktív foglalások (megerősített/jóváhagyott, jövőbeli slot)
     const upcomingActive = appointments.filter(
       (a) => ['confirmed', 'approved'].includes(a.status) && (a.appointment_slots?.slot_date || '') >= today
     ).length
 
-    // Slot kitöltöttség (jövőbeli látható slotok)
     const futureSlots = slots.filter((s) => s.visible && s.slot_date >= today)
     const cap = futureSlots.reduce((s, x) => s + (x.capacity || 0), 0)
     const booked = futureSlots.reduce((s, x) => s + (x.booked_count || 0), 0)
     const fillPct = cap > 0 ? Math.round((booked / cap) * 100) : 0
 
-    // No-show arány
     const done = byStatus.completed || 0
     const ns = byStatus.no_show || 0
     const nsRate = (done + ns) > 0 ? Math.round((ns / (done + ns)) * 100) : 0
 
-    // Havi bontás – a választott év mind a 12 hónapja (created_at szerint)
     const months = []
     for (let m = 0; m < 12; m++) {
       const d = new Date(chartYear, m, 1)
       months.push({
         key: `${chartYear}-${String(m + 1).padStart(2, '0')}`,
-        label: d.toLocaleDateString('hu-HU', { month: 'short' }),   // csak hónap, év nélkül
+        label: d.toLocaleDateString('hu-HU', { month: 'short' }),
         count: 0,
       })
     }
@@ -132,19 +125,16 @@ export default function AdminDashboard() {
       if (k in mIdx) months[mIdx[k]].count++
     })
 
-    // Kategóriánkénti képszám
     const catCounts = categories.map((c) => ({
       label: c.label_hu,
       count: items.filter((i) => (i.portfolio_categories?.slug ) === c.slug).length,
     }))
 
-    // Megbízhatóság szintek
     const relCounts = [0, 1, 2, 3, 4].map((lvl) => ({
       ...RELIABILITY[lvl],
       count: clients.filter((c) => c.reliability_level === lvl).length,
     }))
 
-    // Közelgő időpontok kitöltöttsége
     const upcomingSlots = futureSlots
       .slice()
       .sort((a, b) => (a.slot_date + a.start_time).localeCompare(b.slot_date + b.start_time))
@@ -168,7 +158,6 @@ export default function AdminDashboard() {
     <div className="dash">
       <h2 className="acms-h2">Áttekintés</h2>
 
-      {/* Stat kártyák */}
       <div className="dash-stats">
         <StatCard label="Összes foglalás" value={stats.total} />
         <StatCard
@@ -184,7 +173,6 @@ export default function AdminDashboard() {
       </div>
 
       <div className="dash-grid">
-        {/* Foglalások havonta – választható év, 2 oszlop (6+6 hónap) */}
         <div className="dash-card dash-card--wide">
           <div className="dash-card-head">
             <div className="dash-card-title">Foglalások havonta</div>
@@ -211,7 +199,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Státusz szerint */}
         <div className="dash-card">
           <div className="dash-card-title">Foglalások státusz szerint</div>
           {Object.entries(STATUS).map(([key, meta]) => (
@@ -219,7 +206,6 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Kategóriánkénti képszám */}
         <div className="dash-card">
           <div className="dash-card-title">Képek kategóriánként</div>
           {stats.catCounts.map((c) => (
@@ -227,7 +213,6 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Megbízhatóság */}
         <div className="dash-card">
           <div className="dash-card-title">Kliens-megbízhatóság</div>
           {stats.relCounts.map((r) => (
@@ -235,7 +220,6 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Közelgő időpontok kitöltöttsége */}
         <div className="dash-card dash-card--wide">
           <div className="dash-card-title">Közelgő időpontok kitöltöttsége</div>
           {stats.upcomingSlots.length === 0 ? (

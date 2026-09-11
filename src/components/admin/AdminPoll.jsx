@@ -3,10 +3,6 @@ import { supabase } from '../../supabaseClient'
 import AdminPollStats from './AdminPollStats'
 import PollPie, { PIE_COLORS } from '../PollPie'
 
-// Szavazás-kezelő (1. szakasz): létrehozás/szerkesztés, oszlopok + sorok,
-// szavazat-oszlop, időzítő, aktív kapcsoló, Mentés + Előző verzió + Törlés
-// (letöltés-kérdéssel), CSV/JSON export. A publikus megjelenítés + a szavazás
-// a következő szakaszban jön.
 const emptyPoll = () => ({
   id: null, title_hu: '', title_en: '',
   columns: [{ name_hu: '', name_en: '' }],
@@ -34,7 +30,6 @@ function download(name, text, mime) {
   a.href = url; a.download = name; a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
-// Web Share csak iOS-en (ott a sima letöltés megbízhatatlan); máshol egyszerű letöltés.
 function isIOS() {
   const ua = navigator.userAgent || ''
   const classic = /iPad|iPhone|iPod/.test(ua)
@@ -62,15 +57,15 @@ export default function AdminPoll() {
   const [selId, setSelId]         = useState(null)
   const [poll, setPoll]           = useState(null)
   const [rows, setRows]           = useState([])
-  const [allPending, setAllPending] = useState([])   // jóváhagyásra váró javaslatok (globális)
+  const [allPending, setAllPending] = useState([])
   const [removed, setRemoved]     = useState([])
   const [saving, setSaving]       = useState(false)
   const [saved, setSaved]         = useState(false)
   const [snapshot, setSnapshot]   = useState(null)
   const [confirmDel, setConfirmDel] = useState(false)
   const [msg, setMsg]             = useState('')
-  const [resView, setResView]     = useState('percent')   // lezárt eredmény: darab/%
-  const [resMode, setResMode]     = useState('list')      // lezárt eredmény: lista/diagram
+  const [resView, setResView]     = useState('percent')
+  const [resMode, setResMode]     = useState('list')
 
   const loadList = async () => {
     const { data } = await supabase.from('polls')
@@ -96,7 +91,6 @@ export default function AdminPoll() {
     setRows(all.filter(o => o.approved).map(o => ({ id: o.id, cells: normalizeCells(o.cells, cols), up: o.up_votes, down: o.down_votes })))
   }
 
-  // ── Moderálás (jóváhagyásra váró javaslatok – globálisan, szavazásonként jelölve) ──
   const loadPending = async () => {
     const { data } = await supabase.from('poll_options')
       .select('id, cells, poll_id, polls(title_hu, columns)')
@@ -125,7 +119,6 @@ export default function AdminPoll() {
 
   const setField = (k, v) => { setPoll(p => ({ ...p, [k]: v })); setSaved(false) }
 
-  // ── Oszlop-műveletek ──
   const addColumn = () => {
     setPoll(p => ({ ...p, columns: [...p.columns, { name_hu: '', name_en: '' }] }))
     setRows(rs => rs.map(r => ({ ...r, cells: [...r.cells, { hu: '', en: '' }] })))
@@ -141,7 +134,6 @@ export default function AdminPoll() {
     setSaved(false)
   }
 
-  // ── Sor-műveletek ──
   const addRow = () => {
     setRows(rs => [...rs, { id: null, cells: poll.columns.map(() => ({ hu: '', en: '' })), up: 0, down: 0 }])
     setSaved(false)
@@ -168,7 +160,6 @@ export default function AdminPoll() {
     setSaved(false)
   }
 
-  // ── Mentés (poll + opciók CRUD; a szavazatszámokat nem írja felül) ──
   const closeEditor = () => { setSelId(null); setPoll(null); setRows([]); setSnapshot(null); setSaved(false) }
 
   const closePoll = async () => {
@@ -182,7 +173,6 @@ export default function AdminPoll() {
 
   const save = async () => {
     setSaving(true); setMsg('')
-    // undo-hoz a mentés előtti beállítások (a sorok szövege is)
     const snap = { poll: { ...poll }, rows: rows.map(r => ({ id: r.id, cells: r.cells.map(c => ({ ...c })) })) }
     const payload = {
       title_hu: poll.title_hu, title_en: poll.title_en, columns: poll.columns,
@@ -201,9 +191,7 @@ export default function AdminPoll() {
       if (error) { setMsg('Hiba: ' + error.message); setSaving(false); return }
       pollId = data.id
     }
-    // törölt sorok
     if (removed.length) await supabase.from('poll_options').delete().in('id', removed)
-    // meglévő + új sorok
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i]
       if (r.id) {
@@ -214,11 +202,10 @@ export default function AdminPoll() {
     }
     setSaving(false); setRemoved([])
     await loadList()
-    closeEditor()   // mentésre becsukódik
+    closeEditor()
   }
 
-  // ── Előző verzió: a poll BEÁLLÍTÁSAIT + a sorok SZÖVEGÉT állítja vissza ──
-  // (törölt/új sorok szerkezetét nem, a szavazatok védelme miatt)
+
   const restorePrev = async () => {
     if (!snapshot || !poll?.id) return
     if (!window.confirm('Visszaállítod a szavazás mentés előtti beállításait és a sorok szövegét?')) return
@@ -237,7 +224,6 @@ export default function AdminPoll() {
     await openPoll(poll.id)
   }
 
-  // ── Export ──
   const exportCSV = () => {
     const cols = poll.columns.map(c => c.name_hu || '')
     const header = [...cols, ...(poll.has_votes ? ['Fel', 'Le', 'Nettó'] : [])].map(csvCell).join(',')
@@ -313,16 +299,14 @@ export default function AdminPoll() {
     }
   }
 
-  // ── Törlés ──
   const doDelete = async () => {
     if (!poll?.id) { setSelId(null); setPoll(null); return }
     setSaving(true)
-    await supabase.from('polls').delete().eq('id', poll.id)   // cascade törli az opciókat + szavazatokat
+    await supabase.from('polls').delete().eq('id', poll.id)
     setSaving(false); setConfirmDel(false); setSelId(null); setPoll(null); setRows([])
     await loadList()
   }
 
-  // ── RENDER ──
   const closed = poll && (poll.status === 'closed' || (poll.closes_at && new Date(poll.closes_at).getTime() < Date.now()))
 
   const closedActionRow = (
@@ -475,7 +459,6 @@ export default function AdminPoll() {
 
   const editorBlock = poll ? (closed ? readonlyBlock : (
         <>
-          {/* Felső gombsor (ugyanaz, mint alul – ne kelljen legörgetni) */}
           <div className="acms-content-group" style={{ paddingBottom: '0.4rem' }}>
             {actionRow}
             {msg && <span className="acms-hint" style={{ color: 'var(--rust-light)' }}>{msg}</span>}
@@ -497,7 +480,6 @@ export default function AdminPoll() {
             )}
           </div>
 
-          {/* Alapbeállítások */}
           <div className="acms-content-group">
             <div className="acms-content-group-label">Beállítások</div>
 
@@ -615,7 +597,6 @@ export default function AdminPoll() {
             )}
           </div>
 
-          {/* Oszlopok */}
           <div className="acms-content-group">
             <div className="acms-sect-header-row">
               <div className="acms-content-group-label">Oszlopok</div>
@@ -632,7 +613,6 @@ export default function AdminPoll() {
             ))}
           </div>
 
-          {/* Sorok */}
           <div className="acms-content-group">
             <div className="acms-content-group-label">Sorok (opciók)</div>
             {rows.length === 0 && <div className="admin-empty">Még nincs sor.</div>}
@@ -661,7 +641,6 @@ export default function AdminPoll() {
             <button className="acms-btn-sm" onClick={addRow} style={{ marginTop: '0.3rem' }}>+ Sor</button>
           </div>
 
-          {/* Alsó gombsor (ugyanaz, mint fent) */}
           <div className="acms-content-group">
             {actionRow}
           </div>
@@ -722,7 +701,6 @@ export default function AdminPoll() {
         </div>
       )}
 
-      {/* Statisztika / összehasonlítás – a Szavazás menü alján, mindig elérhető */}
       <AdminPollStats />
     </div>
   )

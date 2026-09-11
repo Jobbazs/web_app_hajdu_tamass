@@ -2,17 +2,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import AdminRoles from './AdminRoles'
 
-// ============================================================
-// Haladó beállítások fül
-// Jelenleg: publikálás (statikus HTML újraépítése a Google számára)
-// ============================================================
+
 
 const LAST_KEY = 'last_published_at'
 
 const ATTACHMENTS_BUCKET = 'attachments'
 const ATTACHMENTS_FOLDER = 'contact-attachments'
 
-// Egy publikus Supabase Storage URL-ből kinyeri a bucketen belüli path-ot.
 function urlToStoragePath(url) {
   const marker = `/object/public/${ATTACHMENTS_BUCKET}/`
   const idx = url.indexOf(marker)
@@ -43,10 +39,10 @@ function formatWhen(iso) {
 }
 
 export default function AdminAdvanced() {
-  const [status, setStatus] = useState('idle')  // idle | publishing | done | error
+  const [status, setStatus] = useState('idle')
   const [lastAt, setLastAt] = useState(null)
   const [errMsg, setErrMsg] = useState('')
-  const [indexNow, setIndexNow] = useState(null)   // { ok, count?, error? }
+  const [indexNow, setIndexNow] = useState(null)
   const [cleaning, setCleaning] = useState(false)
   const [cleanMsg, setCleanMsg] = useState('')
 
@@ -83,8 +79,6 @@ export default function AdminAdvanced() {
     setTimeout(() => setStatus('idle'), 10000)
   }
 
-  // Árva fájlok: minden, ami a Storage "contact-attachments" mappájában van,
-  // de egyetlen üzenet attachment_url mezőjében sem szerepel.
   const cleanOrphanFiles = async () => {
     if (!window.confirm('Ez törli az összes olyan csatolt fájlt a tárhelyről, amely már egyetlen üzenethez sincs hozzárendelve. Folytatod?')) return
 
@@ -146,7 +140,6 @@ export default function AdminAdvanced() {
         </div>
       </div>
 
-      {/* ── Publikálás ── */}
       <div className="acms-content-group">
         <div className="acms-content-group-label">Publikálás a keresőmotorok felé</div>
 
@@ -240,7 +233,6 @@ export default function AdminAdvanced() {
         </div>
       </div>
 
-      {/* ── Árva fájlok takarítása ── */}
       <div className="acms-content-group">
         <div className="acms-content-group-label">Árva fájlok takarítása</div>
 
@@ -278,7 +270,6 @@ export default function AdminAdvanced() {
         </div>
       </div>
 
-      {/* Jogkezelő – csak superadminnak jelenik meg (a komponens maga dönti el) */}
       <AdminRoles />
     </div>
   )

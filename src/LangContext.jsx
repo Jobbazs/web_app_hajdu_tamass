@@ -1,23 +1,18 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 
-// ============================================================
-// FORDÍTÁSOK
-// ============================================================
+
 export const TRANSLATIONS = {
   hu: {
-    // Meta (document.title / meta description nyelvváltáskor)
     meta: {
       title:       'Hajdu Tamás — Fotós & Videós | Budapest',
       description: 'Budapesti fotós és videós. Rendezvények, underground bulik, portrék, videóklippek. Arzenál és hasonló helyszínek.',
     },
-    // Navbar
     nav: {
       about:    'Rólam',
       portfolio:'Portfólió',
       services: 'Szolgáltatások',
       contact:  'Kapcsolat',
     },
-    // Hero
     hero: {
       eyebrow:   'Fotós & Videós',
       line1:     'Ahol a fény',
@@ -26,7 +21,6 @@ export const TRANSLATIONS = {
       cta:       'Portfólió megtekintése',
       scroll:    'Görgess',
     },
-    // About
     about: {
       label:   'Rólam',
       title1:  'A kamera',
@@ -37,7 +31,6 @@ export const TRANSLATIONS = {
       tags:    ['Rendezvény', 'Rave / Buli', 'Videóklipp', 'Portré', 'Urbex'],
       imgAlt:  'Portré fotó',
     },
-    // Portfolio
     portfolio: {
       label:   'Munkáim',
       title:   'Portfólió',
@@ -49,7 +42,6 @@ export const TRANSLATIONS = {
         urbex:    'Urbex',
       },
     },
-    // Modal
     modal: {
       prev:         'Előző',
       next:         'Következő →',
@@ -57,7 +49,6 @@ export const TRANSLATIONS = {
       noVideo:      'Videó URL nincs megadva.',
       noVideoHint:  'Add hozzá a videoUrl mezőt a data.js-ben.',
     },
-    // Services
     services: {
       label: 'Mit kínálok',
       title: 'Szolgáltatások',
@@ -67,7 +58,6 @@ export const TRANSLATIONS = {
         { id: '03', name: 'Videóklipp',          desc: 'Zenészeknek és előadóknak. Helyszíni forgatás, vágás, color grading. Egyedi vizuális nyelv minden projekthez.' },
       ],
     },
-    // Contact
     contact: {
       label:       'Írj nekem',
       title:       'Kapcsolat',
@@ -100,7 +90,6 @@ export const TRANSLATIONS = {
         'Egyéb',
       ],
     },
-    // ThankYou popup
     thankYou: {
       eyebrow:      'Üzenet elküldve',
       titleLine1:   'Köszönöm,',
@@ -110,14 +99,12 @@ export const TRANSLATIONS = {
       closeBtn:     'Vissza az oldalra',
       dismiss:      'Bezárás',
     },
-    // Footer
     footer: {
       copy: 'Budapest, Magyarország',
     },
   },
 
   en: {
-    // Meta (document.title / meta description on language switch)
     meta: {
       title:       'Hajdu Tamás — Photographer & Videographer | Budapest',
       description: 'Budapest-based photographer and videographer. Events, underground parties, portraits, music videos.',
@@ -205,7 +192,6 @@ export const TRANSLATIONS = {
         'Other',
       ],
     },
-    // ThankYou popup
     thankYou: {
       eyebrow:      'Message sent',
       titleLine1:   'Thank you',
@@ -215,16 +201,12 @@ export const TRANSLATIONS = {
       closeBtn:     'Back to the site',
       dismiss:      'Close',
     },
-    // Footer
     footer: {
       copy: 'Budapest, Hungary',
     },
   },
 }
 
-// ============================================================
-// CONTEXT
-// ============================================================
 const LangContext = createContext()
 
 export function LangProvider({ children }) {
@@ -232,9 +214,6 @@ export function LangProvider({ children }) {
   const t = TRANSLATIONS[lang]
   const toggleLang = () => setLang(l => l === 'hu' ? 'en' : 'hu')
 
-  // SEO: document.title, meta description és <html lang> szinkronban tartása
-  // a felhasználó által épp választott nyelvvel, hogy a keresőmotorok és
-  // a képernyőolvasók a ténylegesen látott nyelvet lássák.
   useEffect(() => {
     document.documentElement.lang = lang
 

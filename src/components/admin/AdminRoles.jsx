@@ -4,9 +4,6 @@ import { useAdminRole } from '../../hooks'
 
 const ROLES = ['superadmin', 'admin', 'demo']
 
-// Jogkezelő táblázat – CSAK superadmin látja. Új admin felvétele e-mail alapján,
-// szerepkör állítása, törlés. Saját magát nem módosíthatja/törölheti.
-// A tényleges védelmet az RLS adja (admin_users write = superadmin, és nem-self).
 export default function AdminRoles() {
   const { isSuperadmin, loading: roleLoading } = useAdminRole()
   const [rows,     setRows]     = useState([])
@@ -28,7 +25,6 @@ export default function AdminRoles() {
   }
   useEffect(() => { load() }, [])
 
-  // Csak superadminnak jelenik meg (a demó/admin nem is látja a jogkezelőt).
   if (roleLoading || loading) return null
   if (!isSuperadmin) return null
 
@@ -74,7 +70,6 @@ export default function AdminRoles() {
         </p>
       </div>
 
-      {/* Új admin felvétele */}
       <div className="acms-form-group">
         <label>Új admin felvétele</label>
         <div className="acms-roles-add">
@@ -94,7 +89,6 @@ export default function AdminRoles() {
         </div>
       </div>
 
-      {/* Meglévő adminok */}
       <table className="acms-roles-table">
         <thead>
           <tr><th>E-mail</th><th>Szerepkör</th><th></th></tr>

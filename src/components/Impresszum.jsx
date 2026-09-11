@@ -1,7 +1,5 @@
 import LegalPage from './LegalPage'
 
-// Impresszum – töltsd ki a [KITÖLTENDŐ] helyeket a vállalkozási adataiddal.
-// A tárhely- és domain-szolgáltató a weboldal tényleges beállítása alapján.
 export default function Impresszum() {
   return (
     <LegalPage title="Impresszum">

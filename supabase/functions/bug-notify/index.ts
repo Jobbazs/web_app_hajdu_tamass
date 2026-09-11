@@ -1,15 +1,3 @@
-// bug-notify — a beérkezett hibajegyek e-mail-továbbítása Resend-del.
-//
-// LIMIT-TUDATOS: ha a napi/havi bug-küldés-sapka betelt, VAGY a Resend
-// rate-limitet ad (429), a jegy a DB-ben MARAD (notified_at = null), és a
-// következő cron-futáskor újrapróbáljuk – a limit resetje után magától
-// elmegy. Így egyetlen hibajegy sem vész el.
-//
-// Az e-mail tartalmaz két gombot: "Folyamatban" és "Lezárva" – ezek a
-// bug-status függvényre mutatnak (token alapú státusz-váltás bejelentkezés nélkül).
-//
-// pg_cron hívja (net.http_post + x-cron-secret). CRON_SECRET nélkül ZÁRVA.
-// Titkok: supabase secrets set CRON_SECRET=... RESEND_API_KEY=...
 
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''

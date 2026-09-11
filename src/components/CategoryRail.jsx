@@ -1,10 +1,6 @@
 import { useLang } from '../LangContext'
 import { catLabel } from '../lib/portfolioPages'
 
-// Bal oldali (desktop, fix) / felső (mobil, vízszintes) kategória-sáv.
-// Az "összes" a hub oldalra visz.
-// variant="bottom" → az oldal aljára, a Kapcsolat fölé kerülő második példány
-// (csak reszponzív nézetben látszik; desktopon a bal oldali sáv végig ott van).
 export default function CategoryRail({ categories, activeSlug, variant = 'top' }) {
   const { lang } = useLang()
   const allLabel = lang === 'hu' ? 'Mind' : 'All'

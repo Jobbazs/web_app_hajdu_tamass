@@ -1,8 +1,4 @@
-/* ============================================================
-   ADMIN – SERVICES
-   ============================================================ */
 
-/* ── Services lista (új design) ── */
 .acms-services-list {
   display: flex;
   flex-direction: column;
@@ -55,7 +51,6 @@
   gap: 0.4rem;
 }
 
-/* ── Extra fields ── */
 .acms-extra-field {
   background: var(--bg-primary);
   border: 1px solid var(--border-subtle);
@@ -99,7 +94,6 @@
 
 .acms-form-row--3 { grid-template-columns: repeat(3, 1fr); }
 
-/* ── Subtabs ── */
 .acms-subtabs {
   display: flex;
   gap: 0;
@@ -125,13 +119,11 @@
 .acms-subtab:hover { color: var(--text-primary); }
 .acms-subtab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-/* Mobil: az al-fülek több sorba tördelnek (nincs vízszintes túllógás) */
 @media (max-width: 767px) {
   .acms-subtabs { flex-wrap: wrap; row-gap: 2px; overflow-x: visible; }
   .acms-subtab { padding: 0.5rem 0.7rem; font-size: 0.56rem; letter-spacing: 0.08em; }
 }
 
-/* ── Input variants ── */
 .acms-input--sm {
   padding: 0.5rem 0.7rem !important;
   min-height: 36px !important;
@@ -148,7 +140,6 @@
 
 .acms-textarea--tall { min-height: 120px; }
 
-/* ── Extra field header ── */
 .acms-extra-field-header {
   display: flex;
   justify-content: space-between;
@@ -165,7 +156,6 @@
   color: var(--accent);
 }
 
-/* ── Fixed field (igazítás/méret opciók) ── */
 .acms-fixed-hint {
   font-family: 'Space Mono', 'Share Tech Mono', monospace;
   font-size: 0.62rem;
@@ -203,8 +193,6 @@
   min-width: 70px;
 }
 
-/* ── Tartalom csoport ── */
-/* Tartalom szerkesztő */
 .acms-content-group {
   margin-bottom: 2.5rem;
   border: 1px solid var(--border-subtle);
@@ -228,7 +216,6 @@
   gap: 0 1.5rem;
 }
 
-/* ── Kategória panel ── */
 .acms-cat-panel {
   background: var(--bg-primary);
   border: 1px solid var(--border-mid);
@@ -314,7 +301,6 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-/* ── Reszponzív ── */
 @media (max-width: 767px) {
   .acms-extra-field-row { flex-direction: column; }
   .acms-form-row--3 { grid-template-columns: 1fr; }

@@ -35,8 +35,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
     }
   }, [item?.id])
 
-  // Váltáskor a placeholdert elrejtjük, amíg a SAJÁT új képe be nem tölt →
-  // fizikailag nem tudja megmutatni az előző képet. Az éles kép: ha előtöltött, azonnal.
+  
   useEffect(() => {
     if (!item) return
     setPhLoaded(false)
@@ -52,7 +51,6 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
     }
   }, [item?.id])
 
-  // Előző/következő 2-2 kép háttér-előtöltése → azonnali lapozás
   useEffect(() => {
     if (!item) return
     const idx = items.findIndex(i => i.id === item.id)
@@ -72,7 +70,6 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()}>
 
-        {/* Header */}
         <div className="modal-header">
           <div className="modal-meta">
             <span className="modal-counter">{currentIdx + 1} / {total}</span>
@@ -80,8 +77,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
           <button className="modal-close" onClick={onClose} aria-label={m.close}>✕</button>
         </div>
 
-        {/* Media */}
-        {/* Kattintási zónák – bal/jobb oldal navigál */}
+    
         <div className="modal-media" onClick={e => {
           if (total <= 1) return
           const rect = e.currentTarget.getBoundingClientRect()
@@ -89,7 +85,6 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
           if (x < rect.width * 0.35) onPrev()
           else if (x > rect.width * 0.65) onNext()
         }}>
-          {/* Vizuális hint – nyilak a széleken */}
           {total > 1 && (
             <>
               <div className="modal-tap-prev" aria-hidden="true">‹</div>
@@ -106,8 +101,7 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
             />
           ) : (
             <>
-              {/* Placeholder: közepes felbontású, jó minőségű előnézet, amíg a full betölt.
-                  key → új elem képenként, hogy sose látszódjon az előző kép. */}
+        
               <img
                 key={`ph-${item.id}`}
                 ref={phRef}
@@ -131,7 +125,6 @@ export default function MediaModal({ item, items, onClose, onPrev, onNext }) {
           )}
         </div>
 
-        {/* Navigation */}
         <div className="modal-nav">
           <button className="modal-nav-btn" onClick={onPrev} disabled={total <= 1} aria-label={m.prev}>
             ← {m.prev}

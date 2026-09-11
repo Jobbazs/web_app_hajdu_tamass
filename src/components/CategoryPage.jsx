@@ -97,10 +97,6 @@ export default function CategoryPage({ slug }) {
 
   const loading = itemsLoading || catsLoading
 
-  // Lágy 404: ha a slug nem létező kategóriára mutat, a szerver (a Vercel
-  // rewrite miatt) 200-at ad, tehát HTTP-szinten nem tudjuk 404-nek jelezni.
-  // Ezért NOINDEX-szel jelezzük a keresőknek, hogy ez az URL ne kerüljön be
-  // az indexbe (Bing Guidelines 10. pont, Google: soft 404 kezelés).
   const notFound = !loading && !category
   useEffect(() => {
     const SEL = 'meta[name="robots"]'
@@ -116,15 +112,12 @@ export default function CategoryPage({ slug }) {
       el.setAttribute('content', 'noindex, follow')
     }
 
-    // Visszaállítás, ha elnavigálunk egy létező kategóriára
     return () => {
       const el = document.head.querySelector(SEL)
       if (el && notFound) el.setAttribute('content', prev ?? 'index, follow')
     }
   }, [notFound])
 
-  // Jó kapcsolaton (4g, nincs Save-Data) az első pár kép modal-méretét
-  // tétlen időben előtöltjük → a modal azonnal éles lesz.
   useEffect(() => {
     if (!catItems.length || !goodConnection()) return
     const urls = catItems
@@ -142,7 +135,6 @@ export default function CategoryPage({ slug }) {
     }
   }, [catItems])
 
-  // Nem létező kategória (a betöltés után)
   if (!loading && !category) {
     return (
       <>
@@ -178,7 +170,6 @@ export default function CategoryPage({ slug }) {
               ]}
             />
 
-            {/* Hero – kis narancs eyebrow + nagy fehér cím */}
             <header className="cat-hero">
               <div style={alignStyle(category?.hero_align)}>
                 <div className="cat-hero-eyebrow">{lang === 'hu' ? 'Portfólió' : 'Portfolio'}</div>
@@ -189,7 +180,6 @@ export default function CategoryPage({ slug }) {
               </div>
             </header>
 
-            {/* Intro szöveg */}
             {intro && (
               <section className="cat-intro">
                 <div className={sizeClass(category?.intro_size)} style={alignStyle(category?.intro_align)}>
@@ -202,7 +192,6 @@ export default function CategoryPage({ slug }) {
           </div>
         </div>
 
-        {/* Tartalom sáv (világosabb háttér, hogy a képek elváljanak a herótól) */}
         <div className="cat-content-band">
           <div className="cat-band-inner">
             {loading ? (
@@ -242,13 +231,10 @@ export default function CategoryPage({ slug }) {
         </div>
       </main>
 
-      {/* Mobil: vissza a főoldalra a rács aljáról (desktopon a navbar viszi haza) */}
       <div className="cat-home-wrap">
         <a href="/" className="home-cta">{lang === 'hu' ? 'Főoldal' : 'Home'}</a>
       </div>
 
-      {/* Kategóriaválasztó az oldal alján is – így a képek végignézése után
-          nem kell visszagörgetni. Csak reszponzív nézetben látszik. */}
       <CategoryRail categories={categories} activeSlug={slug} variant="bottom" />
 
       <Contact />

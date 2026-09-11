@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react'
 import { supabase } from '../../supabaseClient'
 
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024    // Cloudinary ingyenes limit: 10 MB/kép
-const TARGET_BYTES     = 9.3 * 1024 * 1024   // cél: biztonsággal a limit alatt
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+const TARGET_BYTES     = 9.3 * 1024 * 1024
 
 function loadImage(file) {
   return new Promise((resolve, reject) => {
@@ -18,12 +18,9 @@ function canvasToBlob(canvas, quality) {
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/jpeg', quality))
 }
 
-// Ha a kép túl nagy, addig kicsinyítjük/újratömörítjük (JPEG), amíg a limit alá
-// nem kerül. Előbb a minőséget csökkentjük, aztán a felbontást – így a lehető
-// legjobb minőség marad a méret alatt. Fotókhoz a JPEG a legjobb választás.
 async function compressImage(file) {
   const img = await loadImage(file)
-  let maxDim  = Math.min(Math.max(img.width, img.height), 4000)  // fotóhoz 4000px bőven elég
+  let maxDim  = Math.min(Math.max(img.width, img.height), 4000)
   let quality = 0.85
   let blob = null
 
@@ -44,14 +41,6 @@ async function compressImage(file) {
   return new File([blob], name, { type: 'image/jpeg' })
 }
 
-// ALÁÍRT feltöltés Cloudinary-ra.
-// A böngésző nem ismer semmilyen titkot: előbb aláírást kér a 'sign-upload'
-// Edge Functiontől (ami csak bejelentkezett adminnak ad), és azzal tölt fel.
-// Így idegen NEM tud a fiókba feltölteni – az "unsigned" preset megszűnt.
-// A Supabase tárhelyet nem érinti: csak a kapott secure_url kerül a DB-be.
-//
-// folder: melyik célmappába kerüljön. A szerver fehérlistázza, tehát csak a
-// megengedett értékek érvényesek, minden más a default mappába esik.
 export default function CloudinaryUpload({
   onUploaded,
   label = 'Kép feltöltése',
@@ -70,7 +59,6 @@ export default function CloudinaryUpload({
     if (!file.type.startsWith('image/')) { setError('Csak képfájl tölthető fel.'); return }
     setError(''); setUploading(true); setProgress(0)
 
-    // 0) Ha a kép nagyobb a Cloudinary limitnél, kliens-oldalon lekicsinyítjük
     if (file.size > MAX_UPLOAD_BYTES) {
       setCompressing(true)
       try {
@@ -88,7 +76,6 @@ export default function CloudinaryUpload({
       }
     }
 
-    // 1) Aláírás kérése a szervertől (csak bejelentkezett adminnak ad)
     let sig
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('sign-upload', {
@@ -102,7 +89,6 @@ export default function CloudinaryUpload({
       return
     }
 
-    // 2) Feltöltés az aláírással – titok nem kerül a böngészőbe
     const fd = new FormData()
     fd.append('file', file)
     fd.append('api_key', sig.apiKey)
@@ -124,12 +110,11 @@ export default function CloudinaryUpload({
           else setError('Nem érkezett URL a Cloudinary-tól.')
         } catch { setError('Hibás válasz a Cloudinary-tól.') }
       } else {
-        // A Cloudinary a hiba okát a válasz törzsében küldi – megmutatjuk
         let msg = `Feltöltési hiba (${xhr.status}).`
         try {
           const e = JSON.parse(xhr.responseText)
           if (e?.error?.message) msg = `Cloudinary: ${e.error.message}`
-        } catch { /* marad az általános szöveg */ }
+        } catch {}
         setError(msg)
       }
     }

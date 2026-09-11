@@ -3,9 +3,7 @@ import { useLang } from '../LangContext'
 import { supabase } from '../supabaseClient'
 import '../Styles/ThankYou.css'
 
-// Több felugró ablak. Mindegyiknek saját elhelyezése (első látogatás / aloldalak).
-// Egy oldalon a legelső illeszkedő, engedélyezett popup jelenik meg (Kiemelt előre).
-// "első látogatás": böngészőnként egyszer (verziónként); "aloldal": minden odaérkezéskor.
+
 const PRIVATE_PREFIXES = ['/admin', '/confirm', '/cancel', '/termekismerteto', '/login']
 const X_STYLE = {
   position: 'absolute', top: '0.5rem', right: '0.7rem', background: 'transparent',
@@ -38,11 +36,8 @@ export default function SitePopup() {
     return () => window.removeEventListener('popstate', handler)
   }, [])
 
-  // Új oldalra érkezéskor az "erre a nézetre elrejtve" állapot törlődik → az
-  // aloldal-popup ismét megjelenhet (az első-látogatás popupot a tartós jel védi).
   useEffect(() => { setDismissed({}) }, [path])
 
-  // Melyik popup jelenjen meg?
   let current = null
   if (!PRIVATE_PREFIXES.some(p => path.startsWith(p))) {
     for (const pop of popups) {
@@ -50,7 +45,7 @@ export default function SitePopup() {
       if (!pageMatches(pop, path)) continue
       if (pop.trigger === 'first_visit') {
         let seen = false
-        try { seen = localStorage.getItem(`popup_fv_${pop.id}_${pop.version}`) === '1' } catch { /* privát mód */ }
+        try { seen = localStorage.getItem(`popup_fv_${pop.id}_${pop.version}`) === '1' } catch {}
         if (seen) continue
       }
       current = pop
@@ -73,7 +68,7 @@ export default function SitePopup() {
 
   const close = () => {
     if (current.trigger === 'first_visit') {
-      try { localStorage.setItem(`popup_fv_${current.id}_${current.version}`, '1') } catch { /* privát mód */ }
+      try { localStorage.setItem(`popup_fv_${current.id}_${current.version}`, '1') } catch {}
     }
     setActive(false)
     const id = current.id

@@ -1,14 +1,4 @@
-// ============================================================
-// Build-idejű prerender
-// A vite build után fut: Supabase-ből lekéri a tartalmat,
-// és statikus HTML-t injektál a #root-ba.
-//
-// Miért: a Google első kérésre üres <div id="root"></div>-ot kapott.
-// Ez a szkript valódi szöveggel tölti fel, a CMS adataiból.
-//
-// React createRoot-tal indul, ami törli a #root tartalmát és
-// újrarendereli -> nincs hydration mismatch, a látogató ugyanazt látja.
-// ============================================================
+
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { resolve, dirname, join } from 'node:path'
@@ -22,7 +12,6 @@ const SITE = 'https://hajdutamas.hu'
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY
 
-// ── HTML escape – XSS és törött markup ellen ────────────────
 const esc = (s) =>
   String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -30,7 +19,6 @@ const esc = (s) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 
-// ── Supabase REST lekérés ──────────────────────────────────
 async function fetchTable(table, query = '') {
   const url = `${SUPABASE_URL}/rest/v1/${table}?${query}`
   const res = await fetch(url, {
@@ -40,7 +28,6 @@ async function fetchTable(table, query = '') {
   return res.json()
 }
 
-// ── Fallback szövegek (LangContext-tel egyezőek) ────────────
 const FB = {
   hero_line1: 'Ahol a fény',
   hero_line2: 'meghal.',
@@ -71,7 +58,6 @@ const DEFAULT_ORDER = [
   { key: 'contact', visible: true },
 ]
 
-// ── Szekció-generátorok ────────────────────────────────────
 function heroHtml(c) {
   const l1 = c.hero_line1_hu || FB.hero_line1
   const l2 = c.hero_line2_hu || FB.hero_line2
@@ -105,9 +91,6 @@ function portfolioHtml(cats, items, content) {
       const catItems = items.filter((i) => i.category_id === cat.id)
       if (!catItems.length) return ''
       const coverUrl = content[`portfolio_cover_${cat.slug}`] || catItems[0].cloudinary_url
-      // A kártya LINK a kategória aloldalára – így a Google a főoldalról
-      // eljut a hubra és minden kategóriára (belső linkelés = felfedezés
-      // + linkerő továbbadása a legerősebb oldalról).
       return `<article>
 <a href="/portfolio/${esc(cat.slug)}">
 <h3>${esc(cat.label_hu)}</h3>
@@ -157,33 +140,28 @@ function customHtml(sections) {
     .join('\n')
 }
 
-// ── Aloldal-segédek ────────────────────────────────────────
 function cldThumb(url, w = 800) {
   if (!url || !url.includes('/upload/')) return url
   if (/\/upload\/[^/]*(?:w_|q_|f_)/.test(url)) return url
   return url.replace('/upload/', `/upload/f_auto,q_auto:eco,c_limit,w_${w}/`)
 }
 
-// SEO / JSON-LD képhivatkozás – jó minőség (ezt a Google indexeli, nem a rács tölti)
 function cldSeo(url, w = 1200) {
   if (!url || !url.includes('/upload/')) return url
   if (/\/upload\/[^/]*(?:w_|q_|f_)/.test(url)) return url
   return url.replace('/upload/', `/upload/f_auto,q_auto,c_limit,w_${w}/`)
 }
 
-// OG-kép: 1200×630 kivágás a közösségi előnézethez (Facebook/Discord/X)
 function cldOg(url) {
   if (!url || !url.includes('/upload/')) return url
   if (/\/upload\/[^/]*(?:w_|h_|c_|q_|f_)/.test(url)) return url
   return url.replace('/upload/', '/upload/w_1200,h_630,c_fill,f_auto,q_auto/')
 }
 
-// Egy head-tag lecserélése (multiline-biztos). Ha nincs találat, változatlan.
 function replaceTag(html, regex, replacement) {
   return regex.test(html) ? html.replace(regex, replacement) : html
 }
 
-// Per-oldal head: title, description, canonical, og:*
 function setHead(html, { title, description, url, image }) {
   html = replaceTag(html, /<title>[\s\S]*?<\/title>/, `<title>${esc(title)}</title>`)
   html = replaceTag(html, /<meta\s+name="description"[\s\S]*?\/>/,
@@ -220,16 +198,11 @@ function injectRoot(template, bodyHtml) {
   )
 }
 
-// A prerender-időben lekért adatot beinjektáljuk egy globálisba, hogy a React
-// hookok abból induljanak (lásd useSiteContent). Így az első render egyezik a
-// statikus HTML-lel → nincs "villanás". A </ jelet escape-eljük, hogy a JSON
-// ne törhesse meg a <script> taget.
 function injectData(html, data) {
   const json = JSON.stringify(data).replace(/</g, '\\u003c')
   return html.replace('</head>', `  <script>window.__PRERENDER__=${json}</script>\n</head>`)
 }
 
-// Bal sáv (belső linkek – SEO)
 function railHtml(cats, activeSlug) {
   const links = [`<a href="/portfolio">Mind</a>`]
     .concat(cats.map((c) => `<a href="/portfolio/${esc(c.slug)}"${c.slug === activeSlug ? ' aria-current="page"' : ''}>${esc(c.label_hu)}</a>`))
@@ -287,7 +260,6 @@ function categoryPageHtml(cat, catItems, catSections) {
     .split('\n').map((s) => s.trim()).filter(Boolean)
     .map((p) => `<p>${esc(p)}</p>`).join('\n')
 
-  // Ha vannak szekciók, azokat rendereljük; különben az egyszerű képgrid.
   const content =
     catSections && catSections.length
       ? sectionsHtml(catSections, catItems, cat.label_hu)
@@ -327,9 +299,6 @@ ${cards}
 <section id="contact"><h2>${esc(FB.contact_title)}</h2></section>`
 }
 
-// A legkésőbbi updated_at érték egy rekordhalmazból, ISO dátumként (YYYY-MM-DD).
-// null, ha egyetlen rekordnak sincs időpontja – ilyenkor a <lastmod> kimarad,
-// mert a pontatlan lastmod rosszabb, mint a hiányzó.
 function lastMod(...recordSets) {
   let newest = 0
   for (const set of recordSets) {
@@ -343,19 +312,16 @@ function lastMod(...recordSets) {
 
 function sitemapXml(cats, items, sections, content, services, customSections) {
   const urls = [
-    // Főoldal: bármelyik szekció változása érinti
     {
       loc: `${SITE}/`,
       pri: '1.0',
       mod: lastMod(content, services, customSections, cats, items),
     },
-    // Hub: a kategóriák és a borítóképeik
     {
       loc: `${SITE}/portfolio`,
       pri: '0.9',
       mod: lastMod(cats, items),
     },
-    // Kategória-aloldalak: a saját kategória, képei és szekciói
     ...cats.map((c) => ({
       loc: `${SITE}/portfolio/${c.slug}`,
       pri: '0.8',
@@ -385,7 +351,6 @@ async function writePage(relPath, html) {
   await writeFile(outPath, html, 'utf8')
 }
 
-// ── Fő futás ───────────────────────────────────────────────
 async function main() {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     console.warn('[prerender] Nincs Supabase env – kihagyva, a build folytatódik.')
@@ -408,7 +373,7 @@ async function main() {
     try {
       order = JSON.parse(content.sections_order)
     } catch {
-      /* marad a default */
+      
     }
   }
 
@@ -429,21 +394,16 @@ async function main() {
       .map((s) => builders[s.key]())
       .join('\n')
 
-  // Template EGYSZER beolvasva (üres #root), minden oldal ebből készül
   let template = await readFile(DIST, 'utf8')
   if (!template.includes('<div id="root"></div>')) {
     console.warn('[prerender] A <div id="root"></div> nem található – kihagyva.')
     return
   }
-  // A kliens-oldali hookok kezdőállapotához (villanás-mentesség) beinjektáljuk
-  // a friss site_content-et. Minden oldal ugyanezt kapja a <head>-ben.
   template = injectData(template, { siteContent: content })
 
-  // 1) Főoldal
   await writeFile(DIST, injectRoot(template, body), 'utf8')
   let pageCount = 1
 
-  // 2) Portfólió hub
   {
     let html = injectRoot(template, hubPageHtml(cats, items, content))
     html = setHead(html, {
@@ -451,7 +411,6 @@ async function main() {
       description: (() => {
         const list = cats.map((c) => c.label_hu).filter(Boolean).join(', ')
         const full = `Válogatás Hajdu Tamás munkáiból kategóriánként: ${list}.`
-        // 160 karakter felett a keresők levágják – ilyenkor általános szöveg
         return full.length <= 160 ? full : 'Válogatás Hajdu Tamás fotós és videós munkáiból, kategóriánként rendezve.'
       })(),
       url: `${SITE}/portfolio`,
@@ -461,7 +420,6 @@ async function main() {
     pageCount++
   }
 
-  // 3) Kategória-oldalak
   for (const cat of cats) {
     cat._allCats = cats
     const catItems = items.filter((i) => i.category_id === cat.id)
@@ -497,9 +455,7 @@ async function main() {
     pageCount++
   }
 
-  // 4) Sitemap
-  // Figyelem: contentRows (nyers sorok) kell, nem a lapított 'content' objektum,
-  // mert csak a soroknak van updated_at mezőjük.
+ 
   await writeFile(
     join(DIST_DIR, 'sitemap.xml'),
     sitemapXml(cats, items, categorySections, contentRows, services, customSections),
@@ -510,7 +466,5 @@ async function main() {
 }
 
 main().catch((err) => {
-  // A prerender hibája NE bontsa el a deployt – rosszabb egy nem elérhető
-  // oldal, mint egy SEO szempontból gyengébb.
   console.error('[prerender] Hiba, a build folytatódik:', err.message)
 })

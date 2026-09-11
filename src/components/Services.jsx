@@ -7,7 +7,6 @@ export default function Services() {
   const { services, loading } = useServices()
   const s = t.services
 
-  // Ha Supabase-ből már töltött, azt használja – fallback a LangContext-re
   const items = services.length > 0
     ? services.map(svc => ({
         id:   svc.number,

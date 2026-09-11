@@ -4,7 +4,6 @@ import { useLang } from '../LangContext'
 import '../Styles/Poll.css'
 import PollPie, { PIE_COLORS } from './PollPie'
 
-// Cookieless szavazó-azonosító (böngészőnként egy anonim UUID)
 function getVoterId() {
   try {
     let id = localStorage.getItem('poll_voter_id')
@@ -19,7 +18,7 @@ function getMyVotes() { try { return JSON.parse(localStorage.getItem('poll_my_vo
 function saveMyVote(optId, dir) {
   const m = getMyVotes()
   if (dir) m[optId] = dir; else delete m[optId]
-  try { localStorage.setItem('poll_my_votes', JSON.stringify(m)) } catch { /* privát mód */ }
+  try { localStorage.setItem('poll_my_votes', JSON.stringify(m)) } catch {}
   return m
 }
 function cellsFor(cells, columns) {
@@ -30,7 +29,6 @@ function cellsFor(cells, columns) {
   return out
 }
 
-// Hátralévő idő formázása a visszaszámlálóhoz
 function fmtRemaining(ms, lang) {
   if (ms <= 0) return lang === 'hu' ? 'lezárult' : 'closed'
   const s = Math.floor(ms / 1000)
@@ -48,12 +46,12 @@ export default function Poll() {
   const { lang } = useLang()
   const [poll, setPoll]       = useState(null)
   const [options, setOptions] = useState([])
-  const [view, setView]       = useState('percent')   // percent | count
-  const [mode, setMode]       = useState(() => { try { return localStorage.getItem('poll_mode') || 'list' } catch { return 'list' } })   // list | pie
+  const [view, setView]       = useState('percent')
+  const [mode, setMode]       = useState(() => { try { return localStorage.getItem('poll_mode') || 'list' } catch { return 'list' } })
   const [myVotes, setMyVotes] = useState({})
   const [voterId]             = useState(getVoterId)
-  const [sug, setSug]         = useState([])   // javaslat cellái (aktuális nyelv)
-  const [sugStatus, setSugStatus] = useState('')   // '' | sending | done | error
+  const [sug, setSug]         = useState([])
+  const [sugStatus, setSugStatus] = useState('')
   const [now, setNow]         = useState(() => Date.now())
 
   const load = async () => {
@@ -63,14 +61,12 @@ export default function Poll() {
       .select('*').eq('poll_id', p.id).eq('approved', true).order('sort_order', { ascending: true })
     setPoll(p); setOptions(opts || [])
     let v = null
-    try { v = localStorage.getItem('poll_view') } catch { /* privát mód */ }
+    try { v = localStorage.getItem('poll_view') } catch {}
     setView(v || p.default_view || 'percent')
     setMyVotes(getMyVotes())
   }
   useEffect(() => { load() }, [])
 
-  // Élő visszaszámláló: másodpercenként frissül, és a lezárás pillanatában
-  // (oldalújratöltés nélkül) átvált eredmény-nézetbe.
   useEffect(() => {
     if (poll?.status === 'closed') return
     const startMs = poll?.starts_at ? new Date(poll.starts_at).getTime() : 0
@@ -81,8 +77,6 @@ export default function Poll() {
     return () => clearInterval(t)
   }, [poll?.closes_at, poll?.status])
 
-  // Élő frissítés: más látogatók szavazata (poll_options up/down) azonnal
-  // megjelenik. A séma publikálja a táblát a supabase_realtime-ban.
   useEffect(() => {
     if (!poll?.id) return
     const flt = `poll_id=eq.${poll.id}`
@@ -100,7 +94,7 @@ export default function Poll() {
   }, [poll?.id])
 
   if (!poll) return null
-  if (poll.starts_at && new Date(poll.starts_at).getTime() > now) return null  // még nem indult
+  if (poll.starts_at && new Date(poll.starts_at).getTime() > now) return null
 
   const closed = poll.status === 'closed' || (poll.closes_at && new Date(poll.closes_at).getTime() <= now)
   const title = lang === 'hu' ? poll.title_hu : (poll.title_en || poll.title_hu)
@@ -109,21 +103,19 @@ export default function Poll() {
   const liveSort = poll.live_sort !== false
   const scoreOf = (o) => (isSimple ? o.up_votes : o.up_votes - o.down_votes)
   const totalScore = options.reduce((s, o) => s + Math.max(0, scoreOf(o)), 0)
-  // Rendezés: fel/le szavazásnál alapból élő rangsor; egyszerűnél alapból nem
-  // (a live_sort dönt); lezárt szavazásnál mindig rangsor.
+ 
   const displayOptions = (liveSort || closed) && poll.has_votes
     ? [...options].sort((a, b) => scoreOf(b) - scoreOf(a))
     : options
 
-  const setViewPref = (v) => { setView(v); try { localStorage.setItem('poll_view', v) } catch { /* privát mód */ } }
-  const setModePref = (m) => { setMode(m); try { localStorage.setItem('poll_mode', m) } catch { /* privát mód */ } }
+  const setViewPref = (v) => { setView(v); try { localStorage.setItem('poll_view', v) } catch {} }
+  const setModePref = (m) => { setMode(m); try { localStorage.setItem('poll_mode', m) } catch {} }
   const rowLabel = (o) => cellsFor(o.cells, poll.columns).map(c => (lang === 'hu' ? c.hu : (c.en || c.hu))).filter(Boolean).join(' – ') || '—'
   const pieSlices = displayOptions.map((o, i) => ({ label: rowLabel(o), value: Math.max(0, scoreOf(o)), color: PIE_COLORS[i % PIE_COLORS.length] }))
 
   const vote = async (opt, dir) => {
     if (closed || !voterId) return
     if (poll.test_mode) {
-      // Teszt mód: nincs dedup/toggle → korlátlan szavazás egy böngészőből
       const { data } = await supabase.rpc('cast_vote', { p_option: opt.id, p_voter: voterId, p_dir: dir })
       if (data?.up != null) setOptions(os => os.map(o => (o.id === opt.id ? { ...o, up_votes: data.up, down_votes: data.down } : o)))
       return
@@ -133,7 +125,7 @@ export default function Poll() {
     if (!data || data.status === 'error') return
     if (data.status === 'closed') { load(); return }
     setOptions(os => os.map(o => (o.id === opt.id ? { ...o, up_votes: data.up, down_votes: data.down } : o)))
-    const newDir = prev === dir ? null : dir       // ugyanaz → visszavonás
+    const newDir = prev === dir ? null : dir
     setMyVotes(saveMyVote(opt.id, newDir))
   }
 

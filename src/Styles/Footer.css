@@ -1,6 +1,4 @@
-/* ============================================================
-   FOOTER
-   ============================================================ */
+
 footer {
   padding: 2.5rem 2rem;
   display: flex;
@@ -17,7 +15,6 @@ footer {
   color: var(--text-muted);
 }
 
-/* Footer jogi linkek */
 .footer-legal {
   display: none;
   gap: 1.2rem;

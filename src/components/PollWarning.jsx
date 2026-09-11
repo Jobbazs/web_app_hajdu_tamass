@@ -3,9 +3,7 @@ import { supabase } from '../supabaseClient'
 import { useLang } from '../LangContext'
 import '../Styles/ThankYou.css'
 
-// Figyelmeztető popup: ha az aktív szavazás hamarosan lezárul (warn_before_min).
-// Cím + top 3 (ha a lista szavazat szerint rendez) + Bezárás / Szavazok.
-// X jobb felül, kívülre kattintás bezár. Böngészőnként egyszer (verziónként).
+
 const X_STYLE = {
   position: 'absolute', top: '0.5rem', right: '0.7rem', background: 'transparent',
   border: 'none', color: 'inherit', fontSize: '1.7rem', lineHeight: 1, cursor: 'pointer',
@@ -33,7 +31,7 @@ export default function PollWarning() {
       if (!p || !p.warn_before_min || !p.closes_at) return
       const { data: opts } = await supabase.from('poll_options').select('*').eq('poll_id', p.id).eq('approved', true)
       setPoll(p); setOptions(opts || [])
-      try { if (localStorage.getItem(`poll_warn_${p.id}_${p.version || 0}`) === '1') setDismissed(true) } catch { /* privát mód */ }
+      try { if (localStorage.getItem(`poll_warn_${p.id}_${p.version || 0}`) === '1') setDismissed(true) } catch {}
     })()
   }, [])
 
@@ -71,7 +69,7 @@ export default function PollWarning() {
   const rowLabel = (o) => (Array.isArray(o.cells) ? o.cells : []).map(c => (lang === 'hu' ? c.hu : (c.en || c.hu))).filter(Boolean).join(' – ') || '—'
   const title = lang === 'hu' ? poll.title_hu : (poll.title_en || poll.title_hu)
 
-  const markSeen = () => { try { localStorage.setItem(`poll_warn_${poll.id}_${poll.version || 0}`, '1') } catch { /* privát mód */ } }
+  const markSeen = () => { try { localStorage.setItem(`poll_warn_${poll.id}_${poll.version || 0}`, '1') } catch {} }
   const close = () => { markSeen(); setActive(false); setTimeout(() => setDismissed(true), 250) }
   const goVote = () => {
     markSeen()

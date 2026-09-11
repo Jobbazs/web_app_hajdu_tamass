@@ -1,6 +1,3 @@
-/* ============================================================
-   CUSTOM SECTIONS – publikus megjelenítés
-   ============================================================ */
 
 .custom-section {
   padding: 5rem 2rem;
@@ -56,10 +53,6 @@
   font-size: 1rem;
 }
 
-/* ============================================================
-   KÉPEK – fent / lent sor
-   ============================================================ */
-
 .cs-img-row {
   display: flex;
   justify-content: center;
@@ -71,19 +64,16 @@
 .cs-img-row--above { margin-bottom: 2.5rem; }
 .cs-img-row--below { margin-top: 2.5rem; }
 
-/* 1 kép: középre, max 40% szélesség */
 .cs-img-row--1 .cs-img-item {
   max-width: 28%;
   flex: 0 0 auto;
 }
 
-/* 2 kép: egyforma, max 40% */
 .cs-img-row--2 .cs-img-item {
   flex: 0 0 auto;
   max-width: 26%;
 }
 
-/* 3 kép: egyforma, max 37% */
 .cs-img-row--3 .cs-img-item {
   flex: 0 0 auto;
   max-width: 24%;
@@ -96,18 +86,13 @@
   object-fit: cover;
 }
 
-/* ============================================================
-   KÉPEK – oldalt (bal / jobb)
-   ============================================================ */
 
-/* Grid wrapper – gridTemplateColumns inline style-ból jön */
 .cs-main--side {
   display: grid;
   gap: 2.5rem;
   align-items: start;
 }
 
-/* Oldalkép oszlop: 1 vagy 2 egymás alatti kép */
 .cs-side-imgs {
   display: flex;
   flex-direction: column;
@@ -120,30 +105,20 @@
   display: block;
 }
 
-/* 1 oldalkép: teljes oszlopot kitölti */
 .cs-side-imgs .cs-img-item--side:only-child {
   align-self: center;
 }
 
-/* ============================================================
-   RESZPONZÍV
-   ============================================================ */
-
-/* ── Desktop: bottom row rejtve, side images láthatók ── */
 .cs-bottom-row { display: none; }
 
-/* ── Tablet/mobil (≤1023px) ── */
 @media (max-width: 1023px) {
 
-  /* Oldalkép grid → egyszerű blokk (csak szöveg látszik) */
   .cs-main--side {
     display: block !important;
   }
 
-  /* Oldalsó képek elrejtve a grid-ből – a cs-bottom-row veszi át */
   .cs-side-desktop { display: none; }
 
-  /* Bottom row: bal + jobb + alatti képek 1 sorban, nowrap, max 5 */
   .cs-bottom-row {
     display: flex;
     flex-wrap: nowrap;
@@ -162,12 +137,10 @@
     display: block;
   }
 
-  /* Above/below önálló sorok mobilon */
   .cs-img-row--above { margin-bottom: 1.8rem; }
   .cs-img-row--below { margin-top: 1.8rem; }
 }
 
-/* ── Kis mobil ── */
 @media (max-width: 767px) {
 
   .custom-section {
@@ -179,7 +152,6 @@
     justify-content: center;
   }
 
-  /* Minden felső/alsó képsorban max. 2 kép legyen egy sorban */
   .cs-img-row .cs-img-item {
     flex: 0 0 calc(50% - 0.3rem) !important;
     max-width: calc(50% - 0.3rem) !important;

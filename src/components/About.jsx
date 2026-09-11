@@ -44,7 +44,6 @@ export default function About() {
     ? rawTags.split(',').map(t => t.trim()).filter(Boolean)
     : a.tags
 
-  // Portré URL – site_content-ből, fallback data.js OWNER-re
   const portraitUrl = content['about_portrait_url'] || OWNER.portraitUrl || ''
 
   return (

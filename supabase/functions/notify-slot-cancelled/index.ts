@@ -1,19 +1,3 @@
-// ============================================================
-// Supabase Edge Function – notify-slot-cancelled
-//
-// Egy időpont (slot) admin általi törlésekor:
-//   1) ellenőrzi, hogy a hívó BEJELENTKEZETT admin (JWT),
-//   2) kiolvassa a slot összes AKTÍV foglalóját (service_role),
-//   3) mindegyiknek küld egy értesítő emailt a törlés okával,
-//   4) törli a slotot (a FK cascade viszi a foglalásokat + várólistát).
-//
-// A címzetteket a DB-ből, a slotId alapján szedjük (nem a hívótól),
-// így nem használható tetszőleges címre spamre. A törlés okát az
-// admin adja meg (megbízható).
-//
-// Deploy (alapértelmezett verify_jwt – kell a session JWT):
-//   supabase functions deploy notify-slot-cancelled
-// ============================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -22,7 +6,6 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-// Admin-allowlist (opcionális): ha be van állítva, csak ezek az e-mailek hívhatják.
 const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
 
 const FROM_EMAIL = "noreply@hajdutamas.hu";
@@ -40,7 +23,6 @@ const json = (b: unknown, s = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-// ── Értesítő email egy foglalónak ──────────────────────────
 async function sendCancellation(row: any, slot: any, reason: string) {
   const st = String(slot.start_time).slice(0, 5);
   const et = String(slot.end_time).slice(0, 5);
@@ -110,7 +92,6 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
 
   try {
-    // ── 1. Admin auth: bejelentkezett felhasználó kell ──
     const authHeader = req.headers.get("Authorization") ?? "";
     const jwt = authHeader.replace("Bearer ", "").trim();
     if (!jwt) return json({ error: "Hiányzó Authorization" }, 401);
@@ -126,13 +107,11 @@ serve(async (req) => {
     if (ADMIN_EMAILS.length && !ADMIN_EMAILS.includes((user.email ?? "").toLowerCase()))
       return json({ error: "Nincs jogosultság" }, 403);
 
-    // ── 2. Bemenet ──
     const { slotId, reason } = await req.json();
     if (!slotId) return json({ error: "Hiányzó slotId" }, 400);
 
     const db = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // slot adatai
     const { data: slot } = await db
       .from("appointment_slots")
       .select("id, title, slot_date, start_time, end_time")
@@ -140,14 +119,12 @@ serve(async (req) => {
       .maybeSingle();
     if (!slot) return json({ error: "Ismeretlen slot" }, 404);
 
-    // ── 3. Aktív foglalók értesítése ──
     const { data: appts } = await db
       .from("appointments")
       .select("name, email, status")
       .eq("slot_id", slotId)
       .in("status", ["pending_confirmation", "confirmed", "approved"]);
 
-    // Egy címzett többször is foglalhatott – dedup email szerint
     const seen = new Set<string>();
     const recipients = (appts ?? []).filter((a) => {
       const key = (a.email || "").toLowerCase();
@@ -163,7 +140,6 @@ serve(async (req) => {
       else report.errors.push(a.email);
     }
 
-    // ── 4. Slot törlése (cascade: appointments + waitlist) ──
     const { error: delErr } = await db
       .from("appointment_slots")
       .delete()
