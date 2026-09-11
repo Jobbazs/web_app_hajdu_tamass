@@ -28,7 +28,8 @@ export default function ThankYou({
   useEffect(() => {
     if (visible) {
       setRendered(true)
-      requestAnimationFrame(() => requestAnimationFrame(() => setActive(true)))
+      const t = setTimeout(() => setActive(true), 20)
+      return () => clearTimeout(t)
     } else {
       setActive(false)
       const t = setTimeout(() => setRendered(false), 500)

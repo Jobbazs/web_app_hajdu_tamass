@@ -3,18 +3,31 @@ import { useLang } from '../LangContext'
 import { supabase } from '../supabaseClient'
 import '../Styles/ThankYou.css'
 
-
 const PRIVATE_PREFIXES = ['/admin', '/confirm', '/cancel', '/termekismerteto', '/login']
-const X_STYLE = {
-  position: 'absolute', top: '0.5rem', right: '0.7rem', background: 'transparent',
-  border: 'none', color: 'inherit', fontSize: '1.7rem', lineHeight: 1, cursor: 'pointer',
-  opacity: 0.55, padding: '0.2rem 0.4rem',
-}
 
 function pageMatches(pop, path) {
   if (pop.trigger === 'first_visit') return path === '/'
   const pages = Array.isArray(pop.pages) ? pop.pages : []
   return pages.some(pg => path === pg || path === pg + '/')
+}
+
+function isSeen(pop) {
+  try {
+    return localStorage.getItem(`popup_fv_${pop.id}_${pop.version}`) === '1'
+  } catch {
+    return false
+  }
+}
+
+function pickPopup(popups, path, dismissed) {
+  if (PRIVATE_PREFIXES.some(p => path.startsWith(p))) return null
+  for (const pop of popups) {
+    if (dismissed[pop.id]) continue
+    if (!pageMatches(pop, path)) continue
+    if (pop.trigger === 'first_visit' && isSeen(pop)) continue
+    return pop
+  }
+  return null
 }
 
 export default function SitePopup() {
@@ -38,20 +51,7 @@ export default function SitePopup() {
 
   useEffect(() => { setDismissed({}) }, [path])
 
-  let current = null
-  if (!PRIVATE_PREFIXES.some(p => path.startsWith(p))) {
-    for (const pop of popups) {
-      if (dismissed[pop.id]) continue
-      if (!pageMatches(pop, path)) continue
-      if (pop.trigger === 'first_visit') {
-        let seen = false
-        try { seen = localStorage.getItem(`popup_fv_${pop.id}_${pop.version}`) === '1' } catch {}
-        if (seen) continue
-      }
-      current = pop
-      break
-    }
-  }
+  const current = pickPopup(popups, path, dismissed)
 
   useEffect(() => {
     if (current) { const t = setTimeout(() => setActive(true), 20); return () => clearTimeout(t) }
@@ -86,7 +86,7 @@ export default function SitePopup() {
   return (
     <div className={`ty-backdrop ${active ? 'ty-active' : ''}`} onClick={close} role="dialog" aria-modal="true">
       <div className={`ty-box ${active ? 'ty-box-active' : ''}`} onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
-        <button onClick={close} aria-label={lang === 'hu' ? 'Bezárás' : 'Close'} style={X_STYLE}>×</button>
+        <button className="ty-x-btn" onClick={close} aria-label={lang === 'hu' ? 'Bezárás' : 'Close'}>×</button>
         <div className="ty-corner ty-corner--tl" />
         <div className="ty-corner ty-corner--tr" />
         <div className="ty-corner ty-corner--bl" />
